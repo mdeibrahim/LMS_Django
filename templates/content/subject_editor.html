@@ -7,176 +7,190 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/editor.css' %}">
+<style>
+    @media (max-width: 1024px) {
+        .editor-layout {
+            grid-template-columns: 1fr !important;
+        }
+    }
+</style>
 {% endblock %}
 
 {% block breadcrumb %}
-<nav class="breadcrumb-bar">
-    <div class="container">
-        <ol class="breadcrumb">
-            <li><a href="{% url 'content:home' %}"><i class="fa-solid fa-house"></i></a></li>
-            <li><a href="{% url 'content:course_detail' course.slug %}">{{ course.name }}</a></li>
-            <li><a href="{{ preview_url }}">{{ module.title }}</a></li>
-            <li class="active"><i class="fa-solid fa-pen-to-square"></i> Editor</li>
+<nav class="border-y border-slate-200/80 bg-white/70 backdrop-blur">
+    <div class="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
+        <ol class="flex flex-wrap items-center gap-3 py-3 text-sm text-slate-600">
+            <li><a href="{% url 'content:home' %}" class="transition hover:text-slate-900"><i class="fa-solid fa-house"></i></a></li>
+            <li>/</li>
+            <li><a href="{% url 'content:course_detail' course.slug %}" class="transition hover:text-slate-900">{{ course.name }}</a></li>
+            <li>/</li>
+            <li><a href="{{ preview_url }}" class="transition hover:text-slate-900">{{ module.title }}</a></li>
+            <li>/</li>
+            <li class="font-semibold text-slate-800"><i class="fa-solid fa-pen-to-square"></i> Editor</li>
         </ol>
     </div>
 </nav>
 {% endblock %}
 
 {% block content %}
-<div class="editor-shell container" style="margin-top: 40px; margin-bottom: 80px;">
-    <div class="editor-topbar" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; gap: 16px; flex-wrap: wrap;">
-        <div class="editor-topbar-left" style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
-            <div class="editor-status" id="editorStatus" style="color: #16a34a; font-size: 0.9rem; font-weight: 500;">
-                <i class="fa-solid fa-circle-check"></i> Saved
-            </div>
-            <input type="text" class="editor-title-input" id="editorTitleInput" value="{{ module.title }}" placeholder="Module title..." autocomplete="off" style="font-size: 1.5rem; font-weight: bold; border: none; outline: none; background: transparent; width: 400px;">
-        </div>
-        <div class="editor-topbar-right" style="display: flex; gap: 10px; flex-wrap: wrap;">
-            <a href="{{ preview_url }}" class="btn" style="background: white; border: 1px solid var(--border); color: var(--text-primary);" target="_blank">
-                <i class="fa-solid fa-eye"></i> Preview Live
-            </a>
-            <button class="btn btn-primary" id="btn-save-body"><i class="fa-solid fa-floppy-disk"></i> Save</button>
-        </div>
-    </div>
-
-    <div class="editor-layout" style="display: grid; grid-template-columns: 1fr 340px; gap: 30px; align-items: start;">
-        <div class="editor-main">
-            <div class="rich-text-container" style="display: flex; flex-direction: column; gap: 15px;">
-                <div class="rte-toolbar" id="rteToolbar">
-                    <button class="rte-btn" data-cmd="bold" title="Bold (Ctrl+B)" id="btn-bold" type="button" style="font-weight: bold; font-family: sans-serif; font-size: 1.1rem;">B</button>
-                    <button class="rte-btn" data-cmd="italic" title="Italic (Ctrl+I)" id="btn-italic" type="button" style="font-style: italic; font-family: serif; font-size: 1.1rem;">I</button>
-                    <button class="rte-btn" data-cmd="underline" title="Underline (Ctrl+U)" id="btn-underline" type="button" style="text-decoration: underline; font-family: sans-serif; font-size: 1.1rem;">U</button>
-                    <div class="rte-divider"></div>
-                    <button class="rte-btn rte-btn-link" id="btn-insert-link" type="button" title="Link Media">
-                        <i class="fa-solid fa-link" style="color: #2563eb;"></i> <span style="color: #2563eb; font-weight: 600; font-size: 0.95rem;">Link Media</span>
-                    </button>
-                </div>
-
-                <div class="link-inline-panel" id="linkInlinePanel" hidden>
-                    <p class="editor-modal-desc" style="margin-bottom: 12px; color: var(--text-secondary);">Selected text-er jonno media select korun:</p>
-                    <div class="link-style-selector" style="margin-bottom: 12px;">
-                        <label style="display: block; font-weight: bold; margin-bottom: 8px;">Link Appearance:</label>
-                        <div style="display: flex; gap: 15px; flex-wrap: wrap;">
-                            <label style="display: flex; align-items: center; gap: 5px; cursor: pointer;"><input type="radio" name="link_style" value="blue_bold" checked><span style="color: #2563eb; font-weight: bold;">Blue Bold Link</span></label>
-                            <label style="display: flex; align-items: center; gap: 5px; cursor: pointer;"><input type="radio" name="link_style" value="red_bold"><span style="color: #ef4444; font-weight: bold;">Red Bold Link</span></label>
-                        </div>
+<section class="py-8 sm:py-10 lg:py-12">
+    <div class="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div class="rounded-[1.75rem] border border-white/70 bg-white/88 p-5 shadow-sm backdrop-blur sm:p-6">
+            <div class="editor-topbar" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; gap: 16px; flex-wrap: wrap;">
+                <div class="editor-topbar-left" style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
+                    <div class="editor-status" id="editorStatus" style="color: #16a34a; font-size: 0.9rem; font-weight: 600;">
+                        <i class="fa-solid fa-circle-check"></i> Saved
                     </div>
-                    <div id="linkPickerList" class="link-picker-list"></div>
-                    <div class="editor-modal-footer" style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 12px;">
-                        <button class="btn" id="insertLinkCancel" type="button" style="background: #f3f4f6; border: 1px solid #d1d5db;">Cancel</button>
-                        <button class="btn btn-primary" id="insertLinkConfirm" type="button" disabled><i class="fa-solid fa-check"></i> Apply Link Media</button>
-                    </div>
+                    <input type="text" class="editor-title-input" id="editorTitleInput" value="{{ module.title }}" placeholder="Module title..." autocomplete="off" style="font-size: 1.5rem; font-weight: bold; border: none; outline: none; background: transparent; width: min(100%, 420px);">
                 </div>
-
-                <div class="rte-editor-wrapper">
-                    <div class="rte-content" id="rteContent" contenteditable="true" spellcheck="true" data-placeholder="Start writing your module content here...">{{ module.body_content|render_stored_content }}</div>
+                <div class="editor-topbar-right" style="display: flex; gap: 10px; flex-wrap: wrap;">
+                    <a href="{{ preview_url }}" class="btn" target="_blank">
+                        <i class="fa-solid fa-eye"></i> Preview Live
+                    </a>
+                    <button class="btn btn-primary" id="btn-save-body"><i class="fa-solid fa-floppy-disk"></i> Save</button>
                 </div>
             </div>
-        </div>
 
-        <div class="editor-sidebar">
-            <div class="editor-panel" id="panelIC">
-                <div class="editor-panel-header">
-                    <h3><i class="fa-solid fa-wand-magic-sparkles"></i> Link Media Items</h3>
-                    <button class="btn-panel-add" id="btn-add-ic" title="Add new media item" type="button"><i class="fa-solid fa-plus"></i></button>
-                </div>
-                <div class="editor-panel-body" id="icList">
-                    {% for ic in interactive_contents %}
-                    <div class="ic-item ic-item--{{ ic.content_type }}" data-ic-id="{{ ic.id }}" data-ic-title="{{ ic.title|escape }}" data-ic-type="{{ ic.content_type }}" data-ic-text="{{ ic.text_content|default:''|escape }}" data-ic-youtube="{{ ic.youtube_url|default:''|escape }}" id="ic-card-{{ ic.id }}">
-                        <div class="ic-item-icon">
-                            {% if ic.content_type == 'text' %}<i class="fa-solid fa-font"></i>{% elif ic.content_type == 'image' %}<i class="fa-solid fa-image"></i>{% elif ic.content_type == 'audio' %}<i class="fa-solid fa-headphones"></i>{% elif ic.content_type == 'video' %}<i class="fa-solid fa-video"></i>{% elif ic.content_type == 'youtube' %}<i class="fa-brands fa-youtube"></i>{% endif %}
+            <div class="editor-layout" style="display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 24px; align-items: start;">
+                <div class="editor-main">
+                    <div class="rounded-[1.5rem] border border-slate-200 bg-slate-50 p-4 sm:p-5">
+                        <div class="rte-toolbar" id="rteToolbar">
+                            <button class="rte-btn" data-cmd="bold" title="Bold (Ctrl+B)" id="btn-bold" type="button" style="font-weight: bold; font-family: sans-serif; font-size: 1.1rem;">B</button>
+                            <button class="rte-btn" data-cmd="italic" title="Italic (Ctrl+I)" id="btn-italic" type="button" style="font-style: italic; font-family: serif; font-size: 1.1rem;">I</button>
+                            <button class="rte-btn" data-cmd="underline" title="Underline (Ctrl+U)" id="btn-underline" type="button" style="text-decoration: underline; font-family: sans-serif; font-size: 1.1rem;">U</button>
+                            <div class="rte-divider"></div>
+                            <button class="rte-btn rte-btn-link" id="btn-insert-link" type="button" title="Link Media">
+                                <i class="fa-solid fa-link" style="color: #2563eb;"></i> <span style="color: #2563eb; font-weight: 600; font-size: 0.95rem;">Link Media</span>
+                            </button>
                         </div>
-                        <div class="ic-item-body">
-                            <div class="ic-item-title">{{ ic.title }}</div>
-                            <div class="ic-item-type">{{ ic.get_content_type_display }}</div>
-                        </div>
-                        <div class="ic-item-actions">
-                            <button class="ic-action-btn ic-edit-btn" data-ic-id="{{ ic.id }}" title="Edit" type="button"><i class="fa-solid fa-pen"></i></button>
-                            <button class="ic-action-btn ic-delete-btn" data-ic-id="{{ ic.id }}" title="Delete" type="button"><i class="fa-solid fa-trash"></i></button>
-                        </div>
-                    </div>
-                    {% empty %}
-                    <div class="panel-empty" id="icEmpty">
-                        <i class="fa-solid fa-puzzle-piece"></i>
-                        <p>No media items yet.<br>Click <strong>+</strong> to add Text, Image, Audio, Video or YouTube.</p>
-                    </div>
-                    {% endfor %}
-                </div>
 
-                <div class="link-inline-panel" id="icInlinePanel" hidden style="margin: 10px;">
-                    <div class="editor-modal-header" style="padding: 0 0 14px 0; border-bottom: 1px solid var(--border); margin-bottom: 14px;">
-                        <h3 id="icInlineTitle" style="margin: 0;"><i class="fa-solid fa-wand-magic-sparkles"></i> Add Media Item</h3>
-                        <button class="editor-modal-close" id="icInlineClose" type="button"><i class="fa-solid fa-xmark"></i></button>
-                    </div>
-                    <form id="icForm" enctype="multipart/form-data">
-                        {% csrf_token %}
-                        <input type="hidden" id="icFormId" value="">
-                        <div class="form-row"><label class="form-label" for="icTitle">Title <span class="required">*</span></label><input type="text" class="form-input" id="icTitle" placeholder="e.g. Demonstration Video" required></div>
-                        <div class="form-row">
-                            <label class="form-label" for="icType">Content Type <span class="required">*</span></label>
-                            <div class="type-selector" id="typeSelector" style="display: flex; flex-wrap: wrap; gap: 10px;">
-                                <button type="button" class="type-btn type-btn--text active" data-type="text"><i class="fa-solid fa-font"></i> Text</button>
-                                <button type="button" class="type-btn type-btn--image" data-type="image"><i class="fa-solid fa-image"></i> Image</button>
-                                <button type="button" class="type-btn type-btn--audio" data-type="audio"><i class="fa-solid fa-headphones"></i> Audio</button>
-                                <button type="button" class="type-btn type-btn--video" data-type="video"><i class="fa-solid fa-video"></i> Video</button>
-                                <button type="button" class="type-btn type-btn--youtube" data-type="youtube"><i class="fa-brands fa-youtube"></i> YouTube</button>
+                        <div class="link-inline-panel" id="linkInlinePanel" hidden>
+                            <p class="editor-modal-desc" style="margin-bottom: 12px; color: var(--text-secondary);">Selected text-er jonno media select korun:</p>
+                            <div class="link-style-selector" style="margin-bottom: 12px;">
+                                <label style="display: block; font-weight: bold; margin-bottom: 8px;">Link Appearance:</label>
+                                <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+                                    <label style="display: flex; align-items: center; gap: 5px; cursor: pointer;"><input type="radio" name="link_style" value="blue_bold" checked><span style="color: #2563eb; font-weight: bold;">Blue Bold Link</span></label>
+                                    <label style="display: flex; align-items: center; gap: 5px; cursor: pointer;"><input type="radio" name="link_style" value="red_bold"><span style="color: #ef4444; font-weight: bold;">Red Bold Link</span></label>
+                                </div>
                             </div>
-                            <input type="hidden" id="icType" value="text">
+                            <div id="linkPickerList" class="link-picker-list"></div>
+                            <div class="editor-modal-footer" style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 12px;">
+                                <button class="btn" id="insertLinkCancel" type="button" style="background: #f3f4f6; border: 1px solid #d1d5db;">Cancel</button>
+                                <button class="btn btn-primary" id="insertLinkConfirm" type="button" disabled><i class="fa-solid fa-check"></i> Apply Link Media</button>
+                            </div>
                         </div>
-                        <div class="form-section" id="fieldText"><div class="form-row"><label class="form-label" for="icTextContent">Text Content</label><textarea class="form-input" id="icTextContent" rows="4" placeholder="Enter text content..."></textarea></div></div>
-                        <div class="form-section" id="fieldImage" hidden><div class="form-row"><label class="form-label" for="icImageFile">Upload Image</label><input type="file" id="icImageFile" name="image" accept="image/*" class="form-input file-input"></div></div>
-                        <div class="form-section" id="fieldAudio" hidden><div class="form-row"><label class="form-label" for="icAudioFile">Upload Audio</label><input type="file" id="icAudioFile" name="audio" accept="audio/*" class="form-input file-input"></div></div>
-                        <div class="form-section" id="fieldVideo" hidden><div class="form-row"><label class="form-label" for="icVideoFile">Upload Video</label><input type="file" id="icVideoFile" name="video" accept="video/*" class="form-input file-input"></div></div>
-                        <div class="form-section" id="fieldYoutube" hidden><div class="form-row"><label class="form-label" for="icYoutubeUrl">YouTube URL</label><input type="url" class="form-input" id="icYoutubeUrl" name="youtube_url" placeholder="https://www.youtube.com/watch?v=..." /></div></div>
-                        <div class="editor-modal-footer" style="margin-top: 20px; display: flex; justify-content: flex-end; gap: 10px;"><button type="button" class="btn" id="icInlineCancel" style="background: #f3f4f6; border: 1px solid #d1d5db;">Cancel</button><button type="submit" class="btn btn-primary" id="icInlineSave"><i class="fa-solid fa-save"></i> Save Content</button></div>
-                    </form>
-                </div>
-            </div>
 
-            <div class="editor-panel" id="panelAccordion" style="margin-top: 20px;">
-                <div class="editor-panel-header">
-                    <h3><i class="fa-solid fa-list"></i> Accordion Sections</h3>
-                    <button class="btn-panel-add" id="btn-add-accordion" title="Add new accordion section" type="button"><i class="fa-solid fa-plus"></i></button>
-                </div>
-                <div class="editor-panel-body" id="accordionList">
-                    {% for section in accordion_sections %}
-                    <div class="acc-item" data-sec-id="{{ section.id }}" data-sec-title="{{ section.title|escape }}" data-sec-content="{{ section.content|escape }}" data-sec-open="{% if section.is_open_by_default %}true{% else %}false{% endif %}" id="acc-card-{{ section.id }}">
-                        <div class="acc-item-icon"><i class="fa-solid fa-layer-group"></i></div>
-                        <div class="acc-item-body">
-                            <div class="acc-item-title">{{ section.title }}</div>
-                            {% if section.is_open_by_default %}<span class="acc-badge">Open by default</span>{% endif %}
-                        </div>
-                        <div class="acc-item-actions">
-                            <button class="ic-action-btn acc-edit-btn" data-sec-id="{{ section.id }}" title="Edit" type="button"><i class="fa-solid fa-pen"></i></button>
-                            <button class="ic-action-btn acc-delete-btn" data-sec-id="{{ section.id }}" title="Delete" type="button"><i class="fa-solid fa-trash"></i></button>
+                        <div class="mt-4 rte-editor-wrapper">
+                            <div class="rte-content" id="rteContent" contenteditable="true" spellcheck="true" data-placeholder="Start writing your module content here...">{{ module.body_content|render_stored_content }}</div>
                         </div>
                     </div>
-                    {% empty %}
-                    <div class="panel-empty" id="accEmpty">
-                        <i class="fa-solid fa-layer-group"></i>
-                        <p>No sidebar sections yet.<br>Click <strong>+</strong> to add collapsible sections.</p>
-                    </div>
-                    {% endfor %}
                 </div>
 
-                <div class="link-inline-panel" id="accInlinePanel" hidden style="margin: 10px;">
-                    <div class="editor-modal-header" style="padding: 0 0 14px 0; border-bottom: 1px solid var(--border); margin-bottom: 14px;">
-                        <h3 id="accInlineTitle" style="margin: 0;"><i class="fa-solid fa-layer-group"></i> Add Accordion Section</h3>
-                        <button class="editor-modal-close" id="accInlineClose" type="button"><i class="fa-solid fa-xmark"></i></button>
+                <div class="editor-sidebar">
+                    <div class="editor-panel" id="panelIC">
+                        <div class="editor-panel-header">
+                            <h3><i class="fa-solid fa-wand-magic-sparkles"></i> Link Media Items</h3>
+                            <button class="btn-panel-add" id="btn-add-ic" title="Add new media item" type="button"><i class="fa-solid fa-plus"></i></button>
+                        </div>
+                        <div class="editor-panel-body" id="icList">
+                            {% for ic in interactive_contents %}
+                            <div class="ic-item ic-item--{{ ic.content_type }}" data-ic-id="{{ ic.id }}" data-ic-title="{{ ic.title|escape }}" data-ic-type="{{ ic.content_type }}" data-ic-text="{{ ic.text_content|default:''|escape }}" data-ic-youtube="{{ ic.youtube_url|default:''|escape }}" id="ic-card-{{ ic.id }}">
+                                <div class="ic-item-icon">
+                                    {% if ic.content_type == 'text' %}<i class="fa-solid fa-font"></i>{% elif ic.content_type == 'image' %}<i class="fa-solid fa-image"></i>{% elif ic.content_type == 'audio' %}<i class="fa-solid fa-headphones"></i>{% elif ic.content_type == 'video' %}<i class="fa-solid fa-video"></i>{% elif ic.content_type == 'youtube' %}<i class="fa-brands fa-youtube"></i>{% endif %}
+                                </div>
+                                <div class="ic-item-body">
+                                    <div class="ic-item-title">{{ ic.title }}</div>
+                                    <div class="ic-item-type">{{ ic.get_content_type_display }}</div>
+                                </div>
+                                <div class="ic-item-actions">
+                                    <button class="ic-action-btn ic-edit-btn" data-ic-id="{{ ic.id }}" title="Edit" type="button"><i class="fa-solid fa-pen"></i></button>
+                                    <button class="ic-action-btn ic-delete-btn" data-ic-id="{{ ic.id }}" title="Delete" type="button"><i class="fa-solid fa-trash"></i></button>
+                                </div>
+                            </div>
+                            {% empty %}
+                            <div class="panel-empty" id="icEmpty">
+                                <i class="fa-solid fa-puzzle-piece"></i>
+                                <p>No media items yet.<br>Click <strong>+</strong> to add Text, Image, Audio, Video or YouTube.</p>
+                            </div>
+                            {% endfor %}
+                        </div>
+
+                        <div class="link-inline-panel" id="icInlinePanel" hidden style="margin: 10px;">
+                            <div class="editor-modal-header" style="padding: 0 0 14px 0; border-bottom: 1px solid var(--border); margin-bottom: 14px;">
+                                <h3 id="icInlineTitle" style="margin: 0;"><i class="fa-solid fa-wand-magic-sparkles"></i> Add Media Item</h3>
+                                <button class="editor-modal-close" id="icInlineClose" type="button"><i class="fa-solid fa-xmark"></i></button>
+                            </div>
+                            <form id="icForm" enctype="multipart/form-data">
+                                {% csrf_token %}
+                                <input type="hidden" id="icFormId" value="">
+                                <div class="form-row"><label class="form-label" for="icTitle">Title <span class="required">*</span></label><input type="text" class="form-input" id="icTitle" placeholder="e.g. Demonstration Video" required></div>
+                                <div class="form-row">
+                                    <label class="form-label" for="icType">Content Type <span class="required">*</span></label>
+                                    <div class="type-selector" id="typeSelector" style="display: flex; flex-wrap: wrap; gap: 10px;">
+                                        <button type="button" class="type-btn type-btn--text active" data-type="text"><i class="fa-solid fa-font"></i> Text</button>
+                                        <button type="button" class="type-btn type-btn--image" data-type="image"><i class="fa-solid fa-image"></i> Image</button>
+                                        <button type="button" class="type-btn type-btn--audio" data-type="audio"><i class="fa-solid fa-headphones"></i> Audio</button>
+                                        <button type="button" class="type-btn type-btn--video" data-type="video"><i class="fa-solid fa-video"></i> Video</button>
+                                        <button type="button" class="type-btn type-btn--youtube" data-type="youtube"><i class="fa-brands fa-youtube"></i> YouTube</button>
+                                    </div>
+                                    <input type="hidden" id="icType" value="text">
+                                </div>
+                                <div class="form-section" id="fieldText"><div class="form-row"><label class="form-label" for="icTextContent">Text Content</label><textarea class="form-input" id="icTextContent" rows="4" placeholder="Enter text content..."></textarea></div></div>
+                                <div class="form-section" id="fieldImage" hidden><div class="form-row"><label class="form-label" for="icImageFile">Upload Image</label><input type="file" id="icImageFile" name="image" accept="image/*" class="form-input file-input"></div></div>
+                                <div class="form-section" id="fieldAudio" hidden><div class="form-row"><label class="form-label" for="icAudioFile">Upload Audio</label><input type="file" id="icAudioFile" name="audio" accept="audio/*" class="form-input file-input"></div></div>
+                                <div class="form-section" id="fieldVideo" hidden><div class="form-row"><label class="form-label" for="icVideoFile">Upload Video</label><input type="file" id="icVideoFile" name="video" accept="video/*" class="form-input file-input"></div></div>
+                                <div class="form-section" id="fieldYoutube" hidden><div class="form-row"><label class="form-label" for="icYoutubeUrl">YouTube URL</label><input type="url" class="form-input" id="icYoutubeUrl" name="youtube_url" placeholder="https://www.youtube.com/watch?v=..." /></div></div>
+                                <div class="editor-modal-footer" style="margin-top: 20px; display: flex; justify-content: flex-end; gap: 10px;"><button type="button" class="btn" id="icInlineCancel" style="background: #f3f4f6; border: 1px solid #d1d5db;">Cancel</button><button type="submit" class="btn btn-primary" id="icInlineSave"><i class="fa-solid fa-save"></i> Save Content</button></div>
+                            </form>
+                        </div>
                     </div>
-                    <form id="accForm">
-                        {% csrf_token %}
-                        <input type="hidden" id="accFormId" value="">
-                        <div class="form-row"><label class="form-label" for="accTitle">Section Title <span class="required">*</span></label><input type="text" class="form-input" id="accTitle" placeholder="e.g. Introduction" required></div>
-                        <div class="form-row"><label class="form-label" for="accContent">Content (HTML supported)</label><textarea class="form-input" id="accContent" rows="6" placeholder="Enter section content..."></textarea></div>
-                        <div class="form-row" style="margin-top: 15px;"><label class="form-label" style="display: flex; align-items: center; gap: 8px; cursor: pointer;"><input type="checkbox" id="accIsOpen"> <span>Open by default</span></label></div>
-                        <div class="editor-modal-footer" style="margin-top: 20px; display: flex; justify-content: flex-end; gap: 10px;"><button type="button" class="btn" id="accInlineCancel" style="background: #f3f4f6; border: 1px solid #d1d5db;">Cancel</button><button type="submit" class="btn btn-primary"><i class="fa-solid fa-save"></i> Save Section</button></div>
-                    </form>
+
+                    <div class="editor-panel" id="panelAccordion" style="margin-top: 20px;">
+                        <div class="editor-panel-header">
+                            <h3><i class="fa-solid fa-list"></i> Accordion Sections</h3>
+                            <button class="btn-panel-add" id="btn-add-accordion" title="Add new accordion section" type="button"><i class="fa-solid fa-plus"></i></button>
+                        </div>
+                        <div class="editor-panel-body" id="accordionList">
+                            {% for section in accordion_sections %}
+                            <div class="acc-item" data-sec-id="{{ section.id }}" data-sec-title="{{ section.title|escape }}" data-sec-content="{{ section.content|escape }}" data-sec-open="{% if section.is_open_by_default %}true{% else %}false{% endif %}" id="acc-card-{{ section.id }}">
+                                <div class="acc-item-icon"><i class="fa-solid fa-layer-group"></i></div>
+                                <div class="acc-item-body">
+                                    <div class="acc-item-title">{{ section.title }}</div>
+                                    {% if section.is_open_by_default %}<span class="acc-badge">Open by default</span>{% endif %}
+                                </div>
+                                <div class="acc-item-actions">
+                                    <button class="ic-action-btn acc-edit-btn" data-sec-id="{{ section.id }}" title="Edit" type="button"><i class="fa-solid fa-pen"></i></button>
+                                    <button class="ic-action-btn acc-delete-btn" data-sec-id="{{ section.id }}" title="Delete" type="button"><i class="fa-solid fa-trash"></i></button>
+                                </div>
+                            </div>
+                            {% empty %}
+                            <div class="panel-empty" id="accEmpty">
+                                <i class="fa-solid fa-layer-group"></i>
+                                <p>No sidebar sections yet.<br>Click <strong>+</strong> to add collapsible sections.</p>
+                            </div>
+                            {% endfor %}
+                        </div>
+
+                        <div class="link-inline-panel" id="accInlinePanel" hidden style="margin: 10px;">
+                            <div class="editor-modal-header" style="padding: 0 0 14px 0; border-bottom: 1px solid var(--border); margin-bottom: 14px;">
+                                <h3 id="accInlineTitle" style="margin: 0;"><i class="fa-solid fa-layer-group"></i> Add Accordion Section</h3>
+                                <button class="editor-modal-close" id="accInlineClose" type="button"><i class="fa-solid fa-xmark"></i></button>
+                            </div>
+                            <form id="accForm">
+                                {% csrf_token %}
+                                <input type="hidden" id="accFormId" value="">
+                                <div class="form-row"><label class="form-label" for="accTitle">Section Title <span class="required">*</span></label><input type="text" class="form-input" id="accTitle" placeholder="e.g. Introduction" required></div>
+                                <div class="form-row"><label class="form-label" for="accContent">Content (HTML supported)</label><textarea class="form-input" id="accContent" rows="6" placeholder="Enter section content..."></textarea></div>
+                                <div class="form-row" style="margin-top: 15px;"><label class="form-label" style="display: flex; align-items: center; gap: 8px; cursor: pointer;"><input type="checkbox" id="accIsOpen"> <span>Open by default</span></label></div>
+                                <div class="editor-modal-footer" style="margin-top: 20px; display: flex; justify-content: flex-end; gap: 10px;"><button type="button" class="btn" id="accInlineCancel" style="background: #f3f4f6; border: 1px solid #d1d5db;">Cancel</button><button type="submit" class="btn btn-primary"><i class="fa-solid fa-save"></i> Save Section</button></div>
+                            </form>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-</div>
+</section>
 
 {{ interactive_contents_payload|json_script:"initialInteractiveContents" }}
 {{ accordion_sections_payload|json_script:"initialAccordionSections" }}

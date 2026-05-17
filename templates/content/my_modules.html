@@ -3,40 +3,49 @@
 {% block title %}My Courses — Teaching Platform{% endblock %}
 
 {% block content %}
-<section class="py-10 sm:py-12">
+<section class="py-10 sm:py-12 lg:py-14">
     <div class="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div class="mb-7 flex items-start gap-4">
-            <div class="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-100 text-blue-700">
-                <i class="fa-solid fa-book"></i>
-            </div>
-            <div>
-                <h1 class="text-3xl font-bold text-slate-900">My Courses</h1>
-                <p class="mt-1 text-slate-600">আপনার কেনা courses গুলো এখান থেকে ওপেন করুন।</p>
+        <div class="mb-8 rounded-[1.75rem] border border-white/70 bg-white/80 p-6 shadow-sm backdrop-blur sm:p-8">
+            <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div class="flex items-start gap-4">
+                    <div class="inline-flex h-14 w-14 items-center justify-center rounded-3xl bg-gradient-to-br from-blue-500 to-cyan-600 text-white shadow-lg shadow-blue-500/20">
+                        <i class="fa-solid fa-book"></i>
+                    </div>
+                    <div>
+                        <span class="eyebrow"><i class="fa-solid fa-layer-group"></i> ENROLLED LIBRARY</span>
+                        <h1 class="mt-3 text-3xl font-bold text-slate-900 sm:text-4xl">My Courses</h1>
+                        <p class="mt-2 text-slate-600">আপনার কেনা courses গুলো এখান থেকে দ্রুত access করুন।</p>
+                    </div>
+                </div>
+                <a href="{% url 'content:home' %}" class="inline-flex w-fit items-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2.5 font-semibold text-slate-700 transition hover:bg-slate-100">
+                    <i class="fa-solid fa-compass"></i> Explore More
+                </a>
             </div>
         </div>
 
         {% if purchases %}
         <div class="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
             {% for purchase in purchases %}
-            <a href="{% url 'content:course_detail' purchase.course.slug %}" class="group rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-1 hover:shadow-lg">
-                <div class="flex items-start justify-between">
-                    <div class="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-100 text-indigo-700">
+            <a href="{% url 'content:course_detail' purchase.course.slug %}" class="group rounded-[1.5rem] border border-slate-200 bg-[linear-gradient(180deg,#ffffff_0%,#f8fafc_100%)] p-5 shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-lg">
+                <div class="flex items-start justify-between gap-3">
+                    <div class="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-indigo-100 text-indigo-700">
                         <i class="fa-solid fa-graduation-cap"></i>
                     </div>
-                    <i class="fa-solid fa-arrow-right text-slate-400 transition group-hover:text-slate-700"></i>
+                    <span class="inline-flex items-center gap-2 rounded-full bg-slate-100 px-3 py-1 text-xs font-bold uppercase tracking-wide text-slate-500">
+                        Open Course <i class="fa-solid fa-arrow-right text-[10px] transition group-hover:translate-x-0.5"></i>
+                    </span>
                 </div>
-                <h3 class="mt-4 text-lg font-bold text-slate-900">{{ purchase.course.name }}</h3>
-                
-                <div class="mt-4 space-y-1 text-sm text-slate-700">
-                    <p><i class="fa-solid fa-calendar-check"></i> Bought {{ purchase.purchased_at|date:"M d, Y" }}</p>
-                    <p><i class="fa-solid fa-tag"></i> ৳{{ purchase.course.price }}</p>
+                <h3 class="mt-5 text-xl font-bold text-slate-900">{{ purchase.course.name }}</h3>
+                <div class="mt-4 space-y-2 text-sm text-slate-700">
+                    <p><i class="fa-solid fa-calendar-check text-slate-400"></i> Bought {{ purchase.purchased_at|date:"M d, Y" }}</p>
+                    <p><i class="fa-solid fa-tag text-slate-400"></i> ৳{{ purchase.course.price }}</p>
                 </div>
             </a>
             {% endfor %}
         </div>
         {% else %}
-        <div class="rounded-3xl border border-dashed border-slate-300 bg-white p-10 text-center shadow-sm">
-            <div class="mx-auto inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-slate-100 text-slate-500">
+        <div class="rounded-[1.75rem] border border-dashed border-slate-300 bg-white/90 p-10 text-center shadow-sm">
+            <div class="mx-auto inline-flex h-16 w-16 items-center justify-center rounded-3xl bg-slate-100 text-slate-500">
                 <i class="fa-solid fa-cart-shopping"></i>
             </div>
             <h2 class="mt-4 text-2xl font-bold text-slate-900">No Courses Yet</h2>

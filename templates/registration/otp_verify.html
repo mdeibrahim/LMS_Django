@@ -3,32 +3,35 @@
 {% block title %}Verify your account — Teaching Platform{% endblock %}
 
 {% block content %}
-<section class="container mx-auto my-12 max-w-xl">
-    <div class="rounded-2xl border bg-white p-6 shadow">
-        <h2 class="text-2xl font-bold">Verify your account</h2>
-        <p class="mt-2 text-sm text-slate-600">We sent a 6-digit verification code to <strong>{{ email }}</strong>. Enter it below to finish signup.</p>
+<section class="auth-shell">
+    <div class="absolute inset-0 -z-20 bg-[radial-gradient(820px_340px_at_10%_-10%,rgba(59,130,246,0.18),transparent),radial-gradient(760px_320px_at_90%_-12%,rgba(14,165,233,0.18),transparent),linear-gradient(180deg,#f8fafc_0%,#eef2ff_100%)]"></div>
+    <div class="mx-auto w-full max-w-xl px-4 sm:px-6">
+        <div class="auth-panel p-6 sm:p-8">
+            <span class="eyebrow"><i class="fa-solid fa-shield-check"></i> OTP VERIFICATION</span>
+            <h2 class="mt-5 text-3xl font-bold text-slate-900">Verify your account</h2>
+            <p class="mt-2 text-sm leading-7 text-slate-600">We sent a 6-digit verification code to <strong>{{ email }}</strong>. Enter it below to finish signup.</p>
 
-        {% if messages %}
+            {% if messages %}
             <div class="mt-4 space-y-2">
                 {% for message in messages %}
-                    <div class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900">{{ message }}</div>
+                <div class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900">{{ message }}</div>
                 {% endfor %}
             </div>
-        {% endif %}
-
-        <form method="post" class="mt-6 space-y-4">
-            {% csrf_token %}
-            {{ form.code.label_tag }}
-            {{ form.code }}
-            {% if form.code.errors %}
-                <p class="mt-1 text-sm text-rose-600">{{ form.code.errors|striptags }}</p>
             {% endif %}
 
-            <div class="flex gap-2 mt-4">
-                <button type="submit" class="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-600 px-4 py-2 font-semibold text-white">Verify</button>
-                <a href="{% url 'content:otp_resend' %}" class="inline-flex items-center gap-2 rounded-xl border px-4 py-2 font-semibold text-slate-700">Resend code</a>
-            </div>
-        </form>
+            <form method="post" class="mt-6 space-y-4">
+                {% csrf_token %}
+                <div>
+                    {{ form.code.label_tag }}
+                    {{ form.code }}
+                    {% if form.code.errors %}<p class="mt-1 text-sm text-rose-600">{{ form.code.errors|striptags }}</p>{% endif %}
+                </div>
+                <div class="flex flex-col gap-2 sm:flex-row">
+                    <button type="submit" class="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-600 px-4 py-3 font-semibold text-white">Verify</button>
+                    <a href="{% url 'content:otp_resend' %}" class="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-3 font-semibold text-slate-700">Resend code</a>
+                </div>
+            </form>
+        </div>
     </div>
 </section>
 {% endblock %}

@@ -3,50 +3,89 @@
 {% block title %}Student Dashboard — Teaching Platform{% endblock %}
 
 {% block content %}
-<section class="py-10 sm:py-12">
+<section class="py-10 sm:py-12 lg:py-14">
     <div class="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div class="rounded-3xl border border-white/70 bg-[linear-gradient(135deg,#f0f9ff_0%,#eef2ff_45%,#fff7ed_100%)] p-6 shadow-lg sm:p-8">
-            <h1 class="font-display text-3xl font-bold text-slate-900 sm:text-4xl">Student Learning Dashboard</h1>
-            <p class="mt-2 text-slate-700">আপনার কেনা course, progress tracking, certificate claim এবং নতুন course explore এক জায়গায়।</p>
+        <div class="relative overflow-hidden rounded-[2rem] border border-white/70 bg-[linear-gradient(135deg,rgba(239,246,255,0.96)_0%,rgba(238,242,255,0.96)_42%,rgba(255,247,237,0.96)_100%)] p-6 shadow-glow sm:p-8 lg:p-10">
+            <div class="absolute -right-16 top-0 h-40 w-40 rounded-full bg-cyan-300/25 blur-3xl"></div>
+            <div class="absolute -left-10 bottom-0 h-36 w-36 rounded-full bg-rose-300/20 blur-3xl"></div>
+            <div class="relative grid gap-6 lg:grid-cols-[1.25fr_0.75fr] lg:items-end">
+                <div>
+                    <span class="eyebrow"><i class="fa-solid fa-gauge-high"></i> LEARNING COMMAND CENTER</span>
+                    <h1 class="mt-5 font-display text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl lg:text-5xl">Student Learning Dashboard</h1>
+                    <p class="mt-3 max-w-2xl text-sm leading-7 text-slate-700 sm:text-base">আপনার কেনা course, progress tracking, certificate claim এবং নতুন learning milestones এক জায়গায় সুন্দরভাবে সাজানো আছে।</p>
+                </div>
+                <div class="grid gap-3 sm:grid-cols-3 lg:grid-cols-1 xl:grid-cols-3">
+                    <div class="rounded-2xl bg-white/80 px-4 py-4 shadow-sm">
+                        <p class="text-xs font-bold uppercase tracking-[0.18em] text-slate-500">Purchased</p>
+                        <p class="mt-2 text-2xl font-extrabold text-slate-900">{{ purchased_cards|length }}</p>
+                    </div>
+                    <div class="rounded-2xl bg-white/80 px-4 py-4 shadow-sm">
+                        <p class="text-xs font-bold uppercase tracking-[0.18em] text-slate-500">Certificates</p>
+                        <p class="mt-2 text-2xl font-extrabold text-slate-900">{{ certificates|length }}</p>
+                    </div>
+                    <div class="rounded-2xl bg-white/80 px-4 py-4 shadow-sm">
+                        <p class="text-xs font-bold uppercase tracking-[0.18em] text-slate-500">Experience</p>
+                        <p class="mt-2 text-2xl font-extrabold text-slate-900">Premium</p>
+                    </div>
+                </div>
+            </div>
         </div>
 
-        <div class="mt-8">
-            <h2 class="text-2xl font-bold text-slate-900">My Purchased Courses</h2>
-            <div class="mt-3 flex items-center justify-between gap-3">
-                <input id="dashboardFilter" type="search" placeholder="Search courses..." class="w-full max-w-sm rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm shadow-sm focus:outline-none" />
-                <div class="text-sm text-slate-500">Showing <span id="dashboardCount">{{ purchased_cards|length }}</span> courses</div>
+        <div class="mt-8 rounded-[1.75rem] border border-slate-200 bg-white/90 p-5 shadow-sm sm:p-6">
+            <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+                <div>
+                    <h2 class="text-2xl font-bold text-slate-900">My Purchased Courses</h2>
+                    <p class="mt-1 text-sm text-slate-600">Search your course library and jump back into learning quickly.</p>
+                </div>
+                <div class="flex flex-col gap-3 sm:flex-row sm:items-center">
+                    <div class="relative w-full sm:w-80">
+                        <i class="fa-solid fa-magnifying-glass pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-slate-400"></i>
+                        <input id="dashboardFilter" type="search" placeholder="Search courses..." class="field-input w-full rounded-2xl border border-slate-200 bg-slate-50 py-3 pl-10 pr-4 text-sm text-slate-900" />
+                    </div>
+                    <div class="rounded-2xl bg-slate-100 px-4 py-3 text-sm font-semibold text-slate-600">Showing <span id="dashboardCount" class="text-slate-900">{{ purchased_cards|length }}</span> courses</div>
+                </div>
             </div>
-            {% if purchased_cards %}
-            <div class="mt-4 grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
-                {% for card in purchased_cards %}
-                <article class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dashboard-card" data-title="{{ card.purchase.course.name|lower }}">
-             <h3 class="mt-1 text-xl font-bold text-slate-900">{{ card.purchase.course.name }}</h3>
-                    <p class="mt-2 text-sm text-slate-600">Purchased: {{ card.purchase.purchased_at|date:"M d, Y" }}</p>
 
-                    <div class="mt-4">
-                        <div class="mb-1 flex items-center justify-between text-xs font-semibold text-slate-600">
-                            <span>Course Progress</span>
-                            <span>{{ card.progress }}%</span>
+            {% if purchased_cards %}
+            <div class="mt-6 grid gap-5 md:grid-cols-2 2xl:grid-cols-3">
+                {% for card in purchased_cards %}
+                <article class="dashboard-card rounded-[1.5rem] border border-slate-200 bg-[linear-gradient(180deg,#ffffff_0%,#f8fafc_100%)] p-5 shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-lg" data-title="{{ card.purchase.course.name|lower }}">
+                    <div class="flex items-start justify-between gap-4">
+                        <div>
+                            <span class="inline-flex rounded-full bg-blue-100 px-3 py-1 text-xs font-bold uppercase tracking-wide text-blue-700">Purchased Course</span>
+                            <h3 class="mt-3 text-xl font-bold text-slate-900">{{ card.purchase.course.name }}</h3>
                         </div>
-                        <div class="h-2 rounded-full bg-slate-200">
-                            <div class="h-2 rounded-full bg-gradient-to-r from-cyan-500 to-blue-600 progress-fill" data-progress="{{ card.progress }}" style="width: 0%"></div>
+                        <div class="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-500 to-blue-600 text-white shadow-lg shadow-cyan-500/20">
+                            <i class="fa-solid fa-book-open"></i>
                         </div>
                     </div>
 
-                    <div class="mt-4 flex flex-wrap gap-2">
+                    <p class="mt-3 text-sm text-slate-600">Purchased: {{ card.purchase.purchased_at|date:"M d, Y" }}</p>
+
+                    <div class="mt-5 rounded-2xl bg-slate-50 p-4">
+                        <div class="mb-2 flex items-center justify-between text-xs font-semibold uppercase tracking-wide text-slate-500">
+                            <span>Course Progress</span>
+                            <span class="text-slate-800">{{ card.progress }}%</span>
+                        </div>
+                        <div class="h-2.5 rounded-full bg-slate-200">
+                            <div class="progress-fill h-2.5 rounded-full bg-gradient-to-r from-cyan-500 via-blue-600 to-indigo-600" data-progress="{{ card.progress }}" style="width: 0%"></div>
+                        </div>
+                    </div>
+
+                    <div class="mt-5 flex flex-wrap gap-2">
                         {% if card.has_access %}
-                        <a href="{% url 'content:course_detail' card.purchase.course.slug %}" class="inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100">
+                        <a href="{% url 'content:course_detail' card.purchase.course.slug %}" class="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-800">
                             <i class="fa-solid fa-book-open"></i> শুরু করুন
                         </a>
                         {% else %}
-                        <a href="{% url 'content:start_purchase' card.purchase.course.slug %}" class="inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100">
+                        <a href="{% url 'content:start_purchase' card.purchase.course.slug %}" class="inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-100">
                             <i class="fa-solid fa-credit-card"></i> এখনই কিনুন
                         </a>
                         {% endif %}
                         {% if card.is_completed %}
                         <form method="post" action="{% url 'content:claim_certificate' card.purchase.course.id %}">
                             {% csrf_token %}
-                            <button type="submit" class="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 px-3 py-2 text-sm font-semibold text-white transition hover:from-emerald-700 hover:to-teal-700">
+                            <button type="submit" class="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:from-emerald-700 hover:to-teal-700">
                                 <i class="fa-solid fa-certificate"></i> Claim Certificate
                             </button>
                         </form>
@@ -54,7 +93,7 @@
                     </div>
 
                     {% if card.certificate %}
-                    <div class="mt-3 rounded-xl bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
+                    <div class="mt-4 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
                         <i class="fa-solid fa-shield-check"></i> Certificate: {{ card.certificate.certificate_code }}
                     </div>
                     {% endif %}
@@ -62,64 +101,51 @@
                 {% endfor %}
             </div>
             {% else %}
-            <div class="mt-4 rounded-2xl border border-dashed border-slate-300 bg-white p-8 text-center text-slate-600">
-                এখনও কোন course কেনা হয়নি। নিচের available course থেকে শুরু করতে পারেন।
+            <div class="mt-6 rounded-[1.5rem] border border-dashed border-slate-300 bg-slate-50 p-10 text-center text-slate-600">
+                <div class="mx-auto inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-white text-slate-500 shadow-sm">
+                    <i class="fa-solid fa-layer-group"></i>
+                </div>
+                <h3 class="mt-4 text-2xl font-bold text-slate-900">No courses purchased yet</h3>
+                <p class="mt-2">এখনও কোন course কেনা হয়নি। explore section থেকে আপনার জন্য উপযুক্ত course বেছে নিতে পারেন।</p>
             </div>
             {% endif %}
         </div>
 
-        <!-- <div class="mt-10">
-            <h2 class="text-2xl font-bold text-slate-900">Available Courses</h2>
-            <div class="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-                {% for course in available_courses %}
-                <article class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                    
-                    <h3 class="mt-1 text-lg font-bold text-slate-900">{{ course.name }}</h3>
-                    <p class="mt-2 text-sm text-slate-600">{{ course.description|default:'No description available.'|truncatechars:90 }}</p>
-                    <div class="mt-3 flex items-center justify-between">
-                        <span class="font-bold text-slate-900">৳{{ course.price }}</span>
-                        <a href="{% url 'content:start_purchase' course.slug %}" class="inline-flex items-center gap-2 rounded-xl border border-slate-300 px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100">
-                            এখনই কিনুন <i class="fa-solid fa-arrow-right"></i>
-                        </a>
-                    </div>
-                </article>
-                {% empty %}
-                <p class="text-sm text-slate-600">No additional courses available right now.</p>
-                {% endfor %}
+        <div class="mt-8 rounded-[1.75rem] border border-slate-200 bg-white/90 p-5 shadow-sm sm:p-6">
+            <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                    <h2 class="text-2xl font-bold text-slate-900">My Certificates</h2>
+                    <p class="mt-1 text-sm text-slate-600">Completed courses and issued certificate codes in one place.</p>
+                </div>
+                <span class="inline-flex w-fit rounded-full bg-slate-100 px-3 py-1 text-xs font-bold uppercase tracking-wide text-slate-600">{{ certificates|length }} available</span>
             </div>
-        </div> -->
-
-        <div class="mt-10 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-            <h2 class="text-2xl font-bold text-slate-900">My Certificates</h2>
             {% if certificates %}
-            <div class="mt-4 overflow-x-auto">
-                <table class="w-full min-w-[560px] text-left text-sm">
+            <div class="mt-5 overflow-x-auto">
+                <table class="w-full min-w-[640px] overflow-hidden rounded-2xl text-left text-sm">
                     <thead>
-                        <tr class="border-b border-slate-200 text-slate-500">
-                            <th class="py-2">Course</th>
-                            <th class="py-2">Category</th>
-                            <th class="py-2">Certificate Code</th>
-                            <th class="py-2">Issued At</th>
+                        <tr class="border-b border-slate-200 bg-slate-50 text-slate-500">
+                            <th class="px-4 py-3 font-bold uppercase tracking-wide">Course</th>
+                            <th class="px-4 py-3 font-bold uppercase tracking-wide">Category</th>
+                            <th class="px-4 py-3 font-bold uppercase tracking-wide">Certificate Code</th>
+                            <th class="px-4 py-3 font-bold uppercase tracking-wide">Issued At</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for cert in certificates %}
-                        <tr class="border-b border-slate-100">
-                            <td class="py-2 font-semibold text-slate-800">{{ cert.course.name }}</td>
-                            <td class="py-2">—</td>
-                            <td class="py-2 font-bold text-emerald-700">{{ cert.certificate_code }}</td>
-                            <td class="py-2">{{ cert.issued_at|date:"M d, Y" }}</td>
+                        <tr class="border-b border-slate-100 last:border-b-0">
+                            <td class="px-4 py-3 font-semibold text-slate-800">{{ cert.course.name }}</td>
+                            <td class="px-4 py-3 text-slate-600">—</td>
+                            <td class="px-4 py-3 font-bold text-emerald-700">{{ cert.certificate_code }}</td>
+                            <td class="px-4 py-3 text-slate-600">{{ cert.issued_at|date:"M d, Y" }}</td>
                         </tr>
                         {% endfor %}
                     </tbody>
                 </table>
             </div>
             {% else %}
-            <p class="mt-3 text-sm text-slate-600">No certificates yet. Complete a course to unlock one.</p>
+            <div class="mt-5 rounded-2xl bg-slate-50 px-4 py-4 text-sm text-slate-600">No certificates yet. Complete a course to unlock one.</div>
             {% endif %}
         </div>
     </div>
 </section>
 {% endblock %}
-
-

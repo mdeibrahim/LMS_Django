@@ -4,66 +4,94 @@
 
 {% block title %}{{ video.title }} — {{ module.title }} — {{ course.name }}{% endblock %}
 
+{% block extra_css %}
+<style>
+    .player-card {
+        border-radius: 1.5rem;
+        border: 1px solid rgba(226, 232, 240, 0.95);
+        background: rgba(255, 255, 255, 0.94);
+        box-shadow: 0 16px 38px rgba(15, 23, 42, 0.06);
+    }
+
+    .toolbar-buttons {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+    }
+
+    .toolbar-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.6rem;
+        border-radius: 1rem;
+        border: 1px solid #dbe3ee;
+        background: #fff;
+        padding: 0.8rem 1rem;
+        font-size: 0.92rem;
+        font-weight: 700;
+        color: #334155;
+        transition: .2s ease;
+    }
+
+    .toolbar-btn:hover { transform: translateY(-1px); box-shadow: 0 12px 28px rgba(15, 23, 42, 0.08); }
+    .article-body { color: #475569; line-height: 1.8; }
+    .article-body p { margin-bottom: 1rem; }
+    .accordion { display: grid; gap: 0.75rem; }
+    .accordion-item { overflow: hidden; border-radius: 1rem; border: 1px solid #e2e8f0; background: #fff; }
+    .accordion-trigger { display: flex; width: 100%; align-items: center; justify-content: space-between; gap: 1rem; padding: 1rem 1.1rem; background: transparent; font-weight: 700; color: #0f172a; }
+    .accordion-body { border-top: 1px solid #e2e8f0; padding: 1rem 1.1rem; color: #475569; line-height: 1.75; }
+    .accordion-icon { transition: transform .2s ease; }
+    .accordion-item--open .accordion-icon { transform: rotate(180deg); }
+    .link-media-blue { color: #2563eb; font-weight: 700; cursor: pointer; text-decoration: underline; }
+    .link-media-red { color: #dc2626; font-weight: 700; cursor: pointer; text-decoration: underline; }
+    @media (min-width: 1024px) {
+        .subject-layout { display: grid; gap: 1.5rem; grid-template-columns: minmax(0, 1fr) 20rem; align-items: start; }
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<section class="py-8 sm:py-10">
+<section class="py-8 sm:py-10 lg:py-12">
     <div class="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
         <div class="grid gap-6 lg:grid-cols-12 lg:items-start">
             <div class="lg:col-span-8">
-                <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm p-4">
-                    <h1 class="text-2xl font-bold text-slate-900">{{ video.title }}</h1>
-                    <p class="text-sm text-slate-500 mt-1">{{ module.title }} — {{ course.name }}</p>
+                <div class="player-card p-4 sm:p-6">
+                    <div class="mb-4">
+                        <h1 class="text-2xl font-bold text-slate-900 sm:text-3xl">{{ video.title }}</h1>
+                        <p class="mt-1 text-sm text-slate-500">{{ module.title }} — {{ course.name }}</p>
+                    </div>
 
-                    <div class="mt-4">
-                        {% if not has_access %}
-                        <div class="rounded-lg border border-rose-200 bg-rose-50 p-6 text-center text-rose-700">
-                            <p class="font-bold">এই কনটেন্টটি আনলক করা প্রয়োজন</p>
-                            <a href="{% url 'content:buy_module' course.slug %}"
-                                class="mt-3 inline-flex items-center gap-2 rounded-xl bg-yellow-400 px-4 py-2 font-bold text-slate-900">কিনুন
-                                / আনলক করুন</a>
-                        </div>
-                        {% else %}
+                    {% if not has_access %}
+                    <div class="rounded-2xl border border-rose-200 bg-rose-50 p-6 text-center text-rose-700">
+                        <p class="font-bold">এই কনটেন্টটি আনলক করা প্রয়োজন</p>
+                        <a href="{% url 'content:buy_module' course.slug %}" class="mt-3 inline-flex items-center gap-2 rounded-xl bg-yellow-400 px-4 py-2 font-bold text-slate-900">কিনুন / আনলক করুন</a>
+                    </div>
+                    {% else %}
                         {% if video.content_type == 'text' %}
                         <div class="subject-layout">
-                            <div class="subject-main">
+                            <div class="space-y-6">
                                 {% if interactive_contents %}
-                                <div class="content-toolbar-section">
-                                    <h2 class="toolbar-heading">
-                                        <i class="fa-solid fa-wand-magic-sparkles"></i>
-                                        Multimedia Content Examples
-                                    </h2>
-                                    <div class="toolbar-buttons">
+                                <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                                    <h2 class="text-lg font-bold text-slate-900"><i class="fa-solid fa-wand-magic-sparkles text-fuchsia-600"></i> Multimedia Content Examples</h2>
+                                    <div class="toolbar-buttons mt-4">
                                         {% for ic in interactive_contents %}
-                                        <button class="toolbar-btn toolbar-btn--{{ ic.content_type }}"
-                                            data-content-id="{{ ic.id }}" id="toolbar-btn-{{ ic.id }}"
-                                            title="{{ ic.title }}">
-                                            {% if ic.content_type == 'text' %}<i class="fa-solid fa-font"></i> <span>{{
-                                                ic.title|truncatechars:20 }}</span>
-                                            {% elif ic.content_type == 'image' %}<i class="fa-solid fa-image"></i>
-                                            <span>{{ ic.title|truncatechars:20 }}</span>
-                                            {% elif ic.content_type == 'audio' %}<i class="fa-solid fa-headphones"></i>
-                                            <span>{{ ic.title|truncatechars:20 }}</span>
-                                            {% elif ic.content_type == 'video' %}<i class="fa-solid fa-video"></i>
-                                            <span>{{ ic.title|truncatechars:20 }}</span>
-                                            {% elif ic.content_type == 'youtube' %}<i class="fa-brands fa-youtube"></i>
-                                            <span>{{ ic.title|truncatechars:20 }}</span>
+                                        <button class="toolbar-btn toolbar-btn--{{ ic.content_type }}" data-content-id="{{ ic.id }}" id="toolbar-btn-{{ ic.id }}" title="{{ ic.title }}">
+                                            {% if ic.content_type == 'text' %}<i class="fa-solid fa-font"></i> <span>{{ ic.title|truncatechars:20 }}</span>
+                                            {% elif ic.content_type == 'image' %}<i class="fa-solid fa-image"></i> <span>{{ ic.title|truncatechars:20 }}</span>
+                                            {% elif ic.content_type == 'audio' %}<i class="fa-solid fa-headphones"></i> <span>{{ ic.title|truncatechars:20 }}</span>
+                                            {% elif ic.content_type == 'video' %}<i class="fa-solid fa-video"></i> <span>{{ ic.title|truncatechars:20 }}</span>
+                                            {% elif ic.content_type == 'youtube' %}<i class="fa-brands fa-youtube"></i> <span>{{ ic.title|truncatechars:20 }}</span>
                                             {% endif %}
-                                            <i class="fa-solid fa-magnifying-glass toolbar-zoom"></i>
+                                            <i class="fa-solid fa-magnifying-glass text-slate-400"></i>
                                         </button>
                                         {% endfor %}
                                     </div>
                                 </div>
                                 {% endif %}
 
-                                <div class="content-article">
-                                    <h2 class="article-heading">
-                                        <i class="fa-solid fa-file-lines"></i>
-                                        {% if video.content_type == 'text' %}
-                                        {{ video.title }}
-                                        {% else %}
-                                        Module Notes and Lesson Overview
-                                        {% endif %}
-                                    </h2>
-                                    <div class="article-body" id="articleBody">
+                                <div class="rounded-2xl border border-slate-200 bg-white p-5">
+                                    <h2 class="text-xl font-bold text-slate-900"><i class="fa-solid fa-file-lines text-blue-600"></i> {% if video.content_type == 'text' %}{{ video.title }}{% else %}Module Notes and Lesson Overview{% endif %}</h2>
+                                    <div class="article-body mt-5" id="articleBody">
                                         {% if video.content_type == 'text' and video.text_content %}
                                         {{ video.text_content|render_stored_content }}
                                         {% else %}
@@ -71,55 +99,43 @@
                                         {% endif %}
                                     </div>
                                 </div>
-
-                                
                             </div>
 
                             {% if accordion_sections %}
-                            <aside class="subject-sidebar">
-                                <div class="sidebar-card">
-                                    <div class="sidebar-title">
-                                        <i class="fa-solid fa-list"></i> Expandable Content
-                                    </div>
-                                    <div class="accordion" id="subjectAccordion">
-                                        {% for section in accordion_sections %}
-                                        <div class="accordion-item {% if section.is_open_by_default %}accordion-item--open{% endif %}"
-                                            id="acc-{{ section.id }}">
-                                            <button class="accordion-trigger"
-                                                aria-expanded="{% if section.is_open_by_default %}true{% else %}false{% endif %}"
-                                                aria-controls="acc-body-{{ section.id }}">
-                                                <span>{{ section.title }}</span>
-                                                <i class="fa-solid fa-chevron-down accordion-icon"></i>
-                                            </button>
-                                            <div class="accordion-body" id="acc-body-{{ section.id }}" {% if not section.is_open_by_default %}hidden{% endif %}>
-                                                <div class="accordion-content">{{ section.content|render_stored_content }}</div>
-                                            </div>
+                            <aside class="rounded-2xl border border-slate-200 bg-white p-4">
+                                <div class="flex items-center gap-2 text-lg font-bold text-slate-900"><i class="fa-solid fa-list text-blue-600"></i> Expandable Content</div>
+                                <div class="accordion mt-4" id="subjectAccordion">
+                                    {% for section in accordion_sections %}
+                                    <div class="accordion-item {% if section.is_open_by_default %}accordion-item--open{% endif %}" id="acc-{{ section.id }}">
+                                        <button class="accordion-trigger" aria-expanded="{% if section.is_open_by_default %}true{% else %}false{% endif %}" aria-controls="acc-body-{{ section.id }}">
+                                            <span>{{ section.title }}</span>
+                                            <i class="fa-solid fa-chevron-down accordion-icon"></i>
+                                        </button>
+                                        <div class="accordion-body" id="acc-body-{{ section.id }}" {% if not section.is_open_by_default %}hidden{% endif %}>
+                                            <div class="accordion-content">{{ section.content|render_stored_content }}</div>
                                         </div>
-                                        {% endfor %}
                                     </div>
+                                    {% endfor %}
                                 </div>
                             </aside>
                             {% endif %}
                         </div>
                         {% else %}
-                        <div class="aspect-video w-full overflow-hidden rounded-lg bg-black">
+                        <div class="aspect-video w-full overflow-hidden rounded-[1.25rem] bg-black">
                             {% if embed.type == 'youtube' %}
-                            <div id="yt-player" class="w-full h-full"></div>
-                            <div id="yt-fallback" class="mt-2 text-center text-sm hidden">
-                                <a href="{{ video.youtube_url|default:video.video_url }}" target="_blank"
-                                    rel="noopener noreferrer" class="underline">Open on YouTube</a>
+                            <div id="yt-player" class="h-full w-full"></div>
+                            <div id="yt-fallback" class="hidden p-4 text-center text-sm text-white">
+                                <a href="{{ video.youtube_url|default:video.video_url }}" target="_blank" rel="noopener noreferrer" class="underline">Open on YouTube</a>
                             </div>
                             <script>
                                 (function () {
                                     var videoId = "{{ embed.video_id|default:'' }}";
                                     var playerEl = document.getElementById('yt-player');
                                     var fallbackEl = document.getElementById('yt-fallback');
-
                                     function showFallback() {
                                         if (playerEl) playerEl.style.display = 'none';
                                         if (fallbackEl) fallbackEl.classList.remove('hidden');
                                     }
-
                                     function createPlayer() {
                                         if (!videoId) { showFallback(); return; }
                                         try {
@@ -130,7 +146,6 @@
                                                 playerVars: { rel: 0, modestbranding: 1 },
                                                 events: {
                                                     'onError': function (e) {
-                                                        // 101/150 => embedding disabled by owner
                                                         if (e && (e.data === 101 || e.data === 150)) {
                                                             showFallback();
                                                         }
@@ -141,7 +156,6 @@
                                             showFallback();
                                         }
                                     }
-
                                     if (typeof YT === 'undefined' || typeof YT.Player === 'undefined') {
                                         var tag = document.createElement('script');
                                         tag.src = 'https://www.youtube.com/iframe_api';
@@ -152,14 +166,13 @@
                                 })();
                             </script>
                             {% elif embed.type == 'mp4' %}
-                            <video class="w-full h-full" controls>
+                            <video class="h-full w-full" controls>
                                 <source src="{{ embed.url }}" type="video/mp4">
                                 আপনার ব্রাউজার ভিডিও ট্যাগ সমর্থন করে না।
                             </video>
                             {% elif embed.type == 'image' %}
-                            <div class="w-full h-full flex items-center justify-center bg-black">
-                                <img src="{{ embed.url }}" alt="{{ video.title }}"
-                                    class="max-h-full max-w-full object-contain" />
+                            <div class="flex h-full w-full items-center justify-center bg-black">
+                                <img src="{{ embed.url }}" alt="{{ video.title }}" class="max-h-full max-w-full object-contain" />
                             </div>
                             {% else %}
                             <div class="flex h-64 items-center justify-center text-center text-slate-400">
@@ -168,26 +181,22 @@
                             {% endif %}
                         </div>
                         {% endif %}
-                        {% endif %}
-
-                        
-                    </div>
+                    {% endif %}
                 </div>
             </div>
 
             <aside class="lg:col-span-4">
                 <div class="sticky top-24 space-y-4">
-                    <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+                    <div class="player-card p-5">
                         <h3 class="text-lg font-bold text-slate-900">{{ module.title }}</h3>
                         <p class="mt-1 text-sm text-slate-600">{{ videos.count }} videos</p>
                     </div>
 
-                    <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+                    <div class="player-card p-4">
                         <ul class="space-y-2">
                             {% for v in videos %}
                             <li>
-                                <a href="{% url 'content:play_video' course.slug module.slug v.id %}"
-                                    class="flex items-center justify-between gap-3 rounded-lg px-3 py-2 hover:bg-slate-50 {% if v.id == video.id %}bg-slate-100{% endif %}">
+                                <a href="{% url 'content:play_video' course.slug module.slug v.id %}" class="flex items-center justify-between gap-3 rounded-xl px-3 py-3 transition hover:bg-slate-50 {% if v.id == video.id %}bg-slate-100{% endif %}">
                                     <div class="min-w-0">
                                         <p class="truncate text-sm font-medium text-slate-800">{{ forloop.counter }}. {{ v.title }}</p>
                                         <p class="mt-1 text-xs text-slate-500">{{ v.get_content_type_display }}</p>

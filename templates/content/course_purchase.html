@@ -3,125 +3,133 @@
 {% block title %}{{ course.name }} — Purchase{% endblock %}
 
 {% block content %}
-<section class="py-12">
-  <div class="mx-auto max-w-5xl px-4 sm:px-6">
-    <div class="grid gap-8 lg:grid-cols-2">
-      <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-        <h1 class="text-2xl font-bold text-slate-900">{{ course.name }}</h1>
-        <p class="mt-2 text-sm text-slate-600">{{ course.description|default:'No description provided.' }}</p>
+<section class="py-10 sm:py-12 lg:py-14">
+    <div class="mx-auto max-w-6xl px-4 sm:px-6">
+        <div class="grid gap-6 lg:grid-cols-[1.05fr_0.95fr]">
+            <div class="rounded-[1.75rem] border border-white/70 bg-white/88 p-6 shadow-sm backdrop-blur sm:p-8">
+                <span class="eyebrow"><i class="fa-solid fa-bag-shopping"></i> PREMIUM CHECKOUT</span>
+                <h1 class="mt-5 text-3xl font-bold text-slate-900 sm:text-4xl">{{ course.name }}</h1>
+                <p class="mt-3 text-sm leading-7 text-slate-600 sm:text-base">{{ course.description|default:'No description provided.' }}</p>
 
-          <dl class="mt-6 grid grid-cols-2 gap-3 text-sm text-slate-600">
-          <div>
-            <dt class="font-semibold text-slate-800">Price</dt>
-            <dd class="mt-1 text-lg font-bold text-slate-900">৳{{ course.price }}</dd>
-          </div>
-        </dl>
-
-        <div class="mt-6">
-          <h3 class="text-sm font-semibold text-slate-800">Course plan</h3>
-          <div class="mt-2 text-sm text-slate-600">{{ course.long_description|default:course.description|default:'Course plan will be added soon.' }}</div>
-        </div>
-      </div>
-
-      <aside class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-        <h2 class="text-lg font-bold text-slate-900">Ready to buy</h2>
-        <p class="mt-1 text-sm text-slate-600">Select payment method and proceed. This page simulates a modern checkout flow.</p>
-
-        <div class="mt-4">
-          <form method="post" action="{% url 'content:buy_module' course.slug %}">
-            {% csrf_token %}
-            <input type="hidden" name="next" value="{{ request.GET.next|default:'' }}">
-            <input type="hidden" name="payment_method" id="payment_method" value="">
-
-            <div class="grid gap-3">
-              <button type="button" data-method="bkash" class="payment-method flex items-center gap-3 rounded-lg border pl-2 text-sm hover:bg-slate-50">
-                <img src="/static/images/payments/bkash.svg" alt="bKash" class="h-12 w-12"> <span>বিকাশ (bKash)</span>
-              </button>
-
-              <button type="button" data-method="nagad" class="payment-method flex items-center gap-3 rounded-lg border pl-2 text-sm hover:bg-slate-50">
-                <img src="/static/images/payments/nagad.svg" alt="Nagad" class="h-12 w-12"> <span>Nagad</span>
-              </button>
-
-              <button type="button" data-method="rocket" class="payment-method flex items-center gap-3 rounded-lg border pl-2 text-sm hover:bg-slate-50">
-                <img src="/static/images/payments/rocket.svg" alt="Rocket" class="h-12 w-12"> <span>Rocket</span>
-              </button>
-
-              <button type="button" data-method="bank" class="payment-method flex items-center gap-3 rounded-lg border pl-2 text-sm hover:bg-slate-50">
-                <img src="/static/images/payments/bank.svg" alt="Bank" class="h-12 w-12"> <span>Bank Transfer</span>
-              </button>
-
-            </div>
-
-           
-
-            <!-- <div class="mt-6">
-              <button id="payBtn" type="submit" class="w-full rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 px-4 py-2.5 text-white font-semibold">Pay ৳{{ course.price }}</button>
-            </div> -->
-          </form>
-        </div>
-      </aside>
-    </div>
-  </div>
-
-  <div class="mt-5 mx-auto max-w-5xl px-4 sm:px-6">
-    <div class="grid gap-8 lg:grid-cols-2">
-      <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-        <h1 class="text-2xl font-bold text-slate-900">Payment Instructions</h1>
-        <p class="mt-2 text-sm text-slate-600">আপনি যে পেমেন্ট মেথডটি নির্বাচন করেছেন তার জন্য নিচের নির্দেশাবলী অনুসরণ করুন।</p>
-
-         <div class="mt-4">
-          {# store each DB instruction in a hidden container that JS can read #}
-          <div id="payment_instruction_data" class="hidden">
-            {% for instruction in payment_instructions %}
-              <div class="instruction-data" data-method="{{ instruction.payment_method_name }}">
-                <div class="mb-4 rounded-lg border border-slate-200 p-4">
-                  <h3 class="text-sm font-semibold text-slate-800">{{ instruction.get_payment_method_name_display }}</h3>
-                  <p class="mt-1 text-sm text-slate-600">{{ instruction.details|safe }}</p>
-                  {% if instruction.image %}
-                    <img src="{{ instruction.image.url }}" alt="{{ instruction.get_payment_method_name_display }} instructions" class="mt-2 max-h-48 object-contain">
-                  {% endif %}
+                <div class="mt-6 grid gap-4 sm:grid-cols-3">
+                    <div class="rounded-2xl bg-slate-50 p-4">
+                        <p class="text-xs font-bold uppercase tracking-wide text-slate-500">Price</p>
+                        <p class="mt-2 text-2xl font-extrabold text-slate-900">৳{{ course.price }}</p>
+                    </div>
+                    <div class="rounded-2xl bg-slate-50 p-4">
+                        <p class="text-xs font-bold uppercase tracking-wide text-slate-500">Access</p>
+                        <p class="mt-2 text-sm font-semibold text-slate-800">Guided and self-paced</p>
+                    </div>
+                    <div class="rounded-2xl bg-slate-50 p-4">
+                        <p class="text-xs font-bold uppercase tracking-wide text-slate-500">Delivery</p>
+                        <p class="mt-2 text-sm font-semibold text-slate-800">Mobile and desktop</p>
+                    </div>
                 </div>
-              </div>
-            {% endfor %}
-          </div>
 
-          <div id="payment_instructions" class="mt-4 text-sm text-slate-600"></div>
-
-        </div>
-      </div>
-
-      <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-        <h3 class="text-sm font-semibold text-slate-800">Submit payment transaction</h3>
-        <p class="mt-1 text-sm text-slate-600">পেমেন্ট করার পর নিচে ট্রানজেকশন আইডি ও (ঐচ্ছিক) নোট দিয়ে সাবমিট করুন — অ্যাডমিনকে ইমেইল পাঠানো হবে।</p>
-
-        <div class="mt-3">
-          <form method="post" action="{% url 'content:submit_payment_details' course.slug %}">
-            {% csrf_token %}
-            <input type="hidden" name="payment_method" id="tx_payment_method" value="">
-
-            <div class="grid gap-4">
-              <label class="text-sm text-slate-700">Payment method</label>
-              <select name="payment_method_display" id="payment_method_select" class="rounded-lg border border-slate-200 px-3 py-2 text-sm w-full">
-                <option value="">Select payment method (or pick above)</option>
-                <option value="bkash">বিকাশ (bKash)</option>
-                <option value="nagad">Nagad</option>
-                <option value="rocket">Rocket</option>
-                <option value="bank">Bank Transfer</option>
-              </select>
-
-              <label class="text-sm text-slate-700">Transaction ID <span class="text-rose-600">*</span></label>
-              <input name="transaction_id" required class="rounded-lg border border-slate-200 px-3 py-2 text-sm w-full" placeholder="Txn / Ref ID">
-
-              <label class="mt-2 text-sm text-slate-700">Note (optional)</label>
-              <textarea name="note" rows="4" class="rounded-lg border border-slate-200 px-3 py-2 text-sm w-full" placeholder="Any note for admin (optional)"></textarea>
-
-              <button type="submit" class="mt-2 w-full rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 px-4 py-2.5 text-white font-semibold">Submit transaction details</button>
+                <div class="mt-6 rounded-[1.5rem] border border-slate-200 bg-[linear-gradient(180deg,#ffffff_0%,#f8fafc_100%)] p-5">
+                    <h2 class="text-lg font-bold text-slate-900">Course plan</h2>
+                    <div class="mt-3 text-sm leading-7 text-slate-600">{{ course.long_description|default:course.description|default:'Course plan will be added soon.' }}</div>
+                </div>
             </div>
-          </form>
+
+            <aside class="rounded-[1.75rem] border border-slate-200 bg-white/92 p-6 shadow-sm sm:p-8">
+                <h2 class="text-2xl font-bold text-slate-900">Choose Payment Method</h2>
+                <p class="mt-2 text-sm text-slate-600">Select your preferred payment option below. All behavior stays the same, only the experience is cleaner and easier to follow.</p>
+
+                <div class="mt-6">
+                    <form method="post" action="{% url 'content:buy_module' course.slug %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="next" value="{{ request.GET.next|default:'' }}">
+                        <input type="hidden" name="payment_method" id="payment_method" value="">
+
+                        <div class="grid gap-3">
+                            <button type="button" data-method="bkash" class="payment-method flex items-center gap-4 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-left text-sm shadow-sm transition hover:border-emerald-300 hover:bg-emerald-50/40">
+                                <img src="/static/images/payments/bkash.svg" alt="bKash" class="h-12 w-12 rounded-xl bg-white object-contain">
+                                <span class="font-semibold text-slate-800">বিকাশ (bKash)</span>
+                            </button>
+
+                            <button type="button" data-method="nagad" class="payment-method flex items-center gap-4 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-left text-sm shadow-sm transition hover:border-emerald-300 hover:bg-emerald-50/40">
+                                <img src="/static/images/payments/nagad.svg" alt="Nagad" class="h-12 w-12 rounded-xl bg-white object-contain">
+                                <span class="font-semibold text-slate-800">Nagad</span>
+                            </button>
+
+                            <button type="button" data-method="rocket" class="payment-method flex items-center gap-4 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-left text-sm shadow-sm transition hover:border-emerald-300 hover:bg-emerald-50/40">
+                                <img src="/static/images/payments/rocket.svg" alt="Rocket" class="h-12 w-12 rounded-xl bg-white object-contain">
+                                <span class="font-semibold text-slate-800">Rocket</span>
+                            </button>
+
+                            <button type="button" data-method="bank" class="payment-method flex items-center gap-4 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-left text-sm shadow-sm transition hover:border-emerald-300 hover:bg-emerald-50/40">
+                                <img src="/static/images/payments/bank.svg" alt="Bank" class="h-12 w-12 rounded-xl bg-white object-contain">
+                                <span class="font-semibold text-slate-800">Bank Transfer</span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </aside>
         </div>
-      </div>
+
+        <div class="mt-6 grid gap-6 lg:grid-cols-2">
+            <div class="rounded-[1.75rem] border border-slate-200 bg-white/92 p-6 shadow-sm sm:p-8">
+                <h2 class="text-2xl font-bold text-slate-900">Payment Instructions</h2>
+                <p class="mt-2 text-sm text-slate-600">আপনি যে পেমেন্ট মেথডটি নির্বাচন করেছেন তার নির্দেশাবলী নিচে দেখা যাবে।</p>
+
+                <div class="mt-5">
+                    <div id="payment_instruction_data" class="hidden">
+                        {% for instruction in payment_instructions %}
+                        <div class="instruction-data" data-method="{{ instruction.payment_method_name }}">
+                            <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                                <h3 class="text-sm font-semibold text-slate-800">{{ instruction.get_payment_method_name_display }}</h3>
+                                <p class="mt-2 text-sm leading-6 text-slate-600">{{ instruction.details|safe }}</p>
+                                {% if instruction.image %}
+                                <img src="{{ instruction.image.url }}" alt="{{ instruction.get_payment_method_name_display }} instructions" class="mt-3 max-h-56 rounded-2xl object-contain">
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    <div id="payment_instructions" class="rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-5 text-sm text-slate-600">Select a payment method to view the payment instructions.</div>
+                </div>
+            </div>
+
+            <div class="rounded-[1.75rem] border border-slate-200 bg-white/92 p-6 shadow-sm sm:p-8">
+                <h2 class="text-2xl font-bold text-slate-900">Submit Transaction</h2>
+                <p class="mt-2 text-sm text-slate-600">পেমেন্ট করার পর ট্রানজেকশন আইডি এবং প্রয়োজনে একটি নোট সাবমিট করুন।</p>
+
+                <form method="post" action="{% url 'content:submit_payment_details' course.slug %}" class="mt-6">
+                    {% csrf_token %}
+                    <input type="hidden" name="payment_method" id="tx_payment_method" value="">
+
+                    <div class="grid gap-4">
+                        <div>
+                            <label for="payment_method_select" class="mb-1.5 block text-sm font-semibold text-slate-700">Payment method</label>
+                            <select name="payment_method_display" id="payment_method_select" class="field-input w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900">
+                                <option value="">Select payment method (or pick above)</option>
+                                <option value="bkash">বিকাশ (bKash)</option>
+                                <option value="nagad">Nagad</option>
+                                <option value="rocket">Rocket</option>
+                                <option value="bank">Bank Transfer</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="mb-1.5 block text-sm font-semibold text-slate-700">Transaction ID <span class="text-rose-600">*</span></label>
+                            <input name="transaction_id" required class="field-input w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900" placeholder="Txn / Ref ID">
+                        </div>
+
+                        <div>
+                            <label class="mb-1.5 block text-sm font-semibold text-slate-700">Note (optional)</label>
+                            <textarea name="note" rows="4" class="field-input w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900" placeholder="Any note for admin (optional)"></textarea>
+                        </div>
+
+                        <button type="submit" class="mt-2 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 px-4 py-3 font-semibold text-white transition hover:from-emerald-700 hover:to-teal-700">
+                            <i class="fa-solid fa-paper-plane"></i> Submit transaction details
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
     </div>
-  </div>
 </section>
 {% endblock %}
 
@@ -155,12 +163,11 @@
         if (html) {
           instr.innerHTML = html;
         } else {
-          instr.innerHTML = '<div class="rounded-lg border border-slate-200 p-4">No payment instructions available for this method.</div>';
+          instr.innerHTML = '<div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">No payment instructions available for this method.</div>';
         }
       });
     });
 
-    // when user changes select, keep hidden inputs in sync
     if (select) {
       select.addEventListener('change', function(){
         const v = select.value || '';
@@ -170,7 +177,7 @@
         if (html) {
           instr.innerHTML = html;
         } else {
-          instr.innerHTML = '<div class="rounded-lg border border-slate-200 p-4">No payment instructions available for this method.</div>';
+          instr.innerHTML = '<div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">No payment instructions available for this method.</div>';
         }
       });
     }

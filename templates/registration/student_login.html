@@ -12,20 +12,6 @@
         animation-delay: 1.8s;
     }
 
-    .auth-card {
-        box-shadow: 0 20px 55px rgba(37, 99, 235, 0.12);
-    }
-
-    .form-input {
-        transition: border-color .2s ease, box-shadow .2s ease, background-color .2s ease;
-    }
-
-    .form-input:focus {
-        border-color: #2563eb;
-        box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.14);
-        background-color: #ffffff;
-    }
-
     @keyframes floatY {
         0%, 100% { transform: translateY(0); }
         50% { transform: translateY(-11px); }
@@ -34,17 +20,14 @@
 {% endblock %}
 
 {% block content %}
-<section class="relative overflow-hidden pb-12 pt-14 sm:pb-16 lg:pt-20">
+<section class="auth-shell">
     <div class="absolute inset-0 -z-20 bg-[radial-gradient(860px_350px_at_12%_-10%,rgba(59,130,246,0.26),transparent),radial-gradient(780px_320px_at_92%_-14%,rgba(6,182,212,0.2),transparent),linear-gradient(180deg,#eff6ff_0%,#f8fafc_55%,#eef2ff_100%)]"></div>
     <div class="auth-orb absolute -left-10 top-20 -z-10 h-28 w-28 rounded-full bg-gradient-to-br from-blue-400/40 to-cyan-400/25 blur-2xl"></div>
     <div class="auth-orb auth-orb--delay absolute right-0 top-20 -z-10 h-36 w-36 rounded-full bg-gradient-to-br from-indigo-400/35 to-sky-400/25 blur-3xl sm:right-8"></div>
 
     <div class="mx-auto grid w-full max-w-6xl gap-8 px-4 sm:px-6 lg:grid-cols-2 lg:items-center">
         <div>
-            <span class="inline-flex items-center gap-2 rounded-full border border-blue-200 bg-white/80 px-4 py-1.5 text-xs font-bold tracking-wide text-blue-700 backdrop-blur sm:text-sm">
-                <i class="fa-solid fa-user-graduate"></i>
-                STUDENT ACCESS
-            </span>
+            <span class="eyebrow"><i class="fa-solid fa-user-graduate"></i> STUDENT ACCESS</span>
             <h1 class="mt-5 font-display text-4xl font-bold tracking-tight text-slate-900 sm:text-5xl">Continue Your <span class="bg-gradient-to-r from-blue-600 via-cyan-600 to-indigo-600 bg-clip-text text-transparent">Learning Journey</span></h1>
             <p class="mt-4 text-base leading-7 text-slate-600">আপনার courses, lessons, progress tracking - সবকিছু এক জায়গায় access করতে student account দিয়ে sign in করুন।</p>
             <div class="mt-6 flex flex-wrap gap-2 text-xs font-semibold sm:text-sm">
@@ -54,14 +37,12 @@
             </div>
         </div>
 
-        <div class="auth-card rounded-3xl border border-white/70 bg-white/85 p-6 backdrop-blur sm:p-8">
+        <div class="auth-panel p-6 sm:p-8">
             <h2 class="text-2xl font-bold text-slate-900">Student Login</h2>
             <p class="mt-1 text-sm text-slate-600">ইমেইল আর পাসওয়ার্ড দিয়ে লগইন করুন।</p>
 
             {% if form.non_field_errors %}
-            <div class="mt-4 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
-                {{ form.non_field_errors }}
-            </div>
+            <div class="mt-4 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{{ form.non_field_errors }}</div>
             {% endif %}
 
             <form method="post" class="mt-5 space-y-4">
@@ -72,28 +53,23 @@
 
                 <div>
                     <label for="id_email" class="mb-1.5 block text-sm font-semibold text-slate-700">Email</label>
-                    <input id="id_email" type="email" name="email" value="{{ form.email.value|default:'' }}" required class="form-input w-full rounded-xl border border-slate-300 bg-slate-50 px-3 py-2.5 text-slate-900 outline-none">
-                    {% if form.email.errors %}
-                    <p class="mt-1 text-sm text-rose-600">{{ form.email.errors|striptags }}</p>
-                    {% endif %}
+                    <input id="id_email" type="email" name="email" value="{{ form.email.value|default:'' }}" required class="field-input w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-slate-900">
+                    {% if form.email.errors %}<p class="mt-1 text-sm text-rose-600">{{ form.email.errors|striptags }}</p>{% endif %}
                 </div>
 
                 <div>
                     <label for="id_password" class="mb-1.5 block text-sm font-semibold text-slate-700">Password</label>
                     <div class="relative">
-                        <input id="id_password" type="password" name="password" required class="form-input w-full rounded-xl border border-slate-300 bg-slate-50 px-3 py-2.5 pr-11 text-slate-900 outline-none">
-                        <button type="button" data-toggle-password="id_password" class="absolute inset-y-0 right-2 my-auto inline-flex h-8 w-8 items-center justify-center rounded-lg text-slate-500 transition hover:bg-slate-100 hover:text-slate-700" aria-label="Show password">
+                        <input id="id_password" type="password" name="password" required class="field-input w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 pr-12 text-slate-900">
+                        <button type="button" data-toggle-password="id_password" class="absolute inset-y-0 right-2 my-auto inline-flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 transition hover:bg-slate-100 hover:text-slate-700" aria-label="Show password">
                             <i class="fa-regular fa-eye"></i>
                         </button>
                     </div>
-                    {% if form.password.errors %}
-                    <p class="mt-1 text-sm text-rose-600">{{ form.password.errors|striptags }}</p>
-                    {% endif %}
+                    {% if form.password.errors %}<p class="mt-1 text-sm text-rose-600">{{ form.password.errors|striptags }}</p>{% endif %}
                 </div>
 
-                <button type="submit" class="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-600 px-5 py-2.5 font-semibold text-white shadow-lg shadow-blue-500/25 transition hover:from-blue-700 hover:to-cyan-700">
-                    <i class="fa-solid fa-right-to-bracket"></i>
-                    Login as Student
+                <button type="submit" class="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-600 px-5 py-3 font-semibold text-white shadow-lg shadow-blue-500/25 transition hover:from-blue-700 hover:to-cyan-700">
+                    <i class="fa-solid fa-right-to-bracket"></i> Login as Student
                 </button>
             </form>
 

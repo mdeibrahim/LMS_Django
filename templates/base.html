@@ -18,6 +18,9 @@
                     fontFamily: {
                         sans: ['Plus Jakarta Sans', 'sans-serif'],
                         display: ['Space Grotesk', 'sans-serif']
+                    },
+                    boxShadow: {
+                        glow: '0 20px 60px rgba(15, 23, 42, 0.10)'
                     }
                 }
             }
@@ -31,34 +34,103 @@
             --text-primary: #0f172a;
             --text-secondary: #475569;
             --text-light: #64748b;
+            --surface: rgba(255, 255, 255, 0.82);
+            --surface-strong: #ffffff;
             --radius-lg: 0.75rem;
+        }
+
+        body {
+            background:
+                radial-gradient(900px 360px at 8% -8%, rgba(244, 114, 182, 0.12), transparent),
+                radial-gradient(900px 360px at 94% -12%, rgba(14, 165, 233, 0.13), transparent),
+                linear-gradient(180deg, #fffdf9 0%, #f8fafc 36%, #eff6ff 100%);
         }
 
         .btn {
             display: inline-flex;
             align-items: center;
+            justify-content: center;
             gap: 0.5rem;
-            border-radius: 0.75rem;
+            border-radius: 0.95rem;
             border: 1px solid #cbd5e1;
-            background: #ffffff;
+            background: rgba(255, 255, 255, 0.9);
             color: #334155;
-            padding: 0.6rem 1rem;
-            font-weight: 600;
-            transition: 0.2s ease;
+            padding: 0.72rem 1.05rem;
+            font-weight: 700;
+            transition: 0.22s ease;
+            box-shadow: 0 8px 20px rgba(15, 23, 42, 0.04);
         }
 
         .btn:hover {
-            background: #f8fafc;
+            background: #fff;
+            transform: translateY(-1px);
         }
 
         .btn-primary {
             border-color: #0f172a;
-            background: #0f172a;
+            background: linear-gradient(135deg, #0f172a, #1e3a8a);
             color: #ffffff;
+            box-shadow: 0 14px 32px rgba(15, 23, 42, 0.18);
         }
 
         .btn-primary:hover {
-            background: #1e293b;
+            background: linear-gradient(135deg, #111827, #1d4ed8);
+        }
+
+        .glass-card {
+            border: 1px solid rgba(255, 255, 255, 0.75);
+            background: rgba(255, 255, 255, 0.78);
+            box-shadow: 0 20px 50px rgba(15, 23, 42, 0.08);
+            backdrop-filter: blur(16px);
+        }
+
+        .section-shell {
+            border: 1px solid rgba(226, 232, 240, 0.92);
+            background: rgba(255, 255, 255, 0.92);
+            box-shadow: 0 18px 42px rgba(15, 23, 42, 0.06);
+        }
+
+        .eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.55rem;
+            border-radius: 9999px;
+            border: 1px solid rgba(191, 219, 254, 0.95);
+            background: rgba(255, 255, 255, 0.88);
+            padding: 0.45rem 0.9rem;
+            font-size: 0.75rem;
+            font-weight: 800;
+            letter-spacing: 0.12em;
+            color: #1d4ed8;
+        }
+
+        .field-input,
+        input[type="text"],
+        input[type="email"],
+        input[type="password"],
+        input[type="tel"],
+        input[type="url"],
+        input[type="search"],
+        input[type="number"],
+        select,
+        textarea {
+            transition: border-color .2s ease, box-shadow .2s ease, background-color .2s ease;
+        }
+
+        .field-input:focus,
+        input[type="text"]:focus,
+        input[type="email"]:focus,
+        input[type="password"]:focus,
+        input[type="tel"]:focus,
+        input[type="url"]:focus,
+        input[type="search"]:focus,
+        input[type="number"]:focus,
+        select:focus,
+        textarea:focus {
+            outline: none;
+            border-color: #2563eb !important;
+            box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
+            background-color: #ffffff;
         }
 
         .prose p {
@@ -86,9 +158,9 @@
             display: inline-flex;
             align-items: center;
             gap: 0.45rem;
-            border-radius: 0.8rem;
-            padding: 0.5rem 0.8rem;
-            font-weight: 600;
+            border-radius: 0.9rem;
+            padding: 0.6rem 0.9rem;
+            font-weight: 700;
             color: #475569;
             transition: all .2s ease;
         }
@@ -114,8 +186,8 @@
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            height: 2.2rem;
-            width: 2.2rem;
+            height: 2.4rem;
+            width: 2.4rem;
             border-radius: 9999px;
             background: linear-gradient(135deg, #0ea5e9, #2563eb);
             color: #ffffff;
@@ -125,183 +197,221 @@
         }
 
         .profile-menu {
-            min-width: 16rem;
+            min-width: 17rem;
             border: 1px solid #e2e8f0;
-            border-radius: 0.95rem;
-            background: #ffffff;
+            border-radius: 1rem;
+            background: rgba(255, 255, 255, 0.96);
             box-shadow: 0 18px 45px rgba(15, 23, 42, 0.14);
+            backdrop-filter: blur(16px);
             z-index: 90;
+        }
+
+        .auth-shell {
+            position: relative;
+            overflow: hidden;
+            padding-top: 3.5rem;
+            padding-bottom: 4rem;
+        }
+
+        .auth-panel {
+            border-radius: 1.75rem;
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            background: rgba(255, 255, 255, 0.84);
+            box-shadow: 0 24px 60px rgba(15, 23, 42, 0.10);
+            backdrop-filter: blur(18px);
+        }
+
+        @media (max-width: 640px) {
+            .auth-shell {
+                padding-top: 2.5rem;
+                padding-bottom: 3rem;
+            }
         }
     </style>
     {% block extra_css %}{% endblock %}
 </head>
-<body class="bg-slate-50 text-slate-800 antialiased">
-    <!-- Header / Navbar -->
+<body class="min-h-screen text-slate-800 antialiased">
     {% url 'content:home' as home_url %}
     {% url 'content:my_courses' as my_modules_url %}
     {% url 'content:login' as login_url %}
     {% url 'content:signup' as signup_url %}
     {% url 'content:profile' as profile_url %}
-    <header id="mainHeader" class="nav-shell sticky top-0 z-40 border-b border-slate-200/80 bg-white/90 backdrop-blur-xl">
-        <div class="relative mx-auto w-full max-w-7xl px-4 py-3 sm:px-6 lg:px-8">
-            <div class="flex items-center justify-between gap-3">
-                <a href="{% url 'content:home' %}" class="inline-flex items-center gap-2.5 rounded-xl px-1 py-1 text-lg font-bold tracking-tight text-slate-900 transition hover:scale-[1.01]">
-                    <span class="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-rose-500 via-orange-500 to-cyan-600 text-white shadow-lg shadow-rose-500/25">
-                        <i class="fa-solid fa-graduation-cap text-sm"></i>
-                    </span>
-                    <span class="font-display">TeachPlatform</span>
-                </a>
+    <div class="relative flex min-h-screen flex-col">
+        <header id="mainHeader" class="nav-shell sticky top-0 z-40 border-b border-slate-200/80 bg-white/80 backdrop-blur-xl">
+            <div class="relative mx-auto w-full max-w-7xl px-4 py-3 sm:px-6 lg:px-8">
+                <div class="flex items-center justify-between gap-3">
+                    <a href="{% url 'content:home' %}" class="inline-flex items-center gap-3 rounded-2xl px-1 py-1 text-lg font-bold tracking-tight text-slate-900 transition hover:scale-[1.01]">
+                        <span class="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-rose-500 via-orange-500 to-cyan-600 text-white shadow-lg shadow-rose-500/25">
+                            <i class="fa-solid fa-graduation-cap text-sm"></i>
+                        </span>
+                        <span class="font-display">TeachPlatform</span>
+                    </a>
 
-                <button id="mobileMenuBtn" type="button" class="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-300 bg-white text-slate-700 transition hover:bg-slate-100 md:hidden" aria-label="Toggle menu" aria-expanded="false" aria-controls="mobileMenu">
-                    <i class="fa-solid fa-bars text-sm"></i>
-                </button>
+                    <button id="mobileMenuBtn" type="button" class="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-300 bg-white/90 text-slate-700 transition hover:bg-slate-100 md:hidden" aria-label="Toggle menu" aria-expanded="false" aria-controls="mobileMenu">
+                        <i class="fa-solid fa-bars text-sm"></i>
+                    </button>
 
-                <nav class="hidden items-center gap-1 text-sm md:flex lg:text-[15px]">
-                    <a href="{{ home_url }}" class="nav-link {% if request.path == home_url %}nav-link-active{% endif %}">
-                        <i class="fa-solid fa-house"></i> Home
-                    </a>
-                    {% if user.is_authenticated %}
-                    <a href="{% url 'content:student_dashboard' %}" class="nav-link {% if '/dashboard/' in request.path %}nav-link-active{% endif %}">
-                        <i class="fa-solid fa-gauge-high"></i> Dashboard
-                    </a>
-                    <a href="{{ my_modules_url }}" class="nav-link {% if request.path == my_modules_url %}nav-link-active{% endif %}">
-                        <i class="fa-solid fa-book"></i> My Courses
-                    </a>
-                    {% with profile=user.profile %}
-                    {% with role_label=profile.role|default:'student' %}
-                    {% with display_name=profile.full_name|default:user.username %}
-                    <div class="relative ml-2">
-                        <button id="profileMenuBtn" type="button" class="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white/90 p-1 pr-2.5 transition hover:border-slate-300 hover:bg-white" aria-expanded="false" aria-controls="profileMenuPanel">
-                            {% if profile.profile_picture %}
-                            <img src="{{ profile.profile_picture.url }}" alt="Profile picture" class="profile-avatar object-cover">
-                            {% else %}
-                            <span class="profile-avatar">{{ display_name|slice:":1"|upper }}</span>
-                            {% endif %}
-                            <span class="hidden text-xs font-semibold text-slate-700 lg:inline">{{ user.username }}</span>
-                            <i class="fa-solid fa-chevron-down text-[10px] text-slate-400"></i>
-                        </button>
-                        <div id="profileMenuPanel" class="profile-menu absolute right-0 top-full z-50 mt-2 hidden p-3">
-                            <div class="rounded-xl bg-slate-50 px-3 py-2.5">
-                                <p class="text-sm font-bold text-slate-900">{{ display_name }}</p>
-                                <p class="text-xs text-slate-600">{{ user.email|default:"No email" }}</p>
-                                <p class="mt-1 inline-flex rounded-full bg-cyan-100 px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide text-cyan-700">{{ role_label|title }}</p>
+                    <nav class="hidden items-center gap-1 text-sm md:flex lg:text-[15px]">
+                        <a href="{{ home_url }}" class="nav-link {% if request.path == home_url %}nav-link-active{% endif %}">
+                            <i class="fa-solid fa-house"></i> Home
+                        </a>
+                        {% if user.is_authenticated %}
+                        <a href="{% url 'content:student_dashboard' %}" class="nav-link {% if '/dashboard/' in request.path %}nav-link-active{% endif %}">
+                            <i class="fa-solid fa-gauge-high"></i> Dashboard
+                        </a>
+                        <a href="{{ my_modules_url }}" class="nav-link {% if request.path == my_modules_url %}nav-link-active{% endif %}">
+                            <i class="fa-solid fa-book"></i> My Courses
+                        </a>
+                        {% with profile=user.profile %}
+                        {% with role_label=profile.role|default:'student' %}
+                        {% with display_name=profile.full_name|default:user.username %}
+                        <div class="relative ml-2">
+                            <button id="profileMenuBtn" type="button" class="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white/90 p-1 pr-2.5 transition hover:border-slate-300 hover:bg-white" aria-expanded="false" aria-controls="profileMenuPanel">
+                                {% if profile.profile_picture %}
+                                <img src="{{ profile.profile_picture.url }}" alt="Profile picture" class="profile-avatar object-cover">
+                                {% else %}
+                                <span class="profile-avatar">{{ display_name|slice:":1"|upper }}</span>
+                                {% endif %}
+                                <span class="hidden text-xs font-semibold text-slate-700 lg:inline">{{ user.username }}</span>
+                                <i class="fa-solid fa-chevron-down text-[10px] text-slate-400"></i>
+                            </button>
+                            <div id="profileMenuPanel" class="profile-menu absolute right-0 top-full z-50 mt-2 hidden p-3">
+                                <div class="rounded-2xl bg-slate-50 px-3 py-3">
+                                    <p class="text-sm font-bold text-slate-900">{{ display_name }}</p>
+                                    <p class="text-xs text-slate-600">{{ user.email|default:"No email" }}</p>
+                                    <p class="mt-1 inline-flex rounded-full bg-cyan-100 px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide text-cyan-700">{{ role_label|title }}</p>
+                                </div>
+                                <a href="{{ profile_url }}" class="mt-3 inline-flex w-full items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-100">
+                                    <i class="fa-solid fa-user"></i> Profile
+                                </a>
+                                <form method="post" action="{% url 'content:logout' %}" class="mt-2">
+                                    {% csrf_token %}
+                                    <button type="submit" class="inline-flex w-full items-center gap-2 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2.5 text-sm font-semibold text-rose-700 transition hover:bg-rose-100">
+                                        <i class="fa-solid fa-right-from-bracket"></i> Logout
+                                    </button>
+                                </form>
                             </div>
-                            <a href="{{ profile_url }}" class="mt-3 inline-flex w-full items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100">
-                                <i class="fa-solid fa-user"></i> Profile
-                            </a>
-                            <form method="post" action="{% url 'content:logout' %}" class="mt-2">
-                                {% csrf_token %}
-                                <button type="submit" class="inline-flex w-full items-center gap-2 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-700 transition hover:bg-rose-100">
-                                    <i class="fa-solid fa-right-from-bracket"></i> Logout
-                                </button>
-                            </form>
                         </div>
-                    </div>
-                    {% endwith %}
-                    {% endwith %}
-                    {% endwith %}
-                    {% else %}
-                    <a href="{{ login_url }}" class="nav-link {% if '/accounts/login' in request.path %}nav-link-active{% endif %}">
-                        <i class="fa-solid fa-right-to-bracket"></i> Login
-                    </a>
-                    <a href="{{ signup_url }}" class="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-rose-500 to-orange-500 px-3.5 py-2 font-semibold text-white shadow-lg shadow-rose-500/25 transition hover:from-rose-600 hover:to-orange-600">
-                        <i class="fa-solid fa-user-plus"></i> Signup
-                    </a>
-                    {% endif %}
-                </nav>
-            </div>
+                        {% endwith %}
+                        {% endwith %}
+                        {% endwith %}
+                        {% else %}
+                        <a href="{{ login_url }}" class="nav-link {% if '/accounts/login' in request.path %}nav-link-active{% endif %}">
+                            <i class="fa-solid fa-right-to-bracket"></i> Login
+                        </a>
+                        <a href="{{ signup_url }}" class="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-rose-500 to-orange-500 px-4 py-2 font-semibold text-white shadow-lg shadow-rose-500/25 transition hover:from-rose-600 hover:to-orange-600">
+                            <i class="fa-solid fa-user-plus"></i> Signup
+                        </a>
+                        {% endif %}
+                    </nav>
+                </div>
 
-            <div id="mobileMenu" class="mt-3 hidden rounded-2xl border border-slate-200 bg-white/95 p-3 shadow-xl shadow-slate-900/5 md:hidden">
-                <div class="space-y-1">
-                    <a href="{{ home_url }}" class="nav-link w-full {% if request.path == home_url %}nav-link-active{% endif %}">
-                        <i class="fa-solid fa-house"></i> Home
-                    </a>
-                    {% if user.is_authenticated %}
-                    <a href="{% url 'content:student_dashboard' %}" class="nav-link w-full {% if '/dashboard/' in request.path %}nav-link-active{% endif %}">
-                        <i class="fa-solid fa-gauge-high"></i> Dashboard
-                    </a>
-                    <a href="{{ my_modules_url }}" class="nav-link w-full {% if request.path == my_modules_url %}nav-link-active{% endif %}">
-                        <i class="fa-solid fa-book"></i> My Courses
-                    </a>
-                    {% with profile=user.profile %}
-                    {% with role_label=profile.role|default:'student' %}
-                    {% with display_name=profile.full_name|default:user.username %}
-                    <div class="rounded-xl bg-slate-100 px-3 py-2 text-xs text-slate-700">
-                        <p class="font-semibold"><i class="fa-solid fa-user"></i> {{ display_name }}</p>
-                        <p class="text-[11px] text-slate-600">{{ user.email|default:"No email" }}</p>
-                        <span class="mt-1 inline-flex rounded-full bg-white px-2 py-0.5 text-[11px] font-bold uppercase text-slate-700">{{ role_label|title }}</span>
+                <div id="mobileMenu" class="mt-3 hidden rounded-3xl border border-slate-200 bg-white/95 p-3 shadow-xl shadow-slate-900/5 md:hidden">
+                    <div class="space-y-1">
+                        <a href="{{ home_url }}" class="nav-link w-full {% if request.path == home_url %}nav-link-active{% endif %}">
+                            <i class="fa-solid fa-house"></i> Home
+                        </a>
+                        {% if user.is_authenticated %}
+                        <a href="{% url 'content:student_dashboard' %}" class="nav-link w-full {% if '/dashboard/' in request.path %}nav-link-active{% endif %}">
+                            <i class="fa-solid fa-gauge-high"></i> Dashboard
+                        </a>
+                        <a href="{{ my_modules_url }}" class="nav-link w-full {% if request.path == my_modules_url %}nav-link-active{% endif %}">
+                            <i class="fa-solid fa-book"></i> My Courses
+                        </a>
+                        {% with profile=user.profile %}
+                        {% with role_label=profile.role|default:'student' %}
+                        {% with display_name=profile.full_name|default:user.username %}
+                        <div class="rounded-2xl bg-slate-100 px-3 py-3 text-xs text-slate-700">
+                            <p class="font-semibold"><i class="fa-solid fa-user"></i> {{ display_name }}</p>
+                            <p class="text-[11px] text-slate-600">{{ user.email|default:"No email" }}</p>
+                            <span class="mt-1 inline-flex rounded-full bg-white px-2 py-0.5 text-[11px] font-bold uppercase text-slate-700">{{ role_label|title }}</span>
+                        </div>
+                        {% endwith %}
+                        {% endwith %}
+                        {% endwith %}
+                        <a href="{{ profile_url }}" class="nav-link w-full">
+                            <i class="fa-solid fa-user"></i> Profile
+                        </a>
+                        <form method="post" action="{% url 'content:logout' %}">
+                            {% csrf_token %}
+                            <button type="submit" class="mt-1 inline-flex w-full items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-3 py-2.5 font-semibold text-slate-700 transition hover:bg-slate-100">
+                                <i class="fa-solid fa-right-from-bracket"></i> Logout
+                            </button>
+                        </form>
+                        {% else %}
+                        <a href="{{ login_url }}" class="nav-link w-full {% if '/accounts/login' in request.path %}nav-link-active{% endif %}">
+                            <i class="fa-solid fa-right-to-bracket"></i> Login
+                        </a>
+                        <a href="{{ signup_url }}" class="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-rose-500 to-orange-500 px-3.5 py-2.5 font-semibold text-white shadow-lg shadow-rose-500/25 transition hover:from-rose-600 hover:to-orange-600">
+                            <i class="fa-solid fa-user-plus"></i> Signup
+                        </a>
+                        {% endif %}
                     </div>
-                    {% endwith %}
-                    {% endwith %}
-                    {% endwith %}
-                    <a href="{{ profile_url }}" class="nav-link w-full">
-                        <i class="fa-solid fa-user"></i> Profile
-                    </a>
-                    <form method="post" action="{% url 'content:logout' %}">
-                        {% csrf_token %}
-                        <button type="submit" class="mt-1 inline-flex w-full items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-3 py-2 font-semibold text-slate-700 transition hover:bg-slate-100">
-                            <i class="fa-solid fa-right-from-bracket"></i> Logout
-                        </button>
-                    </form>
+                </div>
+            </div>
+        </header>
+
+        {% if messages %}
+        <div class="mx-auto mt-4 w-full max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div class="space-y-2">
+                {% for message in messages %}
+                    {% if 'error' in message.tags %}
+                        <div class="rounded-2xl border border-rose-200 bg-rose-50/95 px-4 py-3 text-sm text-rose-700 shadow-sm">{{ message }}</div>
+                    {% elif 'success' in message.tags %}
+                        <div class="rounded-2xl border border-emerald-200 bg-emerald-50/95 px-4 py-3 text-sm text-emerald-700 shadow-sm">{{ message }}</div>
                     {% else %}
-                    <a href="{{ login_url }}" class="nav-link w-full {% if '/accounts/login' in request.path %}nav-link-active{% endif %}">
-                        <i class="fa-solid fa-right-to-bracket"></i> Login
-                    </a>
-                    <a href="{{ signup_url }}" class="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-rose-500 to-orange-500 px-3.5 py-2 font-semibold text-white shadow-lg shadow-rose-500/25 transition hover:from-rose-600 hover:to-orange-600">
-                        <i class="fa-solid fa-user-plus"></i> Signup
-                    </a>
+                        <div class="rounded-2xl border border-slate-200 bg-white/90 px-4 py-3 text-sm text-slate-900 shadow-sm">{{ message }}</div>
                     {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        {% block breadcrumb %}{% endblock %}
+
+        <main class="flex-1">
+            {% block content %}{% endblock %}
+        </main>
+
+        <div id="contentModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/65 p-4" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+            <div class="w-full max-w-4xl rounded-[1.75rem] border border-slate-200 bg-white shadow-2xl">
+                <div class="flex items-center justify-between border-b border-slate-200 px-5 py-4">
+                    <h2 id="modalTitle" class="text-lg font-bold text-slate-900"></h2>
+                    <button class="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 text-slate-600 transition hover:bg-slate-100 hover:text-slate-900" id="modalClose" aria-label="Close modal">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+                <div class="max-h-[75vh] overflow-auto p-5 sm:p-6" id="modalBody">
+                    <div class="flex flex-col items-center justify-center gap-3 py-12 text-slate-600">
+                        <div class="h-9 w-9 animate-spin rounded-full border-4 border-slate-200 border-t-blue-600"></div>
+                        <p>Loading content...</p>
+                    </div>
                 </div>
             </div>
         </div>
-    </header>
 
-    {% if messages %}
-    <div class="mt-2 mb-2 pl-5 pr-5 space-y-2">
-        {% for message in messages %}
-            {% if 'error' in message.tags %}
-                <div class="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{{ message }}</div>
-            {% elif 'success' in message.tags %}
-                <div class="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">{{ message }}</div>
-            {% else %}
-                <div class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900">{{ message }}</div>
-            {% endif %}
-        {% endfor %}
-    </div>
-    {% endif %}
-
-    <!-- Breadcrumb -->
-    {% block breadcrumb %}{% endblock %}
-
-    <!-- Main Content -->
-    <main>
-        {% block content %}{% endblock %}
-    </main>
-
-    <!-- Modal Overlay -->
-    <div id="contentModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/65 p-4" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
-        <div class="w-full max-w-4xl rounded-2xl border border-slate-200 bg-white shadow-2xl">
-            <div class="flex items-center justify-between border-b border-slate-200 px-5 py-4">
-                <h2 id="modalTitle" class="text-lg font-bold text-slate-900"></h2>
-                <button class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 text-slate-600 transition hover:bg-slate-100 hover:text-slate-900" id="modalClose" aria-label="Close modal">
-                    <i class="fa-solid fa-xmark"></i>
-                </button>
-            </div>
-            <div class="max-h-[75vh] overflow-auto p-5" id="modalBody">
-                <div class="flex flex-col items-center justify-center gap-3 py-12 text-slate-600">
-                    <div class="h-9 w-9 animate-spin rounded-full border-4 border-slate-200 border-t-blue-600"></div>
-                    <p>Loading content...</p>
+        <footer class="mt-16 border-t border-slate-200/80 bg-white/70 backdrop-blur">
+            <div class="mx-auto grid w-full max-w-7xl gap-8 px-4 py-10 sm:px-6 lg:grid-cols-[1.3fr_0.7fr] lg:px-8">
+                <div>
+                    <div class="inline-flex items-center gap-3 text-slate-900">
+                        <span class="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-rose-500 via-orange-500 to-cyan-600 text-white shadow-lg shadow-rose-500/20">
+                            <i class="fa-solid fa-graduation-cap text-sm"></i>
+                        </span>
+                        <span class="font-display text-lg font-bold">TeachPlatform</span>
+                    </div>
+                    <p class="mt-3 max-w-xl text-sm leading-6 text-slate-600">A modern interactive learning platform built for structured courses, rich media lessons, and smooth study experiences across every screen size.</p>
+                </div>
+                <div class="lg:text-right">
+                    <p class="text-sm font-semibold text-slate-900">Platform</p>
+                    <div class="mt-3 space-y-2 text-sm text-slate-600">
+                        <p><i class="fa-solid fa-layer-group text-slate-400"></i> Modular learning experience</p>
+                        <p><i class="fa-solid fa-mobile-screen text-slate-400"></i> Responsive on mobile, tablet, and desktop</p>
+                        <p><i class="fa-solid fa-shield-heart text-slate-400"></i> Interactive Teaching Platform &copy; 2026</p>
+                    </div>
                 </div>
             </div>
-        </div>
+        </footer>
     </div>
-
-    <!-- Footer -->
-    <footer class="mt-12 border-t border-slate-200 bg-white">
-        <div class="mx-auto w-full max-w-7xl px-4 py-8 text-center text-sm text-slate-600 sm:px-6 lg:px-8">
-            <p><i class="fa-solid fa-graduation-cap"></i> Interactive Teaching Platform &copy; 2026. Built with Django.</p>
-        </div>
-    </footer>
 
     <script src="{% static 'js/main.js' %}"></script>
     <script>

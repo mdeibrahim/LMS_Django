@@ -5,9 +5,9 @@
 {% block extrastyle %}
 <style>
     .dashboard-shell {
-        --bg-main: #f6f8fc;
-        --bg-accent: #e0f2fe;
-        --card: #ffffff;
+        --bg-main: #f8fbff;
+        --bg-accent: #eef6ff;
+        --card: rgba(255, 255, 255, 0.96);
         --border: #dbe4f0;
         --text-main: #0f172a;
         --text-soft: #475569;
@@ -20,17 +20,16 @@
         --warn-soft: #fef3c7;
         --danger: #b91c1c;
         --danger-soft: #fee2e2;
-
-        background: radial-gradient(circle at top right, #dbeafe 0%, var(--bg-main) 48%),
-            radial-gradient(circle at left 18%, var(--bg-accent) 0%, transparent 32%);
+        background: radial-gradient(circle at top right, #dbeafe 0%, var(--bg-main) 48%), radial-gradient(circle at left 18%, var(--bg-accent) 0%, transparent 32%);
         border: 1px solid var(--border);
-        border-radius: 20px;
+        border-radius: 28px;
         padding: 24px;
+        box-shadow: 0 24px 60px rgba(15, 23, 42, 0.08);
     }
 
     .dashboard-layout {
         display: grid;
-        grid-template-columns: 250px minmax(0, 1fr);
+        grid-template-columns: 280px minmax(0, 1fr);
         gap: 18px;
         align-items: start;
     }
@@ -40,12 +39,13 @@
     .metric-card {
         background: var(--card);
         border: 1px solid var(--border);
-        box-shadow: 0 12px 30px rgba(15, 23, 42, 0.06);
+        box-shadow: 0 16px 38px rgba(15, 23, 42, 0.06);
+        backdrop-filter: blur(14px);
     }
 
     .dashboard-sidebar {
-        border-radius: 16px;
-        padding: 14px;
+        border-radius: 22px;
+        padding: 18px;
         position: sticky;
         top: 18px;
     }
@@ -54,8 +54,8 @@
     .section-title {
         margin: 0 0 12px;
         color: var(--text-main);
-        font-size: 17px;
-        font-weight: 800;
+        font-size: 18px;
+        font-weight: 900;
     }
 
     .sidebar-note,
@@ -79,18 +79,20 @@
         align-items: center;
         justify-content: space-between;
         gap: 10px;
-        padding: 10px 12px;
-        border-radius: 12px;
+        padding: 12px 14px;
+        border-radius: 14px;
         color: var(--text-main);
         text-decoration: none;
         background: #f8fafc;
         border: 1px solid transparent;
+        transition: .18s ease;
     }
 
     .sidebar-item:hover {
         background: var(--brand-soft);
         border-color: #99f6e4;
         text-decoration: none;
+        transform: translateY(-1px);
     }
 
     .count-pill,
@@ -98,9 +100,9 @@
         display: inline-flex;
         align-items: center;
         border-radius: 999px;
-        padding: 4px 9px;
+        padding: 4px 10px;
         font-size: 11px;
-        font-weight: 700;
+        font-weight: 800;
         white-space: nowrap;
     }
 
@@ -110,46 +112,36 @@
         border: 1px solid var(--border);
     }
 
-    .status-pill-success {
-        color: var(--info);
-        background: var(--info-soft);
-    }
-
-    .status-pill-warn {
-        color: var(--warn);
-        background: var(--warn-soft);
-    }
-
-    .status-pill-danger {
-        color: var(--danger);
-        background: var(--danger-soft);
-    }
-
-    .dashboard-main {
-        min-width: 0;
-    }
+    .status-pill-success { color: var(--info); background: var(--info-soft); }
+    .status-pill-warn { color: var(--warn); background: var(--warn-soft); }
+    .status-pill-danger { color: var(--danger); background: var(--danger-soft); }
 
     .hero {
         display: flex;
         justify-content: space-between;
-        gap: 16px;
+        gap: 18px;
         align-items: flex-start;
         margin-bottom: 20px;
         flex-wrap: wrap;
+        padding: 22px;
+        border-radius: 24px;
+        border: 1px solid #dbeafe;
+        background: linear-gradient(135deg, rgba(239, 246, 255, 0.96) 0%, rgba(236, 253, 245, 0.96) 100%);
     }
 
     .hero h1 {
         margin: 0;
         color: var(--text-main);
-        font-size: 30px;
+        font-size: 32px;
         font-weight: 900;
     }
 
     .hero p {
-        margin: 6px 0 0;
-        max-width: 700px;
+        margin: 8px 0 0;
+        max-width: 720px;
         color: var(--text-soft);
         font-size: 14px;
+        line-height: 1.7;
     }
 
     .hero-actions {
@@ -207,8 +199,8 @@
 
     .metric-card,
     .dashboard-panel {
-        border-radius: 16px;
-        padding: 16px;
+        border-radius: 20px;
+        padding: 18px;
     }
 
     .metric-label {
@@ -221,9 +213,9 @@
     }
 
     .metric-value {
-        margin: 8px 0 4px;
+        margin: 10px 0 6px;
         color: var(--text-main);
-        font-size: 31px;
+        font-size: 33px;
         line-height: 1;
         font-weight: 900;
     }
@@ -273,57 +265,20 @@
         align-items: center;
         justify-content: space-between;
         gap: 12px;
-        border-radius: 12px;
+        border-radius: 14px;
         padding: 12px;
         color: var(--text-main);
         background: #fffaf0;
         border: 1px solid #fde68a;
     }
 
-    .table-wrap {
-        overflow-x: auto;
-    }
-
-    .dashboard-table {
-        width: 100%;
-        border-collapse: separate;
-        border-spacing: 0;
-    }
-
-    .dashboard-table th,
-    .dashboard-table td {
-        padding: 11px 12px;
-        text-align: left;
-        font-size: 13px;
-        border-bottom: 1px solid #e8eef5;
-    }
-
-    .dashboard-table th {
-        color: var(--muted);
-        font-size: 11px;
-        font-weight: 800;
-        text-transform: uppercase;
-        letter-spacing: .08em;
-        background: #f8fafc;
-    }
-
-    .dashboard-table tr:hover td {
-        background: #f8fffe;
-    }
-
-    .table-link {
-        color: #0f766e;
-        font-weight: 800;
-        text-decoration: none;
-    }
-
-    .table-link:hover {
-        text-decoration: underline;
-    }
-
-    .muted {
-        color: var(--muted);
-    }
+    .table-wrap { overflow-x: auto; }
+    .dashboard-table { width: 100%; border-collapse: separate; border-spacing: 0; }
+    .dashboard-table th, .dashboard-table td { padding: 11px 12px; text-align: left; font-size: 13px; border-bottom: 1px solid #e8eef5; }
+    .dashboard-table th { color: var(--muted); font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .08em; background: #f8fafc; }
+    .dashboard-table tr:hover td { background: #f8fffe; }
+    .table-link { color: #0f766e; font-weight: 800; text-decoration: none; }
+    .table-link:hover { text-decoration: underline; }
 
     html.dark .dashboard-shell,
     body.dark .dashboard-shell,
@@ -381,28 +336,14 @@
     }
 
     @media (max-width: 980px) {
-        .dashboard-layout {
-            grid-template-columns: 1fr;
-        }
-
-        .dashboard-sidebar {
-            position: relative;
-            top: auto;
-        }
+        .dashboard-layout { grid-template-columns: 1fr; }
+        .dashboard-sidebar { position: relative; top: auto; }
     }
 
     @media (max-width: 768px) {
-        .dashboard-shell {
-            padding: 14px;
-        }
-
-        .hero h1 {
-            font-size: 24px;
-        }
-
-        .metric-value {
-            font-size: 26px;
-        }
+        .dashboard-shell { padding: 14px; border-radius: 22px; }
+        .hero h1 { font-size: 24px; }
+        .metric-value { font-size: 26px; }
     }
 </style>
 {% endblock %}
@@ -438,7 +379,7 @@
             <div class="hero">
                 <div>
                     <h1>Teaching Platform Overview</h1>
-                    <p>Monitor course structure, interactive content, student activity, and admin readiness from one place.</p>
+                    <p>Monitor course structure, interactive content, student activity, and admin readiness from one polished operations dashboard.</p>
                 </div>
                 <div class="hero-actions">
                     <a class="action-btn action-btn-primary" href="{% url 'admin:content_course_add' %}">+ New Course</a>
@@ -448,70 +389,22 @@
             </div>
 
             <section class="metrics-grid">
-                <article class="metric-card">
-                    <p class="metric-label">Courses</p>
-                    <p class="metric-value">{{ stats.courses_count }}</p>
-                    <p class="metric-note">{{ health.courses_with_subcategory }} linked to subcategories</p>
-                </article>
-                <article class="metric-card">
-                    <p class="metric-label">Modules</p>
-                    <p class="metric-value">{{ stats.modules_count }}</p>
-                    <p class="metric-note">{{ stats.content_count }} interactive content items</p>
-                </article>
-                <article class="metric-card">
-                    <p class="metric-label">Quizzes</p>
-                    <p class="metric-value">{{ stats.quiz_count }}</p>
-                    <p class="metric-note">{{ recent_attempts|length }} recent attempts listed below</p>
-                </article>
-                <article class="metric-card">
-                    <p class="metric-label">Purchases</p>
-                    <p class="metric-value">{{ stats.purchase_count }}</p>
-                    <p class="metric-note">{{ stats.confirmed_purchase_count }} confirmed, {{ stats.pending_purchase_count }} pending</p>
-                </article>
-                <article class="metric-card">
-                    <p class="metric-label">Learners</p>
-                    <p class="metric-value">{{ stats.student_profiles_count }}</p>
-                    <p class="metric-note">{{ stats.teacher_profiles_count }} teacher profiles</p>
-                </article>
-                <article class="metric-card">
-                    <p class="metric-label">Certificates</p>
-                    <p class="metric-value">{{ stats.certificate_count }}</p>
-                    <p class="metric-note">{{ stats.active_device_sessions }} active device sessions</p>
-                </article>
+                <article class="metric-card"><p class="metric-label">Courses</p><p class="metric-value">{{ stats.courses_count }}</p><p class="metric-note">{{ health.courses_with_subcategory }} linked to subcategories</p></article>
+                <article class="metric-card"><p class="metric-label">Modules</p><p class="metric-value">{{ stats.modules_count }}</p><p class="metric-note">{{ stats.content_count }} interactive content items</p></article>
+                <article class="metric-card"><p class="metric-label">Quizzes</p><p class="metric-value">{{ stats.quiz_count }}</p><p class="metric-note">{{ recent_attempts|length }} recent attempts listed below</p></article>
+                <article class="metric-card"><p class="metric-label">Purchases</p><p class="metric-value">{{ stats.purchase_count }}</p><p class="metric-note">{{ stats.confirmed_purchase_count }} confirmed, {{ stats.pending_purchase_count }} pending</p></article>
+                <article class="metric-card"><p class="metric-label">Learners</p><p class="metric-value">{{ stats.student_profiles_count }}</p><p class="metric-note">{{ stats.teacher_profiles_count }} teacher profiles</p></article>
+                <article class="metric-card"><p class="metric-label">Certificates</p><p class="metric-value">{{ stats.certificate_count }}</p><p class="metric-note">{{ stats.active_device_sessions }} active device sessions</p></article>
             </section>
 
             <section class="panel-grid">
                 <article class="dashboard-panel">
                     <h2 class="section-title">Content Health</h2>
                     <div class="health-list">
-                        <div class="health-item">
-                            <label>
-                                <span>Courses with module structure</span>
-                                <span>{{ health.course_structure_coverage }}%</span>
-                            </label>
-                            <div class="meter"><span style="width: {{ health.course_structure_coverage }}%;"></span></div>
-                        </div>
-                        <div class="health-item">
-                            <label>
-                                <span>Modules with interactive content</span>
-                                <span>{{ health.content_coverage }}%</span>
-                            </label>
-                            <div class="meter"><span style="width: {{ health.content_coverage }}%;"></span></div>
-                        </div>
-                        <div class="health-item">
-                            <label>
-                                <span>Modules with quiz support</span>
-                                <span>{{ health.quiz_coverage }}%</span>
-                            </label>
-                            <div class="meter"><span style="width: {{ health.quiz_coverage }}%;"></span></div>
-                        </div>
-                        <div class="health-item">
-                            <label>
-                                <span>Courses linked to subcategories</span>
-                                <span>{{ health.subcategory_assignment_coverage }}%</span>
-                            </label>
-                            <div class="meter"><span style="width: {{ health.subcategory_assignment_coverage }}%;"></span></div>
-                        </div>
+                        <div class="health-item"><label><span>Courses with module structure</span><span>{{ health.course_structure_coverage }}%</span></label><div class="meter"><span style="width: {{ health.course_structure_coverage }}%;"></span></div></div>
+                        <div class="health-item"><label><span>Modules with interactive content</span><span>{{ health.content_coverage }}%</span></label><div class="meter"><span style="width: {{ health.content_coverage }}%;"></span></div></div>
+                        <div class="health-item"><label><span>Modules with quiz support</span><span>{{ health.quiz_coverage }}%</span></label><div class="meter"><span style="width: {{ health.quiz_coverage }}%;"></span></div></div>
+                        <div class="health-item"><label><span>Courses linked to subcategories</span><span>{{ health.subcategory_assignment_coverage }}%</span></label><div class="meter"><span style="width: {{ health.subcategory_assignment_coverage }}%;"></span></div></div>
                     </div>
                     <p class="section-note">These percentages are calculated from the current course and module setup.</p>
                 </article>
@@ -519,22 +412,10 @@
                 <article class="dashboard-panel">
                     <h2 class="section-title">Actionable Gaps</h2>
                     <ul class="gap-list">
-                        <li class="gap-item">
-                            <span>Courses without modules</span>
-                            <span class="status-pill {% if health.courses_without_modules %}status-pill-danger{% else %}status-pill-success{% endif %}">{{ health.courses_without_modules }}</span>
-                        </li>
-                        <li class="gap-item">
-                            <span>Modules without content</span>
-                            <span class="status-pill {% if health.modules_without_content %}status-pill-warn{% else %}status-pill-success{% endif %}">{{ health.modules_without_content }}</span>
-                        </li>
-                        <li class="gap-item">
-                            <span>Modules without quizzes</span>
-                            <span class="status-pill {% if health.modules_without_quiz %}status-pill-warn{% else %}status-pill-success{% endif %}">{{ health.modules_without_quiz }}</span>
-                        </li>
-                        <li class="gap-item">
-                            <span>Payment instruction records</span>
-                            <span class="status-pill {% if stats.payment_instruction_count %}status-pill-success{% else %}status-pill-danger{% endif %}">{{ stats.payment_instruction_count }}</span>
-                        </li>
+                        <li class="gap-item"><span>Courses without modules</span><span class="status-pill {% if health.courses_without_modules %}status-pill-danger{% else %}status-pill-success{% endif %}">{{ health.courses_without_modules }}</span></li>
+                        <li class="gap-item"><span>Modules without content</span><span class="status-pill {% if health.modules_without_content %}status-pill-warn{% else %}status-pill-success{% endif %}">{{ health.modules_without_content }}</span></li>
+                        <li class="gap-item"><span>Modules without quizzes</span><span class="status-pill {% if health.modules_without_quiz %}status-pill-warn{% else %}status-pill-success{% endif %}">{{ health.modules_without_quiz }}</span></li>
+                        <li class="gap-item"><span>Payment instruction records</span><span class="status-pill {% if stats.payment_instruction_count %}status-pill-success{% else %}status-pill-danger{% endif %}">{{ stats.payment_instruction_count }}</span></li>
                     </ul>
                 </article>
             </section>
@@ -544,10 +425,7 @@
                     <h2 class="section-title">Interactive Content Mix</h2>
                     <div class="distribution-list">
                         {% for item in content_type_breakdown %}
-                        <div class="distribution-item">
-                            <span>{{ item.content_type|title }}</span>
-                            <span class="count-pill">{{ item.total }}</span>
-                        </div>
+                        <div class="distribution-item"><span>{{ item.content_type|title }}</span><span class="count-pill">{{ item.total }}</span></div>
                         {% empty %}
                         <p class="empty">No content items added yet.</p>
                         {% endfor %}
@@ -558,24 +436,13 @@
                     <h2 class="section-title">Recent Purchases</h2>
                     <div class="table-wrap">
                         <table class="dashboard-table">
-                            <thead>
-                                <tr>
-                                    <th>Student</th>
-                                    <th>Course</th>
-                                    <th>Status</th>
-                                    <th>Time</th>
-                                </tr>
-                            </thead>
+                            <thead><tr><th>Student</th><th>Course</th><th>Status</th><th>Time</th></tr></thead>
                             <tbody>
                                 {% for purchase in recent_purchases %}
                                 <tr>
                                     <td>{{ purchase.user.username }}</td>
                                     <td>{{ purchase.course.name }}</td>
-                                    <td>
-                                        <span class="status-pill {% if purchase.is_purchased %}status-pill-success{% else %}status-pill-warn{% endif %}">
-                                            {% if purchase.is_purchased %}Confirmed{% else %}Pending{% endif %}
-                                        </span>
-                                    </td>
+                                    <td><span class="status-pill {% if purchase.is_purchased %}status-pill-success{% else %}status-pill-warn{% endif %}">{% if purchase.is_purchased %}Confirmed{% else %}Pending{% endif %}</span></td>
                                     <td>{{ purchase.purchased_at|date:"d M Y, H:i" }}</td>
                                 </tr>
                                 {% empty %}
@@ -592,14 +459,7 @@
                     <h2 class="section-title">Recently Added Modules</h2>
                     <div class="table-wrap">
                         <table class="dashboard-table">
-                            <thead>
-                                <tr>
-                                    <th>Module</th>
-                                    <th>Course</th>
-                                    <th>Created</th>
-                                    <th>Go</th>
-                                </tr>
-                            </thead>
+                            <thead><tr><th>Module</th><th>Course</th><th>Created</th><th>Go</th></tr></thead>
                             <tbody>
                                 {% for module in latest_modules %}
                                 <tr>
@@ -620,14 +480,7 @@
                     <h2 class="section-title">Recent Quiz Attempts</h2>
                     <div class="table-wrap">
                         <table class="dashboard-table">
-                            <thead>
-                                <tr>
-                                    <th>Student</th>
-                                    <th>Quiz</th>
-                                    <th>Score</th>
-                                    <th>Submitted</th>
-                                </tr>
-                            </thead>
+                            <thead><tr><th>Student</th><th>Quiz</th><th>Score</th><th>Submitted</th></tr></thead>
                             <tbody>
                                 {% for attempt in recent_attempts %}
                                 <tr>

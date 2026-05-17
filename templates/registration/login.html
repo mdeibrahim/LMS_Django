@@ -22,7 +22,7 @@
         content: "";
         position: absolute;
         inset: 0;
-        background: radial-gradient(circle at top right, rgba(255, 255, 255, 0.35), transparent 52%);
+        background: radial-gradient(circle at top right, rgba(255, 255, 255, 0.4), transparent 52%);
         opacity: 0;
         transition: opacity .28s ease;
         z-index: -1;
@@ -40,33 +40,35 @@
 {% endblock %}
 
 {% block content %}
-<section class="relative overflow-hidden pb-12 pt-14 sm:pb-16 lg:pt-20">
+<section class="auth-shell">
     <div class="absolute inset-0 -z-20 bg-[radial-gradient(1000px_420px_at_10%_-8%,rgba(244,63,94,0.22),transparent),radial-gradient(820px_360px_at_90%_-12%,rgba(14,165,233,0.24),transparent),linear-gradient(180deg,#fff7ed_0%,#f8fafc_52%,#eef2ff_100%)]"></div>
     <div class="choice-orb absolute -left-10 top-16 -z-10 h-28 w-28 rounded-full bg-gradient-to-br from-rose-400/35 to-fuchsia-400/20 blur-2xl"></div>
     <div class="choice-orb choice-orb--delay absolute right-0 top-20 -z-10 h-36 w-36 rounded-full bg-gradient-to-br from-cyan-400/40 to-blue-500/20 blur-3xl sm:right-8"></div>
 
     <div class="mx-auto w-full max-w-6xl px-4 sm:px-6">
-        <div class="mx-auto max-w-2xl text-center">
-            <span class="inline-flex items-center gap-2 rounded-full border border-rose-200 bg-white/80 px-4 py-1.5 text-xs font-bold tracking-wide text-rose-700 backdrop-blur sm:text-sm">
-                <i class="fa-solid fa-right-to-bracket"></i>
-                ACCOUNT ACCESS
-            </span>
+        <div class="mx-auto max-w-3xl text-center">
+            <span class="eyebrow border-rose-200 text-rose-700"><i class="fa-solid fa-right-to-bracket"></i> ACCOUNT ACCESS</span>
             <h1 class="mt-5 font-display text-4xl font-bold tracking-tight text-slate-900 sm:text-5xl">Welcome Back, <span class="bg-gradient-to-r from-rose-500 via-orange-500 to-cyan-600 bg-clip-text text-transparent">Choose Your Login</span></h1>
             <p class="mt-4 text-base leading-7 text-slate-600 sm:text-lg">Student account দিয়ে login করে smooth dashboard experience উপভোগ করুন।</p>
         </div>
 
-        <div class="mt-10">
-            <a href="{% url 'content:student_login' %}{% if request.GET.next %}?next={{ request.GET.next|urlencode }}{% endif %}" class="choice-card group rounded-3xl border border-white/70 bg-white/80 p-6 shadow-lg shadow-slate-900/5 backdrop-blur transition duration-300 hover:-translate-y-1 hover:shadow-xl">
-                <div class="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500/15 to-cyan-500/20 text-xl text-blue-700 ring-1 ring-blue-200">
-                    <i class="fa-solid fa-user-graduate"></i>
+        <div class="mx-auto mt-10 max-w-3xl">
+            <a href="{% url 'content:student_login' %}{% if request.GET.next %}?next={{ request.GET.next|urlencode }}{% endif %}" class="choice-card group auth-panel block p-6 sm:p-8">
+                <div class="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
+                    <div class="max-w-xl">
+                        <div class="inline-flex h-14 w-14 items-center justify-center rounded-3xl bg-gradient-to-br from-blue-500/15 to-cyan-500/20 text-2xl text-blue-700 ring-1 ring-blue-200">
+                            <i class="fa-solid fa-user-graduate"></i>
+                        </div>
+                        <h2 class="mt-5 text-3xl font-extrabold text-slate-900">Student Login</h2>
+                        <p class="mt-3 text-sm leading-7 text-slate-600">কোর্সে access, lesson tracking, এবং আপনার course journey চালিয়ে যেতে sign in করুন।</p>
+                        <div class="mt-5 flex flex-wrap gap-2 text-xs font-semibold">
+                            <span class="rounded-full bg-blue-100 px-3 py-1 text-blue-700"><i class="fa-solid fa-book-open"></i> My Lessons</span>
+                            <span class="rounded-full bg-sky-100 px-3 py-1 text-sky-700"><i class="fa-solid fa-chart-line"></i> Progress</span>
+                            <span class="rounded-full bg-indigo-100 px-3 py-1 text-indigo-700"><i class="fa-solid fa-mobile-screen"></i> Any Device</span>
+                        </div>
+                    </div>
+                    <span class="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-600 px-5 py-3 font-semibold text-white transition group-hover:from-blue-700 group-hover:to-cyan-700">Continue as Student <i class="fa-solid fa-arrow-right"></i></span>
                 </div>
-                <h2 class="mt-4 text-2xl font-extrabold text-slate-900">Student Login</h2>
-                <p class="mt-2 text-sm leading-6 text-slate-600">কোর্সে access, lesson tracking, এবং আপনার course journey চালিয়ে যেতে sign in করুন।</p>
-                <div class="mt-5 flex flex-wrap gap-2 text-xs font-semibold">
-                    <span class="rounded-full bg-blue-100 px-3 py-1 text-blue-700"><i class="fa-solid fa-book-open"></i> My Lessons</span>
-                    <span class="rounded-full bg-sky-100 px-3 py-1 text-sky-700"><i class="fa-solid fa-chart-line"></i> Progress</span>
-                </div>
-                <span class="mt-6 inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-600 px-4 py-2.5 font-semibold text-white transition group-hover:from-blue-700 group-hover:to-cyan-700">Continue as Student <i class="fa-solid fa-arrow-right"></i></span>
             </a>
         </div>
 
