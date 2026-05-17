@@ -66,6 +66,13 @@
         if (item.content_type === 'youtube' && item.youtube_embed_url) {
             return `<div class="modal-youtube-wrap"><iframe src="${item.youtube_embed_url}" allowfullscreen title="${item.title}"></iframe></div>`;
         }
+        if (item.content_type === 'pdf' && item.file_url) {
+            return `<div class="modal-pdf-wrap"><iframe src="${item.file_url}" title="${item.title}" style="width:100%;min-height:70vh;border:0;border-radius:16px;"></iframe></div>`;
+        }
+        if ((item.content_type === 'attachment' || item.content_type === 'external_link' || item.content_type === 'embed') && (item.external_url || item.file_url || item.embed_url)) {
+            const href = item.external_url || item.file_url || item.embed_url;
+            return `<div class="modal-link-wrap"><a class="toolbar-btn" href="${href}" target="_blank" rel="noopener noreferrer">Open resource</a></div>`;
+        }
         return `<div class="modal-error"><i class="fa-solid fa-circle-exclamation"></i><p>Content preview is not available.</p></div>`;
     }
 

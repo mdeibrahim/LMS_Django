@@ -48,9 +48,14 @@ UNFOLD = {
                         "link": reverse_lazy("admin:content_module_changelist"),
                     },
                     {
-                        "title": "Course Content",
+                        "title": "Lessons",
+                        "icon": "library_books",
+                        "link": reverse_lazy("admin:content_lesson_changelist"),
+                    },
+                    {
+                        "title": "Lesson Resources",
                         "icon": "video_library",
-                        "link": reverse_lazy("admin:content_coursecontent_changelist"),
+                        "link": reverse_lazy("admin:content_lessonresource_changelist"),
                     },
                     {
                         "title": "Quizzes",
@@ -70,9 +75,14 @@ UNFOLD = {
                 "collapsible": False,
                 "items": [
                     {
-                        "title": "Purchases",
+                        "title": "Payment Submissions",
                         "icon": "shopping_cart",
-                        "link": reverse_lazy("admin:content_modulepurchase_changelist"),
+                        "link": reverse_lazy("admin:content_paymentsubmission_changelist"),
+                    },
+                    {
+                        "title": "Enrollments",
+                        "icon": "how_to_reg",
+                        "link": reverse_lazy("admin:content_courseenrollment_changelist"),
                     },
                     {
                         "title": "Certificates",

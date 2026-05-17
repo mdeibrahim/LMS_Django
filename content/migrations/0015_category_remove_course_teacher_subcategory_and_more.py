@@ -40,57 +40,49 @@ def _table_columns(connection, table_name):
 def _create_category_with_legacy_support(apps, schema_editor):
     Category = apps.get_model('content', 'Category')
     connection = schema_editor.connection
+    cols = _table_columns(connection, Category._meta.db_table)
+    column_names = ['name', 'slug']
+    values = ['General', 'general']
 
-    try:
-        return Category.objects.create(name='General', slug='general')
-    except Exception:
-        cols = _table_columns(connection, Category._meta.db_table)
-        column_names = ['name', 'slug']
-        values = ['General', 'general']
+    if 'description' in cols:
+        column_names.append('description')
+        values.append('General category')
+    if 'created_at' in cols:
+        column_names.append('created_at')
+        values.append(timezone.now())
 
-        if 'description' in cols:
-            column_names.append('description')
-            values.append('General category')
-        if 'created_at' in cols:
-            column_names.append('created_at')
-            values.append(timezone.now())
-
-        qn = connection.ops.quote_name
-        placeholders = ', '.join(['%s'] * len(values))
-        with connection.cursor() as cursor:
-            cursor.execute(
-                f"INSERT INTO {qn(Category._meta.db_table)} ({', '.join(qn(c) for c in column_names)}) VALUES ({placeholders})",
-                values,
-            )
-        return Category.objects.get(slug='general')
+    qn = connection.ops.quote_name
+    placeholders = ', '.join(['%s'] * len(values))
+    with connection.cursor() as cursor:
+        cursor.execute(
+            f"INSERT INTO {qn(Category._meta.db_table)} ({', '.join(qn(c) for c in column_names)}) VALUES ({placeholders})",
+            values,
+        )
+    return Category.objects.get(slug='general')
 
 
 def _create_subcategory_with_legacy_support(apps, schema_editor, category):
     Subcategory = apps.get_model('content', 'Subcategory')
     connection = schema_editor.connection
+    cols = _table_columns(connection, Subcategory._meta.db_table)
+    column_names = ['category_id', 'name', 'slug']
+    values = [category.id, 'Bangla', 'bangla']
 
-    try:
-        return Subcategory.objects.create(category=category, name='Bangla', slug='bangla')
-    except Exception:
-        cols = _table_columns(connection, Subcategory._meta.db_table)
-        column_names = ['category_id', 'name', 'slug']
-        values = [category.id, 'Bangla', 'bangla']
+    if 'description' in cols:
+        column_names.append('description')
+        values.append('Default subcategory')
+    if 'created_at' in cols:
+        column_names.append('created_at')
+        values.append(timezone.now())
 
-        if 'description' in cols:
-            column_names.append('description')
-            values.append('Default subcategory')
-        if 'created_at' in cols:
-            column_names.append('created_at')
-            values.append(timezone.now())
-
-        qn = connection.ops.quote_name
-        placeholders = ', '.join(['%s'] * len(values))
-        with connection.cursor() as cursor:
-            cursor.execute(
-                f"INSERT INTO {qn(Subcategory._meta.db_table)} ({', '.join(qn(c) for c in column_names)}) VALUES ({placeholders})",
-                values,
-            )
-        return Subcategory.objects.filter(category_id=category.id, slug='bangla').order_by('id').first()
+    qn = connection.ops.quote_name
+    placeholders = ', '.join(['%s'] * len(values))
+    with connection.cursor() as cursor:
+        cursor.execute(
+            f"INSERT INTO {qn(Subcategory._meta.db_table)} ({', '.join(qn(c) for c in column_names)}) VALUES ({placeholders})",
+            values,
+        )
+    return Subcategory.objects.filter(category_id=category.id, slug='bangla').order_by('id').first()
 
 
 def assign_default_subcategory(apps, schema_editor):

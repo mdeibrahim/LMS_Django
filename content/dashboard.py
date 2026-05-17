@@ -13,12 +13,15 @@ from content.models import (
     Category,
     Course,
     CourseCertificate,
-    CourseContent,
+    CourseEnrollment,
     CourseQuiz,
     EmailOTP,
+    Lesson,
+    LessonResource,
     Module,
-    ModulePurchase,
     PaymentInstruction,
+    PaymentSubmission,
+    PaymentSubmissionStatus,
     QuizAttempt,
     StudentDeviceSession,
     Subcategory,
@@ -48,11 +51,12 @@ def admin_dashboard(request):
 
     courses_count = Course.objects.count()
     modules_count = Module.objects.count()
-    interactive_content_count = CourseContent.objects.filter(is_inline_reference=False).count()
+    lessons_count = Lesson.objects.count()
+    interactive_content_count = LessonResource.objects.filter(is_published=True).count()
     quiz_count = CourseQuiz.objects.count()
-    purchase_count = ModulePurchase.objects.count()
-    confirmed_purchase_count = ModulePurchase.objects.filter(is_purchased=True).count()
-    pending_purchase_count = ModulePurchase.objects.filter(is_purchased=False).count()
+    purchase_count = PaymentSubmission.objects.count()
+    confirmed_purchase_count = CourseEnrollment.objects.filter(status="active").count()
+    pending_purchase_count = PaymentSubmission.objects.filter(status=PaymentSubmissionStatus.PENDING).count()
     certificate_count = CourseCertificate.objects.count()
     total_users = User.objects.count()
     staff_users = User.objects.filter(is_staff=True).count()
@@ -65,17 +69,18 @@ def admin_dashboard(request):
     available_otp_count = EmailOTP.objects.filter(is_used=False, expires_at__gt=now).count()
 
     confirmed_revenue = (
-        ModulePurchase.objects.filter(is_purchased=True).aggregate(total=Sum("course__price")).get("total")
+        CourseEnrollment.objects.filter(status="active").aggregate(total=Sum("course__price")).get("total")
         or Decimal("0")
     )
 
     courses_without_modules_qs = Course.objects.annotate(total_modules=Count("modules")).filter(total_modules=0)
     modules_without_content_qs = Module.objects.annotate(
-        total_content=Count("course_contents", filter=Q(course_contents__is_inline_reference=False), distinct=True)
+        total_content=Count("lessons__resources", filter=Q(lessons__resources__is_published=True), distinct=True)
     ).filter(total_content=0)
-    modules_without_quiz_qs = Module.objects.annotate(total_quizzes=Count("course_quizzes", distinct=True)).filter(
+    modules_without_quiz_qs = Module.objects.annotate(total_quizzes=Count("lessons__quizzes", distinct=True)).filter(
         total_quizzes=0
     )
+    modules_without_lessons_qs = Module.objects.annotate(total_lessons=Count("lessons", distinct=True)).filter(total_lessons=0)
     courses_with_subcategory = Course.objects.filter(subcategory__isnull=False).count()
     free_course_count = Course.objects.filter(price=0).count()
     paid_course_count = courses_count - free_course_count
@@ -83,6 +88,7 @@ def admin_dashboard(request):
     stats = {
         "courses_count": courses_count,
         "modules_count": modules_count,
+        "lessons_count": lessons_count,
         "interactive_content_count": interactive_content_count,
         "quiz_count": quiz_count,
         "purchase_count": purchase_count,
@@ -105,9 +111,11 @@ def admin_dashboard(request):
 
     health = {
         "courses_without_modules": courses_without_modules_qs.count(),
+        "modules_without_lessons": modules_without_lessons_qs.count(),
         "modules_without_content": modules_without_content_qs.count(),
         "modules_without_quiz": modules_without_quiz_qs.count(),
         "course_structure_coverage": _percent(courses_count - courses_without_modules_qs.count(), courses_count),
+        "lesson_coverage": _percent(modules_count - modules_without_lessons_qs.count(), modules_count),
         "content_coverage": _percent(modules_count - modules_without_content_qs.count(), modules_count),
         "quiz_coverage": _percent(modules_count - modules_without_quiz_qs.count(), modules_count),
         "courses_with_subcategory": courses_with_subcategory,
@@ -125,7 +133,7 @@ def admin_dashboard(request):
         {
             "label": "Catalog Depth",
             "value": courses_count,
-            "note": f"{modules_count} modules and {interactive_content_count} interactive items",
+            "note": f"{modules_count} modules, {lessons_count} lessons, {interactive_content_count} resources",
             "tone": "blue",
         },
         {
@@ -171,7 +179,7 @@ def admin_dashboard(request):
             "value": pending_purchase_count,
             "tone": "amber" if pending_purchase_count else "emerald",
             "note": "Review payments that still need confirmation.",
-            "url": reverse("admin:content_modulepurchase_changelist"),
+            "url": reverse("admin:content_paymentsubmission_changelist"),
         },
         {
             "label": "Courses without modules",
@@ -179,6 +187,13 @@ def admin_dashboard(request):
             "tone": "rose" if health["courses_without_modules"] else "emerald",
             "note": "Catalog entries that do not yet have lesson structure.",
             "url": reverse("admin:content_course_changelist"),
+        },
+        {
+            "label": "Modules missing lessons",
+            "value": health["modules_without_lessons"],
+            "tone": "rose" if health["modules_without_lessons"] else "emerald",
+            "note": "Modules created without the new lesson layer.",
+            "url": reverse("admin:content_module_changelist"),
         },
         {
             "label": "Modules missing content",
@@ -206,8 +221,9 @@ def admin_dashboard(request):
     quick_actions = [
         {"label": "Create Course", "url": reverse("admin:content_course_add"), "tone": "primary"},
         {"label": "Create Module", "url": reverse("admin:content_module_add"), "tone": "secondary"},
+        {"label": "Create Lesson", "url": reverse("admin:content_lesson_add"), "tone": "secondary"},
         {"label": "Add Quiz", "url": reverse("admin:content_coursequiz_add"), "tone": "secondary"},
-        {"label": "Review Purchases", "url": reverse("admin:content_modulepurchase_changelist"), "tone": "secondary"},
+        {"label": "Review Payments", "url": reverse("admin:content_paymentsubmission_changelist"), "tone": "secondary"},
     ]
 
     management_sections = [
@@ -219,7 +235,8 @@ def admin_dashboard(request):
                 {"label": "Subcategories", "count": Subcategory.objects.count(), "url": reverse("admin:content_subcategory_changelist")},
                 {"label": "Courses", "count": courses_count, "url": reverse("admin:content_course_changelist")},
                 {"label": "Modules", "count": modules_count, "url": reverse("admin:content_module_changelist")},
-                {"label": "Content Items", "count": interactive_content_count, "url": reverse("admin:content_coursecontent_changelist")},
+                {"label": "Lessons", "count": lessons_count, "url": reverse("admin:content_lesson_changelist")},
+                {"label": "Resources", "count": interactive_content_count, "url": reverse("admin:content_lessonresource_changelist")},
                 {"label": "Quizzes", "count": quiz_count, "url": reverse("admin:content_coursequiz_changelist")},
             ],
         },
@@ -227,7 +244,8 @@ def admin_dashboard(request):
             "title": "Commerce",
             "note": "Approve purchases and manage learner entitlements.",
             "items": [
-                {"label": "Purchases", "count": purchase_count, "url": reverse("admin:content_modulepurchase_changelist")},
+                {"label": "Payment Submissions", "count": purchase_count, "url": reverse("admin:content_paymentsubmission_changelist")},
+                {"label": "Enrollments", "count": confirmed_purchase_count, "url": reverse("admin:content_courseenrollment_changelist")},
                 {"label": "Certificates", "count": certificate_count, "url": reverse("admin:content_coursecertificate_changelist")},
                 {"label": "Payment Instructions", "count": payment_instruction_count, "url": reverse("admin:content_paymentinstruction_changelist")},
             ],
@@ -246,31 +264,27 @@ def admin_dashboard(request):
     ]
 
     latest_modules = Module.objects.select_related("course").order_by("-created_at")[:6]
-    recent_purchases = ModulePurchase.objects.select_related("user", "course").order_by("-purchased_at")[:6]
-    recent_attempts = QuizAttempt.objects.select_related("user", "quiz", "quiz__module").order_by("-submitted_at")[:6]
+    recent_purchases = PaymentSubmission.objects.select_related("user", "course").order_by("-submitted_at")[:6]
+    recent_attempts = QuizAttempt.objects.select_related("user", "quiz", "quiz__lesson", "quiz__lesson__module").order_by("-submitted_at")[:6]
     recent_signups = User.objects.order_by("-date_joined")[:6]
     recent_content = (
-        CourseContent.objects.filter(is_inline_reference=False)
-        .select_related("module", "module__course")
+        LessonResource.objects.filter(is_published=True)
+        .select_related("lesson", "lesson__module", "lesson__module__course")
         .order_by("-created_at")[:6]
     )
 
     top_courses = (
         Course.objects.select_related("subcategory", "subcategory__category")
         .annotate(
-            module_total=Count("modules", distinct=True),
-            content_total=Count(
-                "modules__course_contents",
-                filter=Q(modules__course_contents__is_inline_reference=False),
-                distinct=True,
-            ),
-            confirmed_sales=Count("purchases", filter=Q(purchases__is_purchased=True), distinct=True),
-        )
+                module_total=Count("modules", distinct=True),
+                content_total=Count("modules__lessons__resources", filter=Q(modules__lessons__resources__is_published=True), distinct=True),
+                confirmed_sales=Count("enrollments", filter=Q(enrollments__status="active"), distinct=True),
+            )
         .order_by("-confirmed_sales", "-module_total", "name")[:5]
     )
 
     content_type_breakdown = list(
-        CourseContent.objects.filter(is_inline_reference=False)
+        LessonResource.objects.filter(is_published=True)
         .values("content_type")
         .annotate(total=Count("id"))
         .order_by("-total", "content_type")
@@ -288,7 +302,7 @@ def admin_dashboard(request):
     signup_summary = {
         "last_7_days": User.objects.filter(date_joined__gte=week_ago).count(),
         "last_30_days": User.objects.filter(date_joined__gte=month_ago).count(),
-        "recent_purchase_count": ModulePurchase.objects.filter(purchased_at__gte=week_ago).count(),
+        "recent_purchase_count": PaymentSubmission.objects.filter(submitted_at__gte=week_ago).count(),
         "recent_attempt_count": QuizAttempt.objects.filter(submitted_at__gte=week_ago).count(),
     }
 
@@ -312,6 +326,7 @@ def admin_dashboard(request):
         "learning_mix": learning_mix,
         "signup_summary": signup_summary,
         "courses_without_modules_sample": courses_without_modules_qs.order_by("name")[:5],
+        "modules_without_lessons_sample": modules_without_lessons_qs.select_related("course").order_by("course__name", "title")[:5],
         "modules_without_content_sample": modules_without_content_qs.select_related("course").order_by("course__name", "title")[:5],
         "modules_without_quiz_sample": modules_without_quiz_qs.select_related("course").order_by("course__name", "title")[:5],
         "now": now,

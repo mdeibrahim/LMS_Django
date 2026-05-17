@@ -4,7 +4,7 @@ from django import template
 from django.utils.html import escape
 from django.utils.safestring import mark_safe
 
-from content.models import CourseContent
+from content.models import LessonResource
 
 
 register = template.Library()
@@ -35,7 +35,7 @@ def _enrich_highlight_links(text):
 
     contents = {
         item.id: item
-        for item in CourseContent.objects.filter(id__in=content_ids)
+        for item in LessonResource.objects.filter(id__in=content_ids)
     }
 
     def replace_tag(match):

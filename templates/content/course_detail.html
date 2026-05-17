@@ -175,7 +175,7 @@
 
                             {% if has_access %}
                             {% if first_content %}
-                            <a href="{% url 'content:play_video' course.slug first_content.module.slug first_content.id %}" class="inline-flex w-full items-center justify-center rounded-xl bg-yellow-400 px-4 py-3 font-bold text-slate-900 transition hover:bg-yellow-300">শুরু করুন</a>
+                            <a href="{% url 'content:play_video' course.slug first_content.lesson.module.slug first_content.id %}" class="inline-flex w-full items-center justify-center rounded-xl bg-yellow-400 px-4 py-3 font-bold text-slate-900 transition hover:bg-yellow-300">শুরু করুন</a>
                             {% else %}
                             <a href="#" onclick="event.preventDefault(); document.querySelector('#course-list-jump').scrollIntoView({behavior:'smooth'});" class="inline-flex w-full items-center justify-center rounded-xl bg-yellow-400 px-4 py-3 font-bold text-slate-900 transition hover:bg-yellow-300">শুরু করুন</a>
                             {% endif %}

@@ -142,8 +142,9 @@ class ProfileUpdateForm(forms.Form):
                 'student_level': profile.student_level,
             })
 
-        self.fields['student_institution'].required = True
-        self.fields['student_level'].required = True
+        is_student = not profile or profile.role == UserRole.STUDENT
+        self.fields['student_institution'].required = is_student
+        self.fields['student_level'].required = is_student
 
     def clean_email(self):
         email = self.cleaned_data.get('email', '').strip().lower()
@@ -175,10 +176,11 @@ class ProfileUpdateForm(forms.Form):
 
     def clean(self):
         cleaned = super().clean()
-        if not (cleaned.get('student_institution') or '').strip():
-            self.add_error('student_institution', 'This field is required for students.')
-        if not (cleaned.get('student_level') or '').strip():
-            self.add_error('student_level', 'This field is required for students.')
+        if self.profile and self.profile.role == UserRole.STUDENT:
+            if not (cleaned.get('student_institution') or '').strip():
+                self.add_error('student_institution', 'This field is required for students.')
+            if not (cleaned.get('student_level') or '').strip():
+                self.add_error('student_level', 'This field is required for students.')
         return cleaned
 
     def save(self):
@@ -195,11 +197,9 @@ class ProfileUpdateForm(forms.Form):
         if uploaded_picture:
             profile.profile_picture = uploaded_picture
 
-        profile.student_institution = self.cleaned_data['student_institution'].strip()
-        profile.student_level = self.cleaned_data['student_level'].strip()
-        profile.teacher_institution = ''
-        profile.teacher_subject = ''
-        profile.teacher_experience_years = None
+        if profile.role == UserRole.STUDENT:
+            profile.student_institution = self.cleaned_data['student_institution'].strip()
+            profile.student_level = self.cleaned_data['student_level'].strip()
 
         profile.save()
         return profile
@@ -207,20 +207,3 @@ class ProfileUpdateForm(forms.Form):
 
 class OTPForm(forms.Form):
     code = forms.CharField(max_length=8, required=True, widget=forms.TextInput(attrs={'class': 'w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5'}))
-
-    def save(self):
-        user = self.user
-        profile = self.profile
-        user.email = self.cleaned_data['email']
-        user.save(update_fields=['email'])
-
-        profile.full_name = self.cleaned_data['full_name'].strip()
-        profile.phone_number = self.cleaned_data['phone_number']
-
-        profile.student_institution = self.cleaned_data['student_institution'].strip()
-        profile.student_level = self.cleaned_data['student_level'].strip()
-        profile.teacher_institution = ''
-        profile.teacher_subject = ''
-        profile.teacher_experience_years = None
-        profile.save()
-        return profile

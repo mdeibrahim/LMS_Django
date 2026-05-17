@@ -1,7 +1,19 @@
 from django.core.management.base import BaseCommand
 from django.db import transaction
+from django.utils.text import slugify
 
-from content.models import Course, CourseContent, CourseQuiz, CourseQuizQuestion, Module, ModuleAccordionSection
+from content.models import (
+    Category,
+    Course,
+    CourseQuiz,
+    CourseQuizQuestion,
+    Lesson,
+    LessonResource,
+    LessonResourceType,
+    Module,
+    ModuleAccordionSection,
+    Subcategory,
+)
 
 
 SEED_DATA = [
@@ -265,9 +277,26 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         self.stdout.write(self.style.MIGRATE_HEADING("Seeding demo courses..."))
 
+        category, _ = Category.objects.get_or_create(
+            slug="demo-courses",
+            defaults={
+                "name": "Demo Courses",
+                "description": "Default demo category for seeded LMS content.",
+            },
+        )
+        subcategory, _ = Subcategory.objects.get_or_create(
+            category=category,
+            slug="general",
+            defaults={
+                "name": "General",
+                "description": "Default subcategory for seeded demo courses.",
+            },
+        )
+
         course_count = 0
         module_count = 0
-        content_count = 0
+        lesson_count = 0
+        resource_count = 0
         quiz_count = 0
         question_count = 0
 
@@ -276,6 +305,7 @@ class Command(BaseCommand):
             course, _ = Course.objects.update_or_create(
                 slug=course_data["slug"],
                 defaults={
+                    "subcategory": subcategory,
                     "name": course_data["name"],
                     "description": course_data["description"],
                     "price": course_data["price"],
@@ -295,24 +325,49 @@ class Command(BaseCommand):
                     },
                 )
                 module_count += 1
+                lesson, _ = Lesson.objects.update_or_create(
+                    module=module,
+                    slug=f"{module.slug}-lesson",
+                    defaults={
+                        "title": module.title,
+                        "description": module.description,
+                        "body_content": module.body_content,
+                        "order": module.order,
+                        "is_published": True,
+                    },
+                )
+                lesson_count += 1
 
                 for content_data in module_data["contents"]:
-                    inferred_type = content_data.get("content_type")
-                    if not inferred_type:
-                        inferred_type = "youtube" if "youtu" in (content_data.get("video_url", "")) else "video"
-                    CourseContent.objects.update_or_create(
-                        module=module,
+                    inferred_type = content_data.get("content_type", LessonResourceType.VIDEO)
+                    if inferred_type == "youtube":
+                        inferred_type = LessonResourceType.VIDEO
+
+                    video_url = content_data.get("video_url", "")
+                    external_url = video_url if video_url else content_data.get("external_url", "")
+                    embed_url = video_url if "youtu" in video_url else content_data.get("embed_url", "")
+                    file_name = content_data.get("file_name", "")
+
+                    resource, _ = LessonResource.objects.update_or_create(
+                        lesson=lesson,
                         title=content_data["title"],
                         defaults={
+                            "slug": slugify(content_data["title"]) or f"resource-{content_data['order']}",
                             "content_type": inferred_type,
                             "order": content_data["order"],
-                            "video_url": content_data.get("video_url", ""),
-                            "youtube_url": content_data.get("video_url", "") if inferred_type == "youtube" else "",
                             "duration_seconds": content_data.get("duration_seconds", 0),
                             "text_content": content_data.get("text_content", ""),
+                            "external_url": external_url,
+                            "embed_url": embed_url,
+                            "metadata": {"file_name": file_name} if file_name else {},
+                            "is_published": True,
                         },
                     )
-                    content_count += 1
+                    resource_count += 1
+
+                    if resource.content_type == LessonResourceType.QUIZ:
+                        resource.is_preview = False
+                        resource.save(update_fields=["is_preview"])
 
                 for section_data in module_data.get("accordions", []):
                     ModuleAccordionSection.objects.update_or_create(
@@ -327,9 +382,10 @@ class Command(BaseCommand):
 
                 for quiz_data in module_data["quizzes"]:
                     quiz, _ = CourseQuiz.objects.update_or_create(
-                        module=module,
+                        lesson=lesson,
                         title=quiz_data["title"],
                         defaults={
+                            "module": module,
                             "pass_score": quiz_data["pass_score"],
                             "is_active": quiz_data["is_active"],
                         },
@@ -358,7 +414,8 @@ class Command(BaseCommand):
                 "\nSeed complete.\n"
                 f"Courses processed: {course_count}\n"
                 f"Modules processed: {module_count}\n"
-                f"Course contents processed: {content_count}\n"
+                f"Lessons processed: {lesson_count}\n"
+                f"Lesson resources processed: {resource_count}\n"
                 f"Quizzes processed: {quiz_count}\n"
                 f"Quiz questions processed: {question_count}\n"
             )

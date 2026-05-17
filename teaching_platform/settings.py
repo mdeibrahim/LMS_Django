@@ -9,8 +9,19 @@ from .unfold_config import UNFOLD
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
+def _cast_debug(value):
+    if isinstance(value, bool):
+        return value
+    normalized = str(value).strip().lower()
+    if normalized in {"1", "true", "yes", "on", "debug", "development"}:
+        return True
+    if normalized in {"0", "false", "no", "off", "release", "production"}:
+        return False
+    return bool(value)
+
+
 SECRET_KEY = config('SECRET_KEY', default='django-insecure-change-me')
-DEBUG = config('DEBUG', default=True, cast=bool)
+DEBUG = config('DEBUG', default=True, cast=_cast_debug)
 ALLOWED_HOSTS = [host.strip() for host in config('ALLOWED_HOSTS', default='*').split(',') if host.strip()]
 
 
@@ -112,6 +123,12 @@ LOGOUT_REDIRECT_URL = 'content:home'
 
 EMAIL_BACKEND = config('EMAIL_BACKEND', default='django.core.mail.backends.console.EmailBackend')
 DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='no-reply@example.com')
+SITE_URL = config('SITE_URL', default='http://localhost:8000')
+OTP_ATTEMPT_WINDOW = config('OTP_ATTEMPT_WINDOW', default=300, cast=int)
+OTP_ATTEMPT_LIMIT = config('OTP_ATTEMPT_LIMIT', default=5, cast=int)
+OTP_LOCKOUT_SECONDS = config('OTP_LOCKOUT_SECONDS', default=600, cast=int)
+OTP_RESEND_WINDOW = config('OTP_RESEND_WINDOW', default=900, cast=int)
+OTP_RESEND_LIMIT = config('OTP_RESEND_LIMIT', default=3, cast=int)
 
 
 REST_FRAMEWORK = {

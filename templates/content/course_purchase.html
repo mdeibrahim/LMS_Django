@@ -96,6 +96,16 @@
                 <h2 class="text-2xl font-bold text-slate-900">Submit Transaction</h2>
                 <p class="mt-2 text-sm text-slate-600">পেমেন্ট করার পর ট্রানজেকশন আইডি এবং প্রয়োজনে একটি নোট সাবমিট করুন।</p>
 
+                {% if has_access %}
+                <div class="mt-4 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+                    <i class="fa-solid fa-circle-check"></i> You already have course access.
+                </div>
+                {% elif latest_submission %}
+                <div class="mt-4 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">
+                    <strong>Latest submission:</strong> {{ latest_submission.get_status_display }}{% if latest_submission.submitted_at %} on {{ latest_submission.submitted_at|date:"M d, Y H:i" }}{% endif %}
+                </div>
+                {% endif %}
+
                 <form method="post" action="{% url 'content:submit_payment_details' course.slug %}" class="mt-6">
                     {% csrf_token %}
                     <input type="hidden" name="payment_method" id="tx_payment_method" value="">

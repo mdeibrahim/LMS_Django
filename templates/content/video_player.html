@@ -64,7 +64,7 @@
                     {% if not has_access %}
                     <div class="rounded-2xl border border-rose-200 bg-rose-50 p-6 text-center text-rose-700">
                         <p class="font-bold">এই কনটেন্টটি আনলক করা প্রয়োজন</p>
-                        <a href="{% url 'content:buy_module' course.slug %}" class="mt-3 inline-flex items-center gap-2 rounded-xl bg-yellow-400 px-4 py-2 font-bold text-slate-900">কিনুন / আনলক করুন</a>
+                        <a href="{% url 'content:start_purchase' course.slug %}" class="mt-3 inline-flex items-center gap-2 rounded-xl bg-yellow-400 px-4 py-2 font-bold text-slate-900">কিনুন / আনলক করুন</a>
                     </div>
                     {% else %}
                         {% if video.content_type == 'text' %}

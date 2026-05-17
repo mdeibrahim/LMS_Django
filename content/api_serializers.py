@@ -2,6 +2,7 @@ from django.contrib.auth import get_user_model
 from rest_framework import serializers
 
 from .models import Course, UserProfile, UserRole
+from .services import ensure_profile
 
 
 User = get_user_model()
@@ -74,23 +75,21 @@ class UserSummarySerializer(serializers.ModelSerializer):
         fields = ('id', 'username', 'email', 'role', 'profile')
 
     def get_role(self, obj):
-        profile, _ = UserProfile.objects.get_or_create(
-            user=obj,
-            defaults={'role': UserRole.STUDENT},
-        )
+        profile = ensure_profile(obj)
         return profile.role
 
     def get_profile(self, obj):
-        profile, _ = UserProfile.objects.get_or_create(
-            user=obj,
-            defaults={'role': UserRole.STUDENT},
-        )
+        profile = ensure_profile(obj)
         payload = {
             'full_name': profile.full_name,
             'phone_number': profile.phone_number,
         }
-        payload['student_institution'] = profile.student_institution
-        payload['student_level'] = profile.student_level
+        if profile.role == UserRole.STUDENT:
+            payload['student_institution'] = profile.student_institution
+            payload['student_level'] = profile.student_level
+        else:
+            payload['teacher_institution'] = profile.teacher_institution
+            payload['teacher_subject'] = profile.teacher_subject
         return payload
 
 class DetailSummarySerializer(serializers.ModelSerializer):
