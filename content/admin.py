@@ -2,7 +2,10 @@ from django.contrib import admin
 from django import forms
 from django.utils import timezone
 from unfold.admin import ModelAdmin, TabularInline
+from django.urls import reverse
+from django.utils.html import format_html
 from .models import (
+    User,
     Category,
     CourseCertificate,
     CourseQuiz,
@@ -16,10 +19,22 @@ from .models import (
     ModulePurchase,
     Module, UserProfile,
     StudentDeviceSession,
-    
 )
 
+try:
+    admin.site.unregister(User)
+except Exception:
+    pass
 
+@admin.register(User)
+class UserAdmin(ModelAdmin):
+    list_display = ('username', 'email', 'is_staff', 'is_active', 'date_joined')
+    search_fields = ('username', 'email')
+    list_filter = ('is_staff', 'is_active', 'date_joined')
+    date_hierarchy = 'date_joined'
+    list_per_page = 30
+
+    
 class CourseInline(TabularInline):
     model = Course
     extra = 0
@@ -57,7 +72,7 @@ class CourseContentInline(TabularInline):
     extra = 0
     show_change_link = True
     fields = ('title', 'content_type', 'text_content', 'image', 'audio', 'video', 'youtube_url', 'preview')
-    readonly_fields = ('id',)
+    readonly_fields = ('id', 'preview')
 
     def get_queryset(self, request):
         queryset = super().get_queryset(request)
@@ -75,7 +90,6 @@ class ModuleAccordionSectionInline(TabularInline):
     extra = 0
     show_change_link = True
     fields = ('title', 'order', 'is_open_by_default')
-
 
 
 
@@ -146,8 +160,7 @@ class CourseCertificateAdmin(ModelAdmin):
     search_fields = ('user__username', 'course__name', 'certificate_code')
     autocomplete_fields = ('user', 'course')
 
-from django.urls import reverse
-from django.utils.html import format_html
+
 @admin.register(Module)
 class ModuleAdmin(ModelAdmin):
     list_display = ('title', 'course', 'frontend_editor_link')
@@ -276,6 +289,19 @@ class CourseContentAdmin(ModelAdmin):
 class PaymentInstructionAdmin(ModelAdmin):
     list_display = ('id','payment_method_name',  'created_at')
     search_fields = ('payment_method_name',)
+    class PaymentInstructionForm(forms.ModelForm):
+        class Meta:
+            model = PaymentInstruction
+            fields = '__all__'
+            widgets = {
+                'details': forms.Textarea(attrs={'class': 'rte-enabled', 'rows': 8}),
+            }
+
+    form = PaymentInstructionForm
+
+    class Media:
+        js = ('js/admin_rte.js',)
+        css = {'all': ('css/admin_rte.css',)}
 
 # Customize admin site
 admin.site.site_header = "Interactive Teaching Platform"

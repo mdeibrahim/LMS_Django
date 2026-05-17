@@ -76,7 +76,7 @@
               <div class="instruction-data" data-method="{{ instruction.payment_method_name }}">
                 <div class="mb-4 rounded-lg border border-slate-200 p-4">
                   <h3 class="text-sm font-semibold text-slate-800">{{ instruction.get_payment_method_name_display }}</h3>
-                  <p class="mt-1 text-sm text-slate-600">{{ instruction.details }}</p>
+                  <p class="mt-1 text-sm text-slate-600">{{ instruction.details|safe }}</p>
                   {% if instruction.image %}
                     <img src="{{ instruction.image.url }}" alt="{{ instruction.get_payment_method_name_display }} instructions" class="mt-2 max-h-48 object-contain">
                   {% endif %}
