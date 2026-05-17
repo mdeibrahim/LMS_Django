@@ -3,7 +3,7 @@ from django.urls import reverse_lazy
 UNFOLD = {
     "SITE_TITLE": "Teaching Platform Admin",
     "SITE_HEADER": "Interactive Teaching Platform",
-    "SITE_SYMBOL": "school",
+    "SITE_SYMBOL": "auto_stories",
     "SHOW_HISTORY": True,
     "SHOW_VIEW_ON_SITE": True,
     "SIDEBAR": {
@@ -23,23 +23,23 @@ UNFOLD = {
                 ],
             },
             {
-                "title": "Content Management",
+                "title": "Curriculum",
                 "separator": True,
                 "collapsible": False,
                 "items": [
                     {
                         "title": "Categories",
-                        "icon": "account_tree",
+                        "icon": "category",
                         "link": reverse_lazy("admin:content_category_changelist"),
                     },
                     {
                         "title": "Subcategories",
-                        "icon": "account_tree",
+                        "icon": "segment",
                         "link": reverse_lazy("admin:content_subcategory_changelist"),
                     },
                     {
                         "title": "Courses",
-                        "icon": "account_tree",
+                        "icon": "school",
                         "link": reverse_lazy("admin:content_course_changelist"),
                     },
                     {
@@ -65,7 +65,7 @@ UNFOLD = {
                 ],
             },
             {
-                "title": "Platform",
+                "title": "Commerce",
                 "separator": True,
                 "collapsible": False,
                 "items": [
@@ -82,7 +82,7 @@ UNFOLD = {
                 ],
             },
             {
-                "title": "Authentication",
+                "title": "People",
                 "separator": True,
                 "collapsible": False,
                 "items": [
@@ -106,17 +106,21 @@ UNFOLD = {
                         "icon": "devices",
                         "link": reverse_lazy("admin:content_studentdevicesession_changelist"),
                     },
+                    {
+                        "title": "Email OTPs",
+                        "icon": "mark_email_read",
+                        "link": reverse_lazy("admin:content_emailotp_changelist"),
+                    },
                 ],
             },
             {
-                "title": "Payment Instructions",
+                "title": "Operations",
                 "separator": True,
                 "collapsible": False,
                 "items": [
-                    
                     {
                         "title": "Payment Instructions",
-                        "icon": "account_tree",
+                        "icon": "payments",
                         "link": reverse_lazy("admin:content_paymentinstruction_changelist"),
                     },
                 ],
