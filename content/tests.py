@@ -2,7 +2,7 @@ from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
 
-from .models import ModulePurchase, Course
+from .models import Course, CourseContent, Module, ModulePurchase
 from .templatetags.content_render import render_stored_content
 
 
@@ -49,4 +49,18 @@ class ContentRenderTests(TestCase):
 
         self.assertEqual(str(render_stored_content(html)), html)
 
+    def test_highlight_link_gets_variant_class_from_multimedia_content(self):
+        course = Course.objects.create(name='Media Course', slug='media-course')
+        module = Module.objects.create(course=course, title='Lesson 1', slug='lesson-1', body_content='')
+        item = CourseContent.objects.create(
+            module=module,
+            title='Sample Audio',
+            content_type='audio',
+        )
+        html = f'<p>Click <span data-content-id="{item.id}">this word</span></p>'
+
+        rendered = str(render_stored_content(html))
+
+        self.assertIn('class="highlight-link highlight-link--audio"', rendered)
+        self.assertIn(f'data-content-id="{item.id}"', rendered)
 

@@ -247,6 +247,7 @@
         const formData = new FormData();
         formData.append('title', icTitle.value.trim());
         formData.append('content_type', icType.value);
+        formData.append('is_inline_reference', 'false');
         formData.append('text_content', icTextContent.value);
         formData.append('youtube_url', icYoutubeUrl.value);
 

@@ -808,6 +808,23 @@ img { max-width: 100%; display: block; }
     color: var(--text-primary);
 }
 .modal-text-content p { margin-bottom: 12px; }
+.modal-text-content .embedded-resource {
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 18px;
+    background: rgba(255,255,255,0.72);
+}
+.modal-text-content .embedded-resource img,
+.modal-text-content .embedded-resource audio,
+.modal-text-content .embedded-resource video {
+    width: 100%;
+    max-width: 100%;
+}
+.modal-text-content .embedded-resource a {
+    color: var(--brand);
+    font-weight: 700;
+    word-break: break-word;
+}
 
 .modal-image-wrap {
     text-align: center;
@@ -849,6 +866,60 @@ img { max-width: 100%; display: block; }
     color: var(--accent2);
 }
 .modal-error i { font-size: 2rem; margin-bottom: 12px; }
+
+.article-body .highlight-link,
+.accordion-content .highlight-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 2px 10px;
+    margin: 0 2px;
+    border-radius: 999px;
+    font-weight: 700;
+    cursor: pointer;
+    text-decoration: none;
+    border: 1px solid transparent;
+    transition: transform var(--transition), box-shadow var(--transition), background var(--transition), color var(--transition);
+}
+.article-body .highlight-link:hover,
+.accordion-content .highlight-link:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-sm);
+}
+.article-body .highlight-link--link,
+.article-body .highlight-link--blue,
+.accordion-content .highlight-link--link,
+.accordion-content .highlight-link--blue {
+    background: rgba(59,130,246,0.14);
+    color: #1d4ed8;
+    border-color: rgba(59,130,246,0.24);
+}
+.article-body .highlight-link--image,
+.accordion-content .highlight-link--image {
+    background: rgba(16,185,129,0.14);
+    color: #047857;
+    border-color: rgba(16,185,129,0.24);
+}
+.article-body .highlight-link--audio,
+.accordion-content .highlight-link--audio {
+    background: rgba(249,115,22,0.14);
+    color: #c2410c;
+    border-color: rgba(249,115,22,0.24);
+}
+.article-body .highlight-link--video,
+.accordion-content .highlight-link--video {
+    background: rgba(139,92,246,0.14);
+    color: #7c3aed;
+    border-color: rgba(139,92,246,0.24);
+}
+.article-body .highlight-link--youtube,
+.article-body .highlight-link--red,
+.accordion-content .highlight-link--youtube,
+.accordion-content .highlight-link--red {
+    background: rgba(239,68,68,0.14);
+    color: #b91c1c;
+    border-color: rgba(239,68,68,0.24);
+}
 
 /* ═══════════════════════════════════════════════════
    FEATURES SECTION (home)

@@ -9,14 +9,31 @@
 .admin-rte-editor audio, .admin-rte-editor video { display: block; margin: 8px 0; max-width: 100%; }
 
 /* highlight-link styling for editor preview */
-.highlight-link { background: rgba(37,99,235,0.08); padding: 0 6px; border-radius: 4px; text-decoration: none; }
-.highlight-link--blue { background: rgba(59,130,246,0.08); color: #2563eb; font-weight: 600; }
-.highlight-link--red { background: rgba(239,68,68,0.08); color: #dc2626; font-weight: 600; }
+.highlight-link {
+    display: inline-block;
+    padding: 0 8px;
+    border-radius: 999px;
+    text-decoration: none;
+    font-weight: 700;
+    border: 1px solid transparent;
+}
+.highlight-link--blue,
+.highlight-link--link { background: rgba(59,130,246,0.12); color: #1d4ed8; border-color: rgba(59,130,246,0.22); }
+.highlight-link--red { background: rgba(239,68,68,0.12); color: #dc2626; border-color: rgba(239,68,68,0.2); }
+.highlight-link--image { background: rgba(16,185,129,0.12); color: #047857; border-color: rgba(16,185,129,0.22); }
+.highlight-link--audio { background: rgba(249,115,22,0.12); color: #c2410c; border-color: rgba(249,115,22,0.22); }
+.highlight-link--video { background: rgba(139,92,246,0.12); color: #7c3aed; border-color: rgba(139,92,246,0.22); }
+.highlight-link--youtube { background: rgba(239,68,68,0.12); color: #b91c1c; border-color: rgba(239,68,68,0.22); }
 
 @media (prefers-color-scheme: dark) {
 	.highlight-link { background: rgba(96,165,250,0.08); }
-	.highlight-link--blue { color: #93c5fd; }
-	.highlight-link--red { color: #fca5a5; }
+	.highlight-link--blue,
+	.highlight-link--link { color: #93c5fd; }
+	.highlight-link--red,
+    .highlight-link--youtube { color: #fca5a5; }
+    .highlight-link--image { color: #86efac; }
+    .highlight-link--audio { color: #fdba74; }
+    .highlight-link--video { color: #c4b5fd; }
 }
 
 /* Dark mode support */

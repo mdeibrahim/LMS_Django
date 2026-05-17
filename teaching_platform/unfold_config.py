@@ -27,7 +27,16 @@ UNFOLD = {
                 "separator": True,
                 "collapsible": False,
                 "items": [
-                    
+                    {
+                        "title": "Categories",
+                        "icon": "account_tree",
+                        "link": reverse_lazy("admin:content_category_changelist"),
+                    },
+                    {
+                        "title": "Subcategories",
+                        "icon": "account_tree",
+                        "link": reverse_lazy("admin:content_subcategory_changelist"),
+                    },
                     {
                         "title": "Courses",
                         "icon": "account_tree",

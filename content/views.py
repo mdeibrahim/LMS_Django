@@ -18,6 +18,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 from django.views.decorators.http import require_http_methods
 from .models import (
+    Category,
     CourseCertificate,
     CourseContent,
     Course,
@@ -38,17 +39,22 @@ from .forms import (
 User = get_user_model()
 
 
+VISIBLE_COURSE_CONTENTS = CourseContent.objects.filter(is_inline_reference=False).order_by('order', 'created_at')
+
+
 # ─────────────────────────────────────────────────────────
 #   PAGE VIEWS
 # ─────────────────────────────────────────────────────────
 
 def home(request):
     """Home page — show courses."""
-    courses = Course.objects.prefetch_related('modules').all()
+    courses = Course.objects.select_related('subcategory__category').prefetch_related('modules').all()
     owned_course_ids = _get_owned_course_ids(request.user)
+    categories = Category.objects.filter(subcategories__courses__isnull=False).distinct().order_by('name')
     return render(request, 'content/home.html', {
         'courses': courses,
         'owned_course_ids': owned_course_ids,
+        'categories': categories,
     })
 
 
@@ -57,13 +63,14 @@ def course_detail(request, course_slug):
     """Course detail page with module list."""
     course = get_object_or_404(Course, slug=course_slug)
     modules_qs = course.modules.prefetch_related(
-        Prefetch('course_contents', queryset=CourseContent.objects.order_by('order', 'created_at'))
+        Prefetch('course_contents', queryset=VISIBLE_COURSE_CONTENTS)
     ).all()
     modules = list(modules_qs)
     # attach first_content attribute to each module (useful in templates)
     for m in modules:
         contents = list(m.course_contents.all())
         m.first_content = contents[0] if contents else None
+        m.visible_content_count = len(contents)
         # attach quiz count to avoid template relying on related manager in ambiguous contexts
         try:
             m.quiz_count = m.course_quizzes.count()
@@ -93,7 +100,7 @@ def module_detail(request, course_slug, module_slug):
     course = get_object_or_404(Course, slug=course_slug)
     module = get_object_or_404(
         Module.objects.prefetch_related(
-            Prefetch('course_contents', queryset=CourseContent.objects.order_by('order', 'created_at')),
+            Prefetch('course_contents', queryset=VISIBLE_COURSE_CONTENTS),
             Prefetch('accordion_sections', queryset=ModuleAccordionSection.objects.order_by('order', 'created_at')),
         ),
         course=course,
@@ -110,15 +117,14 @@ def module_editor(request, course_slug, module_slug):
     course = get_object_or_404(Course, slug=course_slug)
     module = get_object_or_404(
         Module.objects.prefetch_related(
-            Prefetch('course_contents', queryset=CourseContent.objects.order_by('order', 'created_at')),
             Prefetch('accordion_sections', queryset=ModuleAccordionSection.objects.order_by('order', 'created_at')),
         ),
         course=course,
         slug=module_slug,
     )
-    interactive_contents = list(module.course_contents.all())
+    interactive_contents = list(module.course_contents.filter(is_inline_reference=False).order_by('order', 'created_at').all())
     accordion_sections = list(module.accordion_sections.all())
-    first_content = module.course_contents.order_by('order', 'created_at').first()
+    first_content = module.course_contents.filter(is_inline_reference=False).order_by('order', 'created_at').first()
     return render(request, 'content/subject_editor.html', {
         'course': course,
         'module': module,
@@ -140,7 +146,9 @@ def play_video(request, course_slug, module_slug, video_id):
     video = get_object_or_404(CourseContent, id=video_id, module=module)
 
     has_access = _has_module_access(request.user, course)
-    videos = module.course_contents.order_by('order', 'created_at').all()
+    videos = module.course_contents.filter(is_inline_reference=False).order_by('order', 'created_at').all()
+    interactive_contents = list(videos)
+    accordion_sections = list(module.accordion_sections.order_by('order', 'created_at'))
 
     # derive embed info for youtube/mp4
     def _get_embed(url):
@@ -212,6 +220,8 @@ def play_video(request, course_slug, module_slug, video_id):
         'module': module,
         'video': video,
         'videos': videos,
+        'interactive_contents': interactive_contents,
+        'accordion_sections': accordion_sections,
         'has_access': has_access,
         'embed': embed,
     })
@@ -649,6 +659,7 @@ def get_course_content(request, content_id):
         'module_id': content.module_id,
         'title': content.title,
         'content_type': content.content_type,
+        'is_inline_reference': content.is_inline_reference,
         'text_content': content.text_content or '',
         'image_url': image_url,
         'audio_url': audio_url,
@@ -709,6 +720,7 @@ def _serialize_ic(ic):
         'module_id': ic.module_id,
         'title': ic.title,
         'content_type': ic.content_type,
+        'is_inline_reference': ic.is_inline_reference,
         'text_content': ic.text_content or '',
         'youtube_url': ic.youtube_url or '',
         'youtube_embed_url': ic.get_youtube_embed_url() or _youtube_embed_from_url(video_url),
@@ -784,8 +796,10 @@ def api_ic_create(request, module_id):
 
     content_type = data.get('content_type', 'text')
     title = data.get('title', 'Untitled')
+    is_inline_reference = str(data.get('is_inline_reference', '')).lower() in ('1', 'true', 'yes', 'on')
 
     ic = CourseContent(module=module, content_type=content_type, title=title)
+    ic.is_inline_reference = is_inline_reference
 
     if content_type == 'text':
         ic.text_content = data.get('text_content', '')
@@ -793,8 +807,10 @@ def api_ic_create(request, module_id):
         ic.image = files['image']
     elif content_type == 'audio' and 'audio' in files:
         ic.audio = files['audio']
-    elif content_type == 'video' and 'video' in files:
-        ic.video = files['video']
+    elif content_type == 'video':
+        if 'video' in files:
+            ic.video = files['video']
+        ic.video_url = data.get('video_url', '')
     elif content_type == 'youtube':
         ic.youtube_url = data.get('youtube_url', '')
     ic.save()
@@ -823,10 +839,14 @@ def api_ic_update(request, ic_id):
         ic.content_type = data['content_type']
     if 'title' in data:
         ic.title = data['title']
+    if 'is_inline_reference' in data:
+        ic.is_inline_reference = str(data['is_inline_reference']).lower() in ('1', 'true', 'yes', 'on')
     if 'text_content' in data:
         ic.text_content = data['text_content']
     if 'youtube_url' in data:
         ic.youtube_url = data['youtube_url']
+    if 'video_url' in data:
+        ic.video_url = data['video_url']
     if 'image' in files:
         ic.image = files['image']
     if 'audio' in files:

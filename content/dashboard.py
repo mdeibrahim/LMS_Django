@@ -79,7 +79,7 @@ def admin_dashboard(request):
     modules_without_quiz = Module.objects.annotate(
         total_quizzes=Count("course_quizzes")
     ).filter(total_quizzes=0).count()
-    courses_with_teacher = Course.objects.filter(teacher__isnull=False).count()
+    courses_with_subcategory = Course.objects.filter(subcategory__isnull=False).count()
 
     health = {
         "courses_without_modules": courses_without_modules,
@@ -88,8 +88,8 @@ def admin_dashboard(request):
         "course_structure_coverage": _percent(courses_count - courses_without_modules, courses_count),
         "content_coverage": _percent(modules_count - modules_without_content, modules_count),
         "quiz_coverage": _percent(modules_count - modules_without_quiz, modules_count),
-        "courses_with_teacher": courses_with_teacher,
-        "teacher_assignment_coverage": _percent(courses_with_teacher, courses_count),
+        "courses_with_subcategory": courses_with_subcategory,
+        "subcategory_assignment_coverage": _percent(courses_with_subcategory, courses_count),
     }
 
     latest_modules = Module.objects.select_related("course").order_by("-created_at")[:6]

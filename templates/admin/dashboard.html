@@ -451,7 +451,7 @@
                 <article class="metric-card">
                     <p class="metric-label">Courses</p>
                     <p class="metric-value">{{ stats.courses_count }}</p>
-                    <p class="metric-note">{{ health.courses_with_teacher }} assigned to teachers</p>
+                    <p class="metric-note">{{ health.courses_with_subcategory }} linked to subcategories</p>
                 </article>
                 <article class="metric-card">
                     <p class="metric-label">Modules</p>
@@ -507,10 +507,10 @@
                         </div>
                         <div class="health-item">
                             <label>
-                                <span>Courses assigned to teachers</span>
-                                <span>{{ health.teacher_assignment_coverage }}%</span>
+                                <span>Courses linked to subcategories</span>
+                                <span>{{ health.subcategory_assignment_coverage }}%</span>
                             </label>
-                            <div class="meter"><span style="width: {{ health.teacher_assignment_coverage }}%;"></span></div>
+                            <div class="meter"><span style="width: {{ health.subcategory_assignment_coverage }}%;"></span></div>
                         </div>
                     </div>
                     <p class="section-note">These percentages are calculated from the current course and module setup.</p>

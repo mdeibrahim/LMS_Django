@@ -33,8 +33,15 @@
     }
 
     @keyframes floatY {
-        0%, 100% { transform: translateY(0); }
-        50% { transform: translateY(-12px); }
+
+        0%,
+        100% {
+            transform: translateY(0);
+        }
+
+        50% {
+            transform: translateY(-12px);
+        }
     }
 
     @keyframes revealUp {
@@ -42,6 +49,7 @@
             opacity: 0;
             transform: translateY(18px);
         }
+
         to {
             opacity: 1;
             transform: translateY(0);
@@ -49,36 +57,105 @@
     }
 </style>
 {% endblock %}
+<style>
+    /* Force badge rows to stay single-line and be horizontally scrollable */
+    .badges-row {
+        display: flex;
+        flex-wrap: nowrap;
+        gap: 0.5rem;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .badges-row .subcategory-badge,
+    .badges-row .course-badge {
+        flex: 0 0 auto;
+        white-space: nowrap;
+    }
+
+    /* Make subcategory cards a horizontal scroller so each card stays on one line */
+    .subcategory-cards {
+        display: flex;
+        flex-wrap: nowrap;
+        gap: 1rem;
+        overflow-x: auto;
+        padding-bottom: 0.5rem;
+    }
+
+    .subcategory-cards .course-card {
+        flex: 0 0 320px;
+        min-width: 280px;
+    }
+
+    /* Simple fade transitions for show/hide */
+    .fade-hidden {
+        opacity: 0;
+        transform: translateY(6px);
+        pointer-events: none;
+        transition: opacity .24s ease, transform .24s ease;
+    }
+
+    .fade-show {
+        opacity: 1;
+        transform: none;
+        transition: opacity .24s ease, transform .24s ease;
+    }
+
+    /* Reset button */
+    .reset-btn {
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 0.75rem;
+        border-radius: 9999px;
+        border: 1px solid rgba(0, 0, 0, 0.06);
+        background: white;
+    }
+</style>
 
 {% block content %}
 <section class="relative overflow-hidden pb-10 pt-14 sm:pb-14 lg:pt-20">
-    <div class="absolute inset-0 -z-20 bg-[radial-gradient(950px_340px_at_8%_-5%,rgba(244,63,94,0.24),transparent),radial-gradient(880px_360px_at_92%_-12%,rgba(14,165,233,0.26),transparent),linear-gradient(180deg,#fff7ed_0%,#f8fafc_48%,#eef2ff_100%)]"></div>
-    <div class="hero-orb absolute -left-10 top-16 -z-10 h-32 w-32 rounded-full bg-gradient-to-br from-rose-400/40 to-fuchsia-400/20 blur-2xl"></div>
-    <div class="hero-orb hero-orb--delay absolute right-2 top-24 -z-10 h-40 w-40 rounded-full bg-gradient-to-br from-cyan-400/40 to-indigo-500/25 blur-2xl sm:right-10"></div>
+    <div
+        class="absolute inset-0 -z-20 bg-[radial-gradient(950px_340px_at_8%_-5%,rgba(244,63,94,0.24),transparent),radial-gradient(880px_360px_at_92%_-12%,rgba(14,165,233,0.26),transparent),linear-gradient(180deg,#fff7ed_0%,#f8fafc_48%,#eef2ff_100%)]">
+    </div>
+    <div
+        class="hero-orb absolute -left-10 top-16 -z-10 h-32 w-32 rounded-full bg-gradient-to-br from-rose-400/40 to-fuchsia-400/20 blur-2xl">
+    </div>
+    <div
+        class="hero-orb hero-orb--delay absolute right-2 top-24 -z-10 h-40 w-40 rounded-full bg-gradient-to-br from-cyan-400/40 to-indigo-500/25 blur-2xl sm:right-10">
+    </div>
 
     <div class="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
         <div class="grid items-center gap-8 lg:grid-cols-2">
             <div>
-                <span class="reveal-up inline-flex items-center gap-2 rounded-full border border-rose-200 bg-white/80 px-4 py-1.5 text-xs font-bold tracking-wide text-rose-700 backdrop-blur sm:text-sm">
+                <span
+                    class="reveal-up inline-flex items-center gap-2 rounded-full border border-rose-200 bg-white/80 px-4 py-1.5 text-xs font-bold tracking-wide text-rose-700 backdrop-blur sm:text-sm">
                     <i class="fa-solid fa-sparkles"></i>
                     FUTURE-READY LEARNING
                 </span>
 
-                <h1 class="reveal-up-2 mt-5 font-display text-4xl font-bold tracking-tight text-slate-900 sm:text-5xl lg:text-6xl">
+                <h1
+                    class="reveal-up-2 mt-5 font-display text-4xl font-bold tracking-tight text-slate-900 sm:text-5xl lg:text-6xl">
                     Learn Smarter with
-                    <span class="bg-gradient-to-r from-rose-500 via-orange-500 to-cyan-600 bg-clip-text text-transparent">Colorful Interactive Lessons</span>
+                    <span
+                        class="bg-gradient-to-r from-rose-500 via-orange-500 to-cyan-600 bg-clip-text text-transparent">Colorful
+                        Interactive Lessons</span>
                 </h1>
 
                 <p class="reveal-up-3 mt-5 max-w-2xl text-base leading-7 text-slate-600 sm:text-lg">
-                    Structured categories, unlockable courses, and module-based video learning in one place. Study with focused lessons and guided course flow.
+                    Structured categories, unlockable courses, and module-based video learning in one place. Study with
+                    focused lessons and guided course flow.
                 </p>
 
                 <div class="reveal-up-3 mt-8 flex flex-wrap gap-3">
-                    <a href="#courses" class="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-rose-500 to-orange-500 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-rose-500/25 transition hover:scale-[1.02] hover:from-rose-600 hover:to-orange-600 sm:text-base">
+                    <a href="#courses"
+                        class="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-rose-500 to-orange-500 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-rose-500/25 transition hover:scale-[1.02] hover:from-rose-600 hover:to-orange-600 sm:text-base">
                         <i class="fa-solid fa-compass"></i>
                         Explore Courses
                     </a>
-                    <a href="{% url 'content:my_courses' %}" class="inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white/90 px-5 py-3 text-sm font-semibold text-slate-700 backdrop-blur transition hover:bg-slate-100 sm:text-base">
+                    <a href="{% url 'content:my_courses' %}"
+                        class="inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white/90 px-5 py-3 text-sm font-semibold text-slate-700 backdrop-blur transition hover:bg-slate-100 sm:text-base">
                         <i class="fa-solid fa-book-open-reader"></i>
                         My Courses
                     </a>
@@ -101,8 +178,10 @@
             </div>
 
             <div class="reveal-up-2">
-                <div class="relative rounded-3xl border border-white/70 bg-white/70 p-4 shadow-xl shadow-slate-900/10 backdrop-blur sm:p-6">
-                    <div class="absolute -right-3 -top-3 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 px-3 py-1 text-xs font-bold text-white shadow">
+                <div
+                    class="relative rounded-3xl border border-white/70 bg-white/70 p-4 shadow-xl shadow-slate-900/10 backdrop-blur sm:p-6">
+                    <div
+                        class="absolute -right-3 -top-3 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 px-3 py-1 text-xs font-bold text-white shadow">
                         New Experience
                     </div>
                     <div class="grid gap-3">
@@ -112,15 +191,18 @@
                         </div>
                         <div class="grid gap-3 sm:grid-cols-2">
                             <div class="rounded-2xl border border-slate-200 bg-white p-4">
-                                <p class="text-sm font-semibold text-slate-900"><i class="fa-solid fa-brain text-violet-600"></i> Smart Learning</p>
+                                <p class="text-sm font-semibold text-slate-900"><i
+                                        class="fa-solid fa-brain text-violet-600"></i> Smart Learning</p>
                                 <p class="mt-1 text-sm text-slate-600">Module-by-module focused explanations.</p>
                             </div>
                             <div class="rounded-2xl border border-slate-200 bg-white p-4">
-                                <p class="text-sm font-semibold text-slate-900"><i class="fa-solid fa-layer-group text-emerald-600"></i> Structured Flow</p>
+                                <p class="text-sm font-semibold text-slate-900"><i
+                                        class="fa-solid fa-layer-group text-emerald-600"></i> Structured Flow</p>
                                 <p class="mt-1 text-sm text-slate-600">Category to module journey for clarity.</p>
                             </div>
                         </div>
-                        <div class="rounded-2xl border border-dashed border-slate-300 bg-white p-4 text-sm text-slate-600">
+                        <div
+                            class="rounded-2xl border border-dashed border-slate-300 bg-white p-4 text-sm text-slate-600">
                             <i class="fa-solid fa-bolt text-amber-500"></i>
                             Perfect for school, college and exam-focused learners.
                         </div>
@@ -132,67 +214,214 @@
 </section>
 
 <section id="courses" class="pb-12 sm:pb-14">
+
     <div class="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
-        {% if courses %}
-        <div class="mb-8 text-center">
-            <h2 class="font-display text-3xl font-bold text-slate-900 sm:text-4xl">Popular Courses</h2>
-            <p class="mt-2 text-slate-600">Choose a course and start progressing with confidence.</p>
+
+        <!-- Heading -->
+        <div class="mb-10 text-center">
+            <h2 class="font-display text-3xl font-bold text-slate-900 sm:text-4xl">
+                Popular Courses
+            </h2>
+
+            <p class="mt-2 text-slate-600">
+                Choose a course and start progressing with confidence.
+            </p>
         </div>
 
-        <div class="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
-            {% for course in courses %}
-            <a href="{% url 'content:course_detail' course.slug %}" class="group overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl">
-                <div class="relative h-44 overflow-hidden bg-gradient-to-r from-violet-700 via-fuchsia-600 to-rose-500 p-5 text-white">
-                    <div class="absolute -right-6 -top-8 h-24 w-24 rounded-full bg-white/20"></div>
-                    <div class="absolute right-8 top-6 h-10 w-10 rounded-full border-4 border-white/35"></div>
-                    <div class="inline-flex items-center gap-2 rounded-full bg-white/20 px-3 py-1 text-xs font-semibold backdrop-blur">
-                        <i class="fa-solid fa-graduation-cap"></i>
-                        Featured Course
-                    </div>
-                    <h3 class="mt-4 text-3xl font-bold tracking-tight text-amber-300">{{ course.name|truncatechars:18 }}</h3>
-                    <p class="mt-1 text-base font-medium text-white/90">Learning Track</p>
+        {% if categories %}
+
+            {% for category in categories %}
+
+            <!-- CATEGORY -->
+            <div class="mb-16 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+
+                <!-- CATEGORY HEADER -->
+                <div class="mb-8 flex flex-wrap items-center justify-between gap-4">
+
+                    <h2 class="text-3xl font-extrabold text-slate-900">
+                        {{ category.name }}
+                    </h2>
+
+                    <button
+                        type="button"
+                        class="reset-btn rounded-full bg-slate-200 px-5 py-2 text-sm font-bold text-slate-700 transition hover:bg-slate-300"
+                        data-category-id="{{ category.id }}">
+
+                        Show All
+
+                    </button>
+
                 </div>
 
-                <div class="p-5">
-                    <div class="inline-flex rounded-lg bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-700">
-                        {{ course.name|truncatechars:14 }}
-                    </div>
-                    <h3 class="mt-4 text-2xl font-extrabold leading-tight text-slate-900">{{ course.name }}</h3>
-                    <p class="course-desc mt-2 text-sm leading-6 text-slate-600">{{ course.description|default:"এই course-এ structured lesson এবং exam-focused explanation পাওয়া যাবে।" }}</p>
+                <!-- SUBCATEGORY BADGES -->
+                <div class="mb-6 flex flex-wrap gap-3">
 
-                    <div class="mt-4 flex flex-wrap gap-2 text-xs font-semibold">
-                        <span class="inline-flex items-center gap-1 rounded-full bg-blue-100 px-3 py-1 text-blue-700">
-                            <i class="fa-solid fa-layer-group"></i> {{ course.modules.count }} modules
-                        </span>
-                        <span class="inline-flex items-center gap-1 rounded-full bg-violet-100 px-3 py-1 text-violet-700">
-                            <i class="fa-solid fa-book-open"></i> Guided Learning
-                        </span>
-                    </div>
+                    {% for subcategory in category.subcategories.all %}
 
-                    <div class="mt-5 flex items-center justify-between">
-                        <div class="text-sm text-slate-500">
-                            <span class="font-medium text-slate-700">Updated:</span>
-                            {{ course.created_at|date:"M d, Y" }}
+                    <button
+                        type="button"
+                        class="subcategory-badge rounded-full bg-slate-900 px-4 py-2 text-sm font-bold text-white transition hover:bg-slate-700"
+                        data-category-id="{{ category.id }}"
+                        data-subcategory-id="{{ subcategory.id }}">
+
+                        <i class="fa-solid fa-layer-group mr-1"></i>
+                        {{ subcategory.name }}
+
+                    </button>
+
+                    {% endfor %}
+
+                </div>
+
+                <!-- ALL COURSE BADGES -->
+                <div class="mb-10 flex flex-wrap gap-3">
+
+                    {% for subcategory in category.subcategories.all %}
+                        {% for course in subcategory.courses.all %}
+
+                        <button
+                            type="button"
+                            class="course-badge rounded-full bg-blue-100 px-4 py-2 text-sm font-bold text-blue-700 transition hover:bg-blue-200"
+                            data-category-id="{{ category.id }}"
+                            data-subcategory-id="{{ subcategory.id }}"
+                            data-course-id="{{ course.id }}">
+
+                            <i class="fa-solid fa-book mr-1"></i>
+                            {{ course.name }}
+
+                        </button>
+
+                        {% endfor %}
+                    {% endfor %}
+
+                </div>
+
+                <!-- ALL COURSE CARDS -->
+                <div class="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+
+                    {% for subcategory in category.subcategories.all %}
+                        {% for course in subcategory.courses.all %}
+
+                        <div
+                            class="course-card-wrapper"
+                            data-category-id="{{ category.id }}"
+                            data-subcategory-id="{{ subcategory.id }}"
+                            data-course-id="{{ course.id }}">
+
+                            <a href="{% url 'content:course_detail' course.slug %}"
+                               class="group block overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl">
+
+                                <!-- Card Header -->
+                                <div class="relative h-44 overflow-hidden bg-gradient-to-r from-violet-700 via-fuchsia-600 to-rose-500 p-5 text-white">
+
+                                    <div class="absolute -right-6 -top-8 h-24 w-24 rounded-full bg-white/20"></div>
+
+                                    <div class="absolute right-8 top-6 h-10 w-10 rounded-full border-4 border-white/35"></div>
+
+                                    <div class="inline-flex items-center gap-2 rounded-full bg-white/20 px-3 py-1 text-xs font-semibold backdrop-blur">
+                                        <i class="fa-solid fa-graduation-cap"></i>
+                                        Featured Course
+                                    </div>
+
+                                    <h3 class="mt-4 text-3xl font-bold tracking-tight text-amber-300">
+                                        {{ course.name|truncatechars:18 }}
+                                    </h3>
+
+                                    <p class="mt-1 text-base font-medium text-white/90">
+                                        Learning Track
+                                    </p>
+
+                                </div>
+
+                                <!-- Card Body -->
+                                <div class="p-5">
+
+                                    <div class="inline-flex rounded-lg bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-700">
+                                        {{ course.name|truncatechars:14 }}
+                                    </div>
+
+                                    <h3 class="mt-4 text-2xl font-extrabold leading-tight text-slate-900">
+                                        {{ course.name }}
+                                    </h3>
+
+                                    <p class="course-desc mt-2 text-sm leading-6 text-slate-600">
+                                        {{ course.description|default:"এই course-এ structured lesson এবং exam-focused explanation পাওয়া যাবে।" }}
+                                    </p>
+
+                                    <div class="mt-4 flex flex-wrap gap-2 text-xs font-semibold">
+
+                                        <span class="inline-flex items-center gap-1 rounded-full bg-blue-100 px-3 py-1 text-blue-700">
+                                            <i class="fa-solid fa-book"></i>
+                                            {{ course.modules.count }} modules
+                                        </span>
+
+                                        <span class="inline-flex items-center gap-1 rounded-full bg-violet-100 px-3 py-1 text-violet-700">
+                                            <i class="fa-solid fa-book-open"></i>
+                                            Guided Learning
+                                        </span>
+
+                                    </div>
+
+                                    <div class="mt-5 flex items-center justify-between">
+
+                                        <div class="text-sm text-slate-500">
+
+                                            <span class="font-medium text-slate-700">
+                                                Updated:
+                                            </span>
+
+                                            {{ course.created_at|date:"M d, Y" }}
+
+                                        </div>
+
+                                        <span class="inline-flex items-center gap-2 rounded-xl bg-yellow-400 px-4 py-2 text-base font-extrabold text-slate-900 transition group-hover:bg-yellow-300">
+
+                                            বিস্তারিত দেখুন
+
+                                            <i class="fa-solid fa-arrow-right text-sm"></i>
+
+                                        </span>
+
+                                    </div>
+
+                                </div>
+
+                            </a>
+
                         </div>
-                        <span class="inline-flex items-center gap-2 rounded-xl bg-yellow-400 px-4 py-2 text-base font-extrabold text-slate-900 transition group-hover:bg-yellow-300">
-                            বিস্তারিত দেখুন
-                            <i class="fa-solid fa-arrow-right text-sm"></i>
-                        </span>
-                    </div>
+
+                        {% endfor %}
+                    {% endfor %}
+
                 </div>
-            </a>
+
+            </div>
+
             {% endfor %}
-        </div>
+
         {% else %}
+
+        <!-- EMPTY -->
         <div class="rounded-3xl border border-dashed border-slate-300 bg-white px-6 py-10 text-center shadow-sm sm:px-10">
+
             <div class="mx-auto inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-slate-100 text-slate-500">
                 <i class="fa-solid fa-book-open"></i>
             </div>
-            <h2 class="mt-4 text-2xl font-bold text-slate-900">No Content Yet</h2>
-            <p class="mt-2 text-slate-600">Content এখনো available হয়নি। একটু পরে আবার চেক করুন।</p>
+
+            <h2 class="mt-4 text-2xl font-bold text-slate-900">
+                No Content Yet
+            </h2>
+
+            <p class="mt-2 text-slate-600">
+                Content এখনো available হয়নি। একটু পরে আবার চেক করুন।
+            </p>
+
         </div>
+
         {% endif %}
+
     </div>
+
 </section>
 
 <section id="lecturers" class="pb-12 sm:pb-14">
@@ -203,9 +432,11 @@
         </div>
 
         <div class="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
-            <article class="group rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-xl">
+            <article
+                class="group rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-xl">
                 <div class="flex items-center gap-3">
-                    <div class="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-rose-100 to-orange-100 text-rose-600">
+                    <div
+                        class="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-rose-100 to-orange-100 text-rose-600">
                         <i class="fa-solid fa-user-graduate"></i>
                     </div>
                     <div>
@@ -213,15 +444,19 @@
                         <p class="text-xs text-slate-500">Math Lecturer</p>
                     </div>
                 </div>
-                <p class="mt-4 text-sm leading-6 text-slate-600">HSC + Admission math problem-solving expert with shortcut-based techniques.</p>
-                <div class="mt-4 inline-flex items-center gap-2 rounded-full bg-rose-50 px-3 py-1 text-xs font-semibold text-rose-700">
+                <p class="mt-4 text-sm leading-6 text-slate-600">HSC + Admission math problem-solving expert with
+                    shortcut-based techniques.</p>
+                <div
+                    class="mt-4 inline-flex items-center gap-2 rounded-full bg-rose-50 px-3 py-1 text-xs font-semibold text-rose-700">
                     <i class="fa-solid fa-award"></i> 8+ Years Experience
                 </div>
             </article>
 
-            <article class="group rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-xl">
+            <article
+                class="group rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-xl">
                 <div class="flex items-center gap-3">
-                    <div class="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-cyan-100 to-blue-100 text-cyan-700">
+                    <div
+                        class="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-cyan-100 to-blue-100 text-cyan-700">
                         <i class="fa-solid fa-flask-vial"></i>
                     </div>
                     <div>
@@ -229,15 +464,19 @@
                         <p class="text-xs text-slate-500">Chemistry Lecturer</p>
                     </div>
                 </div>
-                <p class="mt-4 text-sm leading-6 text-slate-600">Concept-first chemistry teaching with visual examples and quick revision notes.</p>
-                <div class="mt-4 inline-flex items-center gap-2 rounded-full bg-cyan-50 px-3 py-1 text-xs font-semibold text-cyan-700">
+                <p class="mt-4 text-sm leading-6 text-slate-600">Concept-first chemistry teaching with visual examples
+                    and quick revision notes.</p>
+                <div
+                    class="mt-4 inline-flex items-center gap-2 rounded-full bg-cyan-50 px-3 py-1 text-xs font-semibold text-cyan-700">
                     <i class="fa-solid fa-award"></i> 6+ Years Experience
                 </div>
             </article>
 
-            <article class="group rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-xl">
+            <article
+                class="group rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-xl">
                 <div class="flex items-center gap-3">
-                    <div class="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-violet-100 to-fuchsia-100 text-violet-700">
+                    <div
+                        class="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-violet-100 to-fuchsia-100 text-violet-700">
                         <i class="fa-solid fa-atom"></i>
                     </div>
                     <div>
@@ -245,15 +484,19 @@
                         <p class="text-xs text-slate-500">Physics Lecturer</p>
                     </div>
                 </div>
-                <p class="mt-4 text-sm leading-6 text-slate-600">Real-life physics applications and exam-oriented CQ/MCQ strategy sessions.</p>
-                <div class="mt-4 inline-flex items-center gap-2 rounded-full bg-violet-50 px-3 py-1 text-xs font-semibold text-violet-700">
+                <p class="mt-4 text-sm leading-6 text-slate-600">Real-life physics applications and exam-oriented CQ/MCQ
+                    strategy sessions.</p>
+                <div
+                    class="mt-4 inline-flex items-center gap-2 rounded-full bg-violet-50 px-3 py-1 text-xs font-semibold text-violet-700">
                     <i class="fa-solid fa-award"></i> 7+ Years Experience
                 </div>
             </article>
 
-            <article class="group rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-xl">
+            <article
+                class="group rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-xl">
                 <div class="flex items-center gap-3">
-                    <div class="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-100 to-teal-100 text-emerald-700">
+                    <div
+                        class="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-100 to-teal-100 text-emerald-700">
                         <i class="fa-solid fa-book-open"></i>
                     </div>
                     <div>
@@ -261,15 +504,18 @@
                         <p class="text-xs text-slate-500">English Lecturer</p>
                     </div>
                 </div>
-                <p class="mt-4 text-sm leading-6 text-slate-600">Grammar to writing mastery with practical exercises and spoken practice support.</p>
-                <div class="mt-4 inline-flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
+                <p class="mt-4 text-sm leading-6 text-slate-600">Grammar to writing mastery with practical exercises and
+                    spoken practice support.</p>
+                <div
+                    class="mt-4 inline-flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
                     <i class="fa-solid fa-award"></i> 5+ Years Experience
                 </div>
             </article>
         </div>
 
         <div class="mt-6 text-center">
-            <a href="#categories" class="inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-5 py-2.5 font-semibold text-slate-700 transition hover:bg-slate-100">
+            <a href="#categories"
+                class="inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-5 py-2.5 font-semibold text-slate-700 transition hover:bg-slate-100">
                 <i class="fa-solid fa-circle-play"></i>
                 Start Learning with Our Lecturers
             </a>
@@ -279,23 +525,238 @@
 
 <section class="pb-14">
     <div class="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div class="relative overflow-hidden rounded-3xl bg-gradient-to-r from-violet-700 via-fuchsia-700 to-rose-600 p-6 text-white shadow-xl shadow-violet-700/20 sm:p-8">
+        <div
+            class="relative overflow-hidden rounded-3xl bg-gradient-to-r from-violet-700 via-fuchsia-700 to-rose-600 p-6 text-white shadow-xl shadow-violet-700/20 sm:p-8">
             <div class="absolute -right-12 top-0 h-36 w-36 rounded-full bg-white/20 blur-2xl"></div>
             <div class="absolute -left-12 bottom-0 h-36 w-36 rounded-full bg-amber-300/25 blur-2xl"></div>
 
             <div class="relative grid gap-6 lg:grid-cols-2 lg:items-center">
                 <div>
                     <h3 class="text-2xl font-bold sm:text-3xl">Make every study session inspiring</h3>
-                    <p class="mt-2 text-sm text-fuchsia-100 sm:text-base">Your complete digital classroom with visually rich, modular content and focused learning paths.</p>
+                    <p class="mt-2 text-sm text-fuchsia-100 sm:text-base">Your complete digital classroom with visually
+                        rich, modular content and focused learning paths.</p>
                 </div>
                 <div class="flex flex-wrap gap-2 lg:justify-end">
-                    <span class="rounded-full border border-white/35 bg-white/10 px-3 py-1.5 text-xs font-semibold sm:text-sm"><i class="fa-solid fa-layer-group"></i> Modules</span>
-                    <span class="rounded-full border border-white/35 bg-white/10 px-3 py-1.5 text-xs font-semibold sm:text-sm"><i class="fa-solid fa-video"></i> Videos</span>
-                    <span class="rounded-full border border-white/35 bg-white/10 px-3 py-1.5 text-xs font-semibold sm:text-sm"><i class="fa-solid fa-list-check"></i> Structured</span>
-                    <span class="rounded-full border border-white/35 bg-white/10 px-3 py-1.5 text-xs font-semibold sm:text-sm"><i class="fa-solid fa-mobile-screen"></i> Mobile Ready</span>
+                    <span
+                        class="rounded-full border border-white/35 bg-white/10 px-3 py-1.5 text-xs font-semibold sm:text-sm"><i
+                            class="fa-solid fa-layer-group"></i> Modules</span>
+                    <span
+                        class="rounded-full border border-white/35 bg-white/10 px-3 py-1.5 text-xs font-semibold sm:text-sm"><i
+                            class="fa-solid fa-video"></i> Videos</span>
+                    <span
+                        class="rounded-full border border-white/35 bg-white/10 px-3 py-1.5 text-xs font-semibold sm:text-sm"><i
+                            class="fa-solid fa-list-check"></i> Structured</span>
+                    <span
+                        class="rounded-full border border-white/35 bg-white/10 px-3 py-1.5 text-xs font-semibold sm:text-sm"><i
+                            class="fa-solid fa-mobile-screen"></i> Mobile Ready</span>
                 </div>
             </div>
         </div>
     </div>
 </section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+
+        // Prevent wrapping
+        document.querySelectorAll('.subcategory-badge, .course-badge').forEach(function (el) {
+            el.style.flex = '0 0 auto';
+            el.style.whiteSpace = 'nowrap';
+        });
+
+        function setVisible(el, visible) {
+
+            if (!el) return;
+
+            if (visible) {
+
+                el.style.display = '';
+
+                requestAnimationFrame(function () {
+                    el.classList.remove('fade-hidden');
+                    el.classList.add('fade-show');
+                });
+
+            } else {
+
+                el.classList.remove('fade-show');
+                el.classList.add('fade-hidden');
+
+                setTimeout(function () {
+                    el.style.display = 'none';
+                }, 240);
+
+            }
+
+        }
+
+        // CATEGORY LOOP
+        document.querySelectorAll('[data-category-id]').forEach(function (categorySection) {
+
+            const categoryId = categorySection.dataset.categoryId;
+
+            const subcategoryButtons = categorySection.querySelectorAll('.subcategory-badge');
+
+            const courseButtons = categorySection.querySelectorAll('.course-badge');
+
+            const courseCards = categorySection.querySelectorAll('.course-card-wrapper');
+
+            const resetButton = categorySection.querySelector('.reset-btn');
+
+
+            // =========================
+            // SUBCATEGORY FILTER
+            // =========================
+            subcategoryButtons.forEach(function (button) {
+
+                button.addEventListener('click', function () {
+
+                    const subcategoryId = button.dataset.subcategoryId;
+
+                    // FILTER COURSE BADGES
+                    courseButtons.forEach(function (courseBtn) {
+
+                        if (
+                            String(courseBtn.dataset.subcategoryId) === String(subcategoryId)
+                        ) {
+                            setVisible(courseBtn, true);
+                        } else {
+                            setVisible(courseBtn, false);
+                        }
+
+                    });
+
+                    // FILTER COURSE CARDS
+                    courseCards.forEach(function (card) {
+
+                        if (
+                            String(card.dataset.subcategoryId) === String(subcategoryId)
+                        ) {
+                            setVisible(card, true);
+                        } else {
+                            setVisible(card, false);
+                        }
+
+                    });
+
+                });
+
+                // KEYBOARD SUPPORT
+                button.addEventListener('keydown', function (e) {
+
+                    if (e.key === 'Enter' || e.key === ' ') {
+
+                        e.preventDefault();
+                        button.click();
+
+                    }
+
+                });
+
+            });
+
+
+            // =========================
+            // COURSE FILTER
+            // =========================
+            courseButtons.forEach(function (button) {
+
+                button.addEventListener('click', function () {
+
+                    const courseId = button.dataset.courseId;
+
+                    courseCards.forEach(function (card) {
+
+                        if (
+                            String(card.dataset.courseId) === String(courseId)
+                        ) {
+                            setVisible(card, true);
+                        } else {
+                            setVisible(card, false);
+                        }
+
+                    });
+
+                    // SCROLL TO CARD
+                    const targetCard = categorySection.querySelector(
+                        '[data-course-id="' + courseId + '"]'
+                    );
+
+                    if (targetCard) {
+
+                        targetCard.scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'center'
+                        });
+
+                    }
+
+                });
+
+                // KEYBOARD SUPPORT
+                button.addEventListener('keydown', function (e) {
+
+                    if (e.key === 'Enter' || e.key === ' ') {
+
+                        e.preventDefault();
+                        button.click();
+
+                    }
+
+                });
+
+            });
+
+
+            // =========================
+            // RESET FILTER
+            // =========================
+            if (resetButton) {
+
+                resetButton.addEventListener('click', function () {
+
+                    // SHOW ALL COURSE BADGES
+                    courseButtons.forEach(function (btn) {
+                        setVisible(btn, true);
+                    });
+
+                    // SHOW ALL COURSE CARDS
+                    courseCards.forEach(function (card) {
+                        setVisible(card, true);
+                    });
+
+                    // SCROLL TO CATEGORY
+                    categorySection.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+
+                });
+
+            }
+
+
+            // =========================
+            // INITIAL STATE
+            // =========================
+            courseButtons.forEach(function (btn) {
+
+                btn.classList.add('fade-show');
+                btn.style.display = '';
+
+            });
+
+            courseCards.forEach(function (card) {
+
+                card.classList.add('fade-show');
+                card.style.display = '';
+
+            });
+
+        });
+
+    });
+</script>
 {% endblock %}

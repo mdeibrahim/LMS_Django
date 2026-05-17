@@ -60,10 +60,37 @@ class StudentDeviceSession(models.Model):
 
     def __str__(self):
         return f"{self.user.username} device session ({self.jti})"
+    
+
+class Category(models.Model):
+    name = models.CharField(max_length=255)
+    slug = models.SlugField(unique=True)
+    description = models.TextField(default='', blank=True,null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['name']
+
+    def __str__(self):
+        return self.name
+
+class Subcategory(models.Model):
+    category = models.ForeignKey('Category', on_delete=models.CASCADE, related_name='subcategories')
+    name = models.CharField(max_length=255)
+    slug = models.SlugField()
+    description = models.TextField(default='', blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('category', 'slug')
+        ordering = ['name']
+
+    def __str__(self):
+        return f"{self.category.name} → {self.name}"
 
 
 class Course(models.Model):
-    teacher = models.ForeignKey(User, on_delete=models.SET_NULL, related_name='teaching_courses', blank=True, null=True)
+    subcategory = models.ForeignKey('Subcategory', on_delete=models.CASCADE, related_name='courses')
     name = models.CharField(max_length=255)
     slug = models.SlugField(unique=True)
     description = models.TextField(blank=True)
@@ -157,6 +184,7 @@ class CourseContent(models.Model):
     module = models.ForeignKey('Module', on_delete=models.CASCADE, related_name='course_contents', blank=True, null=True)
     title = models.CharField(max_length=255)
     content_type = models.CharField(max_length=20, choices=CONTENT_TYPE_CHOICES, default='text')
+    is_inline_reference = models.BooleanField(default=False)
     order = models.PositiveIntegerField(default=0)
     video_url = models.URLField(blank=True, null=True)
     duration_seconds = models.PositiveIntegerField(blank=True, null=True, default=0)
@@ -324,7 +352,6 @@ class PaymentInstruction(models.Model):
     details = models.TextField(blank=True, default='')
     image = models.ImageField(upload_to='payment_instructions/', blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
-
 
 
 

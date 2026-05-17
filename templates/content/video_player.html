@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load static %}
 {% load content_render %}
 
 {% block title %}{{ video.title }} — {{ module.title }} — {{ course.name }}{% endblock %}
@@ -204,4 +205,14 @@
         </div>
     </div>
 </section>
+
+<script id="interactiveData" type="application/json">
+{
+    "apiUrl": "{% url 'content:get_interactive_content' 0 %}"
+}
+</script>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/subject.js' %}"></script>
 {% endblock %}

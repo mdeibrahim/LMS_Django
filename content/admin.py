@@ -3,6 +3,7 @@ from django import forms
 from django.utils import timezone
 from unfold.admin import ModelAdmin, TabularInline
 from .models import (
+    Category,
     CourseCertificate,
     CourseQuiz,
     CourseQuizQuestion,
@@ -11,6 +12,7 @@ from .models import (
     ModuleAccordionSection,
     PaymentInstruction,
     QuizAttempt,
+    Subcategory,
     ModulePurchase,
     Module, UserProfile,
     StudentDeviceSession,
@@ -26,7 +28,20 @@ class CourseInline(TabularInline):
     fields = ('name', 'slug', 'price', 'description')
 
 
-# Category admin removed — categories removed from models
+@admin.register(Category)
+class CategoryAdmin(ModelAdmin):
+    list_display = ('name', 'slug')
+    search_fields = ('name', 'slug')
+    prepopulated_fields = {'slug': ('name',)}
+
+
+@admin.register(Subcategory)
+class SubcategoryAdmin(ModelAdmin):
+    list_display = ('name', 'slug', 'category')
+    list_filter = ('category',)
+    search_fields = ('name', 'slug', 'category__name')
+    autocomplete_fields = ('category',)
+    prepopulated_fields = {'slug': ('name',)}
 
 @admin.register(Course)
 class CourseAdmin(ModelAdmin):
@@ -43,6 +58,10 @@ class CourseContentInline(TabularInline):
     show_change_link = True
     fields = ('title', 'content_type', 'text_content', 'image', 'audio', 'video', 'youtube_url', 'preview')
     readonly_fields = ('id',)
+
+    def get_queryset(self, request):
+        queryset = super().get_queryset(request)
+        return queryset.filter(is_inline_reference=False)
 
     def preview(self, obj):
         if not obj.pk:
@@ -166,7 +185,7 @@ class ModuleAdmin(ModelAdmin):
     )
 
     def content_count(self, obj):
-        return obj.course_contents.count()
+        return obj.course_contents.filter(is_inline_reference=False).count()
     content_count.short_description = 'Interactive Items'
 
     def edit_contents_link(self, obj):
@@ -193,6 +212,10 @@ class CourseContentAdmin(ModelAdmin):
     date_hierarchy = 'created_at'
     list_per_page = 25
     readonly_fields = ('id', 'preview')
+
+    def get_queryset(self, request):
+        queryset = super().get_queryset(request)
+        return queryset.filter(is_inline_reference=False)
 
     fieldsets = (
         ('Basic', {
@@ -258,4 +281,3 @@ class PaymentInstructionAdmin(ModelAdmin):
 admin.site.site_header = "Interactive Teaching Platform"
 admin.site.site_title = "Teaching Platform Admin"
 admin.site.index_title = "Content Management"
-
