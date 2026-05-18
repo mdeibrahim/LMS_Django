@@ -123,6 +123,16 @@ LOGOUT_REDIRECT_URL = 'content:home'
 
 EMAIL_BACKEND = config('EMAIL_BACKEND', default='django.core.mail.backends.console.EmailBackend')
 DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='no-reply@example.com')
+SERVER_EMAIL = config('SERVER_EMAIL', default=None)  # For admin notifications
+EMAIL_HOST = config('EMAIL_HOST', default=None)
+EMAIL_PORT = config('EMAIL_PORT', default=587, cast=int)
+EMAIL_HOST_USER = config('EMAIL_HOST_USER', default=None)
+EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default=None)
+EMAIL_USE_TLS = config('EMAIL_USE_TLS', default=True, cast=_cast_debug)
+EMAIL_USE_SSL = config('EMAIL_USE_SSL', default=False, cast=_cast_debug)
+EMAIL_TIMEOUT = config('EMAIL_TIMEOUT', default=10, cast=int)
+
+
 SITE_URL = config('SITE_URL', default='http://localhost:8000')
 OTP_ATTEMPT_WINDOW = config('OTP_ATTEMPT_WINDOW', default=300, cast=int)
 OTP_ATTEMPT_LIMIT = config('OTP_ATTEMPT_LIMIT', default=5, cast=int)

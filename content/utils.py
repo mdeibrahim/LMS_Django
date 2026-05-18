@@ -1,9 +1,12 @@
+import logging
 from django.conf import settings
 from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
 
 from .models import UserRole
+
+logger = logging.getLogger(__name__)
 
 
 def _salutation(role: str) -> str:
@@ -70,13 +73,20 @@ def render_password_reset_email(user, token: str):
 def send_email(subject: str, text_body: str, html_body: str, to_email: str, from_email: str = None) -> bool:
     """Send an email with both text and HTML parts. Returns True on success, False otherwise."""
     from_email = from_email or getattr(settings, 'DEFAULT_FROM_EMAIL', None) or getattr(settings, 'EMAIL_HOST_USER', None)
+    
+    if not from_email:
+        logger.error(f"Cannot send email to {to_email}: DEFAULT_FROM_EMAIL not configured")
+        return False
+    
     try:
         msg = EmailMultiAlternatives(subject=subject, body=text_body, from_email=from_email, to=[to_email])
         if html_body:
             msg.attach_alternative(html_body, 'text/html')
         msg.send(fail_silently=False)
+        logger.info(f"Email sent successfully: {subject} → {to_email}")
         return True
-    except Exception:
+    except Exception as e:
+        logger.error(f"Failed to send email: {subject} → {to_email}. Error: {str(e)}", exc_info=True)
         return False
 
 
@@ -123,5 +133,6 @@ def send_payment_submission_email(user, course, amount, payment_method: str, tra
         subject, text_body, html_body = render_payment_submission_email(user, course, amount, payment_method, transaction_id, note)
         to_email = getattr(settings, 'SERVER_EMAIL', None) or getattr(settings, 'DEFAULT_FROM_EMAIL', None) or getattr(settings, 'EMAIL_HOST_USER', None)
         if not to_email:
+                logger.error("Cannot send payment notification email: SERVER_EMAIL, DEFAULT_FROM_EMAIL, and EMAIL_HOST_USER are all not configured")
                 return False
         return send_email(subject, text_body, html_body, to_email=to_email)
