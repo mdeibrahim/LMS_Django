@@ -349,9 +349,27 @@
     rteContent?.addEventListener('input', markDirty);
     saveBodyBtn?.addEventListener('click', saveModuleBody);
 
-    document.getElementById('btn-insert-link')?.addEventListener('click', () => {
+    const insertLinkButton = document.getElementById('btn-insert-link');
+    insertLinkButton?.addEventListener('mousedown', (event) => {
+        if (event.button !== 0) return;
+
+        const selection = window.getSelection();
+        if (!selection || selection.rangeCount === 0 || selection.isCollapsed) {
+            state.savedRange = null;
+            return;
+        }
+
+        const range = selection.getRangeAt(0);
+        if (!rteContent.contains(range.commonAncestorContainer)) {
+            state.savedRange = null;
+            return;
+        }
+
         saveSelection();
-        if (!state.savedRange || window.getSelection().isCollapsed) {
+    });
+    insertLinkButton?.addEventListener('click', (event) => {
+        event.preventDefault();
+        if (!state.savedRange) {
             setStatus('Select some text first', 'error');
             return;
         }
