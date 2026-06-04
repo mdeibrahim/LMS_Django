@@ -429,12 +429,22 @@ class LessonResourceInline(TabularInline):
 
 @admin.register(Lesson)
 class LessonAdmin(ModelAdmin):
-    list_display = ("title", "module", "order", "resource_total", "quiz_total", "is_preview", "is_published")
+    list_display = (
+        "title",
+        "module",
+        "order",
+        "resource_total",
+        "quiz_total",
+        "frontend_editor_link",
+        "is_preview",
+        "is_published",
+    )
     list_filter = ("is_preview", "is_published", RelatedCourseCategoryFilter)
     search_fields = ("title", "slug", "module__title", "module__course__name")
     autocomplete_fields = ("module",)
     prepopulated_fields = {"slug": ("title",)}
     inlines = [LessonResourceInline]
+    readonly_fields = ("frontend_editor_link",)
 
     class LessonForm(forms.ModelForm):
         class Meta:
@@ -451,6 +461,12 @@ class LessonAdmin(ModelAdmin):
         js = ("js/admin_rte.js",)
         css = {"all": ("css/admin_rte.css",)}
 
+    fieldsets = (
+        ("Basic Info", {"fields": ("module", "title", "slug", "order", "frontend_editor_link")}),
+        ("Content", {"fields": ("description", "body_content")}),
+        ("Visibility", {"fields": ("is_preview", "is_published", "thumbnail", "duration_seconds")}),
+    )
+
     def get_queryset(self, request):
         return super().get_queryset(request).select_related("module", "module__course").annotate(
             resource_total=Count("resources", distinct=True),
@@ -464,6 +480,16 @@ class LessonAdmin(ModelAdmin):
     @admin.display(description="Quizzes", ordering="quiz_total")
     def quiz_total(self, obj):
         return obj.quiz_total
+
+    @admin.display(description="Frontend editor")
+    def frontend_editor_link(self, obj):
+        if not obj.pk:
+            return tone_badge("Save first", "amber")
+        return object_link(
+            reverse("content:lesson_editor", args=[obj.module.course.slug, obj.module.slug, obj.slug]),
+            "Open editor",
+            new_tab=True,
+        )
 
 
 @admin.register(LessonResource)
@@ -516,6 +542,16 @@ class LessonResourceAdmin(ModelAdmin):
 class CourseQuizQuestionInline(TabularInline):
     model = CourseQuizQuestion
     extra = 0
+    formfield_overrides = {
+        CourseQuizQuestion._meta.get_field("question").__class__: {
+            "widget": forms.Textarea(
+                attrs={
+                    "rows": 6,
+                    "placeholder": "Type the question here. Press Enter for a new line, or paste simple HTML if needed.",
+                }
+            )
+        }
+    }
 
 
 @admin.register(CourseQuiz)

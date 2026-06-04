@@ -2,8 +2,8 @@
 {% load static %}
 {% load content_render %}
 
-{% block title %}Editor — {{ module.title }}{% endblock %}
-{% block meta_description %}Frontend rich-text editor for {{ module.title }}{% endblock %}
+{% block title %}Editor — {{ editor_title }}{% endblock %}
+{% block meta_description %}Frontend rich-text editor for {{ editor_title }}{% endblock %}
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/editor.css' %}">
@@ -24,9 +24,9 @@
             <li>/</li>
             <li><a href="{% url 'content:course_detail' course.slug %}" class="transition hover:text-slate-900">{{ course.name }}</a></li>
             <li>/</li>
-            <li><a href="{{ preview_url }}" class="transition hover:text-slate-900">{{ module.title }}</a></li>
+            <li><a href="{{ preview_url }}" class="transition hover:text-slate-900">{{ editor_title }}</a></li>
             <li>/</li>
-            <li class="font-semibold text-slate-800"><i class="fa-solid fa-pen-to-square"></i> Editor</li>
+            <li class="font-semibold text-slate-800"><i class="fa-solid fa-pen-to-square"></i> {{ editor_label }} Editor</li>
         </ol>
     </div>
 </nav>
@@ -41,7 +41,7 @@
                     <div class="editor-status" id="editorStatus" style="color: #16a34a; font-size: 0.9rem; font-weight: 600;">
                         <i class="fa-solid fa-circle-check"></i> Saved
                     </div>
-                    <input type="text" class="editor-title-input" id="editorTitleInput" value="{{ module.title }}" placeholder="Module title..." autocomplete="off" style="font-size: 1.5rem; font-weight: bold; border: none; outline: none; background: transparent; width: min(100%, 420px);">
+                    <input type="text" class="editor-title-input" id="editorTitleInput" value="{{ editor_title }}" placeholder="{{ editor_label }} title..." autocomplete="off" style="font-size: 1.5rem; font-weight: bold; border: none; outline: none; background: transparent; width: min(100%, 420px);">
                 </div>
                 <div class="editor-topbar-right" style="display: flex; gap: 10px; flex-wrap: wrap;">
                     <a href="{{ preview_url }}" class="btn" target="_blank">
@@ -81,7 +81,7 @@
                         </div>
 
                         <div class="mt-4 rte-editor-wrapper">
-                            <div class="rte-content" id="rteContent" contenteditable="true" spellcheck="true" data-placeholder="Start writing your module content here...">{{ module.body_content|render_stored_content }}</div>
+                            <div class="rte-content" id="rteContent" contenteditable="true" spellcheck="true" data-placeholder="Start writing your {{ editor_label|lower }} content here...">{{ editor_body_content|render_stored_content }}</div>
                         </div>
                     </div>
                 </div>
@@ -197,11 +197,12 @@
 <script id="editorData" type="application/json">
 {
     "moduleId": {{ module.id }},
-    "saveUrl": "{% url 'content:api_subject_save' module.id %}",
-    "icCreateUrl": "{% url 'content:api_ic_create' module.id %}",
+    "lessonId": {{ lesson.id }},
+    "saveUrl": "{{ save_url }}",
+    "icCreateUrl": "{{ ic_create_url }}",
     "icUpdateBase": "/api/ic/",
     "icDeleteBase": "/api/ic/",
-    "accCreateUrl": "{% url 'content:api_accordion_create' module.id %}",
+    "accCreateUrl": "{{ acc_create_url }}",
     "accUpdateBase": "/api/accordion/",
     "accDeleteBase": "/api/accordion/",
     "csrfToken": "{{ csrf_token }}"

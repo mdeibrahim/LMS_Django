@@ -148,6 +148,9 @@ def module_editor(request, course_slug, module_slug):
             "course": course,
             "module": module,
             "lesson": lesson,
+            "editor_label": "Module",
+            "editor_title": module.title,
+            "editor_body_content": module.body_content,
             "interactive_contents": interactive_contents,
             "accordion_sections": accordion_sections,
             "interactive_contents_payload": [_serialize_resource(resource) for resource in interactive_contents],
@@ -157,6 +160,50 @@ def module_editor(request, course_slug, module_slug):
                 if first_content
                 else reverse("content:course_detail", args=[course.slug])
             ),
+            "save_url": reverse("content:api_subject_save", args=[module.id]),
+            "ic_create_url": reverse("content:api_ic_create", args=[module.id]),
+            "acc_create_url": reverse("content:api_accordion_create", args=[module.id]),
+        },
+    )
+
+
+@staff_member_required
+def lesson_editor(request, course_slug, module_slug, lesson_slug):
+    course = get_object_or_404(Course, slug=course_slug)
+    module = get_object_or_404(
+        Module.objects.prefetch_related(
+            Prefetch("accordion_sections", queryset=ModuleAccordionSection.objects.order_by("order", "created_at")),
+        ),
+        course=course,
+        slug=module_slug,
+    )
+    lesson = get_object_or_404(
+        Lesson.objects.prefetch_related(
+            Prefetch("resources", queryset=LessonResource.objects.order_by("order", "created_at")),
+        ),
+        module=module,
+        slug=lesson_slug,
+    )
+    interactive_contents = list(lesson.resources.all())
+    accordion_sections = list(module.accordion_sections.all())
+    return render(
+        request,
+        "content/subject_editor.html",
+        {
+            "course": course,
+            "module": module,
+            "lesson": lesson,
+            "editor_label": "Lesson",
+            "editor_title": lesson.title,
+            "editor_body_content": lesson.body_content,
+            "interactive_contents": interactive_contents,
+            "accordion_sections": accordion_sections,
+            "interactive_contents_payload": [_serialize_resource(resource) for resource in interactive_contents],
+            "accordion_sections_payload": [_serialize_accordion(section) for section in accordion_sections],
+            "preview_url": reverse("content:lesson_detail", args=[course.slug, module.slug, lesson.slug]),
+            "save_url": reverse("content:api_lesson_save", args=[lesson.id]),
+            "ic_create_url": reverse("content:api_lesson_ic_create", args=[lesson.id]),
+            "acc_create_url": reverse("content:api_accordion_create", args=[module.id]),
         },
     )
 
@@ -728,9 +775,66 @@ def api_subject_save(request, module_id):
 
 @staff_member_required
 @require_http_methods(["POST"])
+def api_lesson_save(request, lesson_id):
+    lesson = get_object_or_404(Lesson.objects.select_related("module"), id=lesson_id)
+    data, _, error = _parse_api_payload(request)
+    if error:
+        return error
+
+    lesson.title = (data.get("title") or lesson.title).strip() or lesson.title
+    lesson.body_content = data.get("body_content", lesson.body_content or "")
+    lesson.save(update_fields=["title", "body_content", "updated_at"])
+
+    return JsonResponse(
+        {
+            "ok": True,
+            "lesson": {
+                "id": lesson.id,
+                "title": lesson.title,
+                "body_content": lesson.body_content,
+                "updated_at": lesson.updated_at.isoformat() if lesson.updated_at else "",
+            },
+        }
+    )
+
+
+@staff_member_required
+@require_http_methods(["POST"])
 def api_ic_create(request, module_id):
     module = get_object_or_404(Module, id=module_id)
     lesson = ensure_primary_lesson(module)
+    data, files, error = _parse_api_payload(request)
+    if error:
+        return error
+
+    resource = LessonResource(
+        lesson=lesson,
+        title=(data.get("title") or "Untitled").strip() or "Untitled",
+        content_type=data.get("content_type", LessonResourceType.TEXT),
+        order=lesson.resources.count() + 1,
+        is_preview=lesson.is_preview,
+        is_published=True,
+        text_content=data.get("text_content", ""),
+        external_url=data.get("youtube_url") or data.get("external_url") or "",
+        embed_url=data.get("embed_url") or "",
+    )
+
+    uploaded_file = files.get("image") or files.get("audio") or files.get("video") or files.get("file")
+    if uploaded_file:
+        resource.file = uploaded_file
+
+    if resource.content_type == LessonResourceType.VIDEO and data.get("video_url"):
+        resource.external_url = data.get("video_url")
+
+    resource.slug = _build_resource_slug(resource.title, lesson)
+    resource.save()
+    return JsonResponse(_serialize_resource(resource), status=201)
+
+
+@staff_member_required
+@require_http_methods(["POST"])
+def api_lesson_ic_create(request, lesson_id):
+    lesson = get_object_or_404(Lesson, id=lesson_id)
     data, files, error = _parse_api_payload(request)
     if error:
         return error

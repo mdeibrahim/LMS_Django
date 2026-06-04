@@ -96,6 +96,72 @@ class PurchaseAccessTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Score: 100%')
 
+    def test_quiz_question_preserves_line_breaks(self):
+        self.client.force_login(self.user)
+        CourseEnrollment.objects.create(user=self.user, course=self.course)
+        question = self.quiz.questions.first()
+        question.question = "Choose the best answer:\nLine two"
+        question.save(update_fields=["question"])
+
+        response = self.client.get(
+            reverse('content:quiz_detail', args=[self.course.slug, self.module.slug, self.lesson.slug, self.quiz.id])
+        )
+
+        self.assertContains(response, 'Choose the best answer:<br>Line two')
+
+
+class StaffEditorTests(TestCase):
+    def setUp(self):
+        self.staff = User.objects.create_user(
+            username='admin',
+            email='admin@example.com',
+            password='adminpass123',
+            is_staff=True,
+        )
+        self.category = Category.objects.create(name="Programming", slug="programming-staff")
+        self.subcategory = Subcategory.objects.create(category=self.category, name="Python", slug="python-staff")
+        self.course = Course.objects.create(
+            subcategory=self.subcategory,
+            name='Python Advanced',
+            slug='python-advanced',
+            price=999,
+        )
+        self.module = Module.objects.create(course=self.course, title='Module 1', slug='module-1')
+        self.lesson = Lesson.objects.create(
+            module=self.module,
+            title='Lesson 1',
+            slug='lesson-1',
+            body_content='<p>Lesson body</p>',
+            is_preview=True,
+        )
+
+    def test_staff_can_open_lesson_editor(self):
+        self.client.force_login(self.staff)
+
+        response = self.client.get(
+            reverse('content:lesson_editor', args=[self.course.slug, self.module.slug, self.lesson.slug])
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Lesson Editor')
+        self.assertContains(response, self.lesson.title)
+
+    def test_lesson_editor_save_updates_lesson_only(self):
+        self.client.force_login(self.staff)
+
+        response = self.client.post(
+            reverse('content:api_lesson_save', args=[self.lesson.id]),
+            data='{"title":"Lesson 1 Updated","body_content":"<p>Updated lesson</p>"}',
+            content_type='application/json',
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.lesson.refresh_from_db()
+        self.module.refresh_from_db()
+        self.assertEqual(self.lesson.title, 'Lesson 1 Updated')
+        self.assertEqual(self.lesson.body_content, '<p>Updated lesson</p>')
+        self.assertEqual(self.module.title, 'Module 1')
+
 
 class ContentRenderTests(TestCase):
     def test_plain_text_preserves_line_breaks(self):
