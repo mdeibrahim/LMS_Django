@@ -76,11 +76,10 @@
         <div class="grid gap-6 lg:grid-cols-12 lg:items-start">
             <div class="space-y-6 lg:col-span-8">
                 <div class="overflow-hidden rounded-[2rem] border border-white/70 bg-white/85 shadow-glow">
-                    <div class="relative h-64 bg-gradient-to-br from-cyan-900 via-blue-700 to-indigo-700 p-6 sm:h-80 sm:p-8">
-                        <div class="absolute inset-0 bg-[radial-gradient(circle_at_18%_20%,rgba(255,255,255,0.22),transparent_36%),radial-gradient(circle_at_88%_20%,rgba(251,191,36,0.18),transparent_28%)]"></div>
+                    <div class="course-banner course-banner--hero p-6 sm:p-8">
                         <div class="relative flex h-full flex-col justify-between">
                             <div class="flex items-start justify-between gap-4">
-                                <span class="inline-flex items-center gap-2 rounded-full bg-white/15 px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-white backdrop-blur">
+                                <span class="course-banner__chip">
                                     <i class="fa-solid fa-layer-group"></i> Course
                                 </span>
                                 <div class="hidden rounded-full bg-white/10 p-4 text-white shadow-lg backdrop-blur sm:block">
@@ -192,7 +191,7 @@
                     <div class="mt-5 grid gap-4 sm:grid-cols-2">
                         {% for rel in related_courses %}
                         <a href="{% url 'content:course_detail' rel.slug %}" class="group overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white transition duration-300 hover:-translate-y-1 hover:shadow-lg">
-                            <div class="h-28 bg-gradient-to-r from-violet-700 via-fuchsia-600 to-rose-500 p-4 text-white">
+                            <div class="course-banner course-banner--compact p-4 text-white">
                                 <p class="inline-flex rounded-full bg-white/20 px-2.5 py-1 text-[10px] font-semibold">{{ rel.name|truncatechars:15 }}</p>
                                 <h3 class="mt-3 truncate text-lg font-bold text-amber-300">{{ rel.name }}</h3>
                             </div>

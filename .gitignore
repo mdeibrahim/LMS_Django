@@ -10,7 +10,7 @@ venv/
 
 # Django build/runtime
 staticfiles/
-*.sqlite3
+# *.sqlite3
 
 # OS/Editor
 .DS_Store
