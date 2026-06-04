@@ -2,7 +2,17 @@ from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
 
-from .models import Category, Course, CourseEnrollment, Lesson, LessonResource, Module, Subcategory
+from .models import (
+    Category,
+    Course,
+    CourseEnrollment,
+    CourseQuiz,
+    CourseQuizQuestion,
+    Lesson,
+    LessonResource,
+    Module,
+    Subcategory,
+)
 from .templatetags.content_render import render_stored_content
 
 
@@ -19,6 +29,24 @@ class PurchaseAccessTests(TestCase):
             name='Python Basics',
             slug='python-basics',
             price=999,
+        )
+        self.module = Module.objects.create(course=self.course, title='Module 1', slug='module-1')
+        self.lesson = Lesson.objects.create(
+            module=self.module,
+            title='Lesson 1',
+            slug='lesson-1',
+            body_content='<p>Lesson body</p>',
+            is_preview=True,
+        )
+        self.quiz = CourseQuiz.objects.create(lesson=self.lesson, module=self.module, title='Quiz 1', pass_score=50)
+        CourseQuizQuestion.objects.create(
+            quiz=self.quiz,
+            question='What is Python?',
+            option_a='A snake',
+            option_b='A programming language',
+            option_c='A car',
+            option_d='A game',
+            correct_option='B',
         )
         self.course_url = reverse('content:course_detail', args=[self.course.slug])
 
@@ -38,6 +66,35 @@ class PurchaseAccessTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'content/course_detail.html')
+
+    def test_course_page_contains_collapsible_module_content(self):
+        response = self.client.get(self.course_url)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, self.module.title)
+        self.assertContains(response, self.lesson.title)
+        self.assertContains(response, self.quiz.title)
+
+    def test_preview_lesson_is_accessible_without_enrollment(self):
+        response = self.client.get(
+            reverse('content:lesson_detail', args=[self.course.slug, self.module.slug, self.lesson.slug])
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'content/lesson_detail.html')
+        self.assertContains(response, 'Lesson body')
+
+    def test_quiz_submission_records_score(self):
+        self.client.force_login(self.user)
+        CourseEnrollment.objects.create(user=self.user, course=self.course)
+
+        response = self.client.post(
+            reverse('content:quiz_detail', args=[self.course.slug, self.module.slug, self.lesson.slug, self.quiz.id]),
+            data={f'question_{self.quiz.questions.first().id}': 'B'},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Score: 100%')
 
 
 class ContentRenderTests(TestCase):

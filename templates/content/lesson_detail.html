@@ -1,0 +1,200 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load content_render %}
+
+{% block title %}{{ lesson.title }} — {{ course.name }}{% endblock %}
+{% block meta_description %}{{ lesson.description|default:module.description|default:"Interactive text lesson with linked media explanations." }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .lesson-shell {
+        border-radius: 1.5rem;
+        border: 1px solid rgba(226, 232, 240, 0.95);
+        background: rgba(255, 255, 255, 0.94);
+        box-shadow: 0 16px 38px rgba(15, 23, 42, 0.06);
+    }
+
+    .lesson-body {
+        color: #475569;
+        line-height: 1.9;
+        font-size: 1rem;
+    }
+
+    .lesson-body p { margin-bottom: 1rem; }
+
+    .accordion {
+        display: grid;
+        gap: 0.75rem;
+    }
+
+    .accordion-item {
+        overflow: hidden;
+        border-radius: 1rem;
+        border: 1px solid #e2e8f0;
+        background: #fff;
+    }
+
+    .accordion-trigger {
+        display: flex;
+        width: 100%;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        padding: 1rem 1.1rem;
+        background: transparent;
+        font-weight: 700;
+        color: #0f172a;
+    }
+
+    .accordion-body {
+        border-top: 1px solid #e2e8f0;
+        padding: 1rem 1.1rem;
+        color: #475569;
+        line-height: 1.75;
+    }
+
+    .accordion-icon {
+        transition: transform .2s ease;
+    }
+
+    .accordion-item--open .accordion-icon {
+        transform: rotate(180deg);
+    }
+
+    .highlight-link,
+    .link-media-blue,
+    .link-media-red {
+        cursor: pointer;
+        text-decoration: underline;
+        text-decoration-thickness: 2px;
+        text-underline-offset: 0.2em;
+    }
+
+    .link-media-blue { color: #2563eb; font-weight: 700; }
+    .link-media-red { color: #dc2626; font-weight: 700; }
+
+    @media (min-width: 1024px) {
+        .lesson-layout {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 22rem;
+            gap: 1.5rem;
+            align-items: start;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block breadcrumb %}
+<nav class="border-y border-slate-200/80 bg-white/70 backdrop-blur">
+    <div class="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
+        <ol class="flex flex-wrap items-center gap-3 py-3 text-sm text-slate-600">
+            <li><a href="{% url 'content:home' %}" class="transition hover:text-slate-900"><i class="fa-solid fa-house"></i></a></li>
+            <li>/</li>
+            <li><a href="{% url 'content:course_detail' course.slug %}" class="transition hover:text-slate-900">{{ course.name }}</a></li>
+            <li>/</li>
+            <li class="font-semibold text-slate-800">{{ lesson.title }}</li>
+        </ol>
+    </div>
+</nav>
+{% endblock %}
+
+{% block content %}
+<section class="py-8 sm:py-10 lg:py-12">
+    <div class="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div class="lesson-shell p-6 sm:p-8">
+            <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+                <div>
+                    <div class="flex flex-wrap items-center gap-2 text-xs font-bold uppercase tracking-[0.16em] text-slate-500">
+                        <span class="rounded-full bg-slate-100 px-3 py-1">{{ course.name }}</span>
+                        <span class="rounded-full bg-blue-100 px-3 py-1 text-blue-700">{{ module.title }}</span>
+                    </div>
+                    <h1 class="mt-4 font-display text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">{{ lesson.title }}</h1>
+                    {% if lesson.description %}
+                    <p class="mt-3 max-w-3xl text-sm text-slate-600 sm:text-base">{{ lesson.description }}</p>
+                    {% endif %}
+                </div>
+                <a href="{% url 'content:course_detail' course.slug %}#module-{{ module.id }}" class="inline-flex w-fit items-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2.5 font-semibold text-slate-700 transition hover:bg-slate-100">
+                    <i class="fa-solid fa-arrow-left"></i> Back to Modules
+                </a>
+            </div>
+        </div>
+
+        <div class="mt-6 lesson-layout">
+            <div class="space-y-6">
+                <div class="lesson-shell p-5 sm:p-6">
+                    <div class="mb-4 flex flex-wrap items-center gap-2">
+                        <span class="inline-flex items-center gap-2 rounded-full bg-slate-100 px-3 py-1 text-xs font-bold uppercase tracking-wide text-slate-600"><i class="fa-solid fa-highlighter text-blue-600"></i> Click highlighted words for popup media</span>
+                    </div>
+                    <div class="lesson-body" id="articleBody">{{ lesson.body_content|render_stored_content }}</div>
+                </div>
+
+                {% if quizzes %}
+                <div class="lesson-shell p-5 sm:p-6">
+                    <h2 class="text-xl font-bold text-slate-900"><i class="fa-solid fa-list-check text-amber-600"></i> Lesson MCQ</h2>
+                    <div class="mt-4 grid gap-3">
+                        {% for quiz in quizzes %}
+                        <div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
+                            <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                                <div>
+                                    <div class="font-semibold text-slate-900">{{ quiz.title }}</div>
+                                    <p class="mt-1 text-sm text-slate-500">Pass score: {{ quiz.pass_score }}%</p>
+                                </div>
+                                <a href="{% url 'content:quiz_detail' course.slug module.slug lesson.slug quiz.id %}" class="btn btn-primary w-full sm:w-auto">Take MCQ</a>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+
+            <aside class="space-y-6">
+                <div class="lesson-shell p-5 sm:p-6">
+                    <h2 class="text-lg font-bold text-slate-900"><i class="fa-solid fa-book-open text-blue-600"></i> Module Lessons</h2>
+                    <div class="mt-4 space-y-2">
+                        {% for item in lesson_navigation %}
+                        <a href="{% url 'content:lesson_detail' course.slug module.slug item.lesson.slug %}" class="flex items-center justify-between gap-3 rounded-xl px-3 py-3 transition {% if item.is_current %}bg-slate-100 text-slate-900{% else %}hover:bg-slate-50 text-slate-600{% endif %}">
+                            <span class="text-sm font-medium">{{ item.lesson.title }}</span>
+                            {% if item.is_current %}
+                            <span class="rounded-full bg-blue-100 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-blue-700">Current</span>
+                            {% endif %}
+                        </a>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                {% if accordion_sections %}
+                <div class="lesson-shell p-5 sm:p-6">
+                    <div class="flex items-center gap-2 text-lg font-bold text-slate-900">
+                        <i class="fa-solid fa-list text-blue-600"></i> Extra Notes
+                    </div>
+                    <div class="accordion mt-5" id="subjectAccordion">
+                        {% for section in accordion_sections %}
+                        <div class="accordion-item {% if section.is_open_by_default %}accordion-item--open{% endif %}" id="acc-{{ section.id }}">
+                            <button class="accordion-trigger" aria-expanded="{% if section.is_open_by_default %}true{% else %}false{% endif %}" aria-controls="acc-body-{{ section.id }}">
+                                <span>{{ section.title }}</span>
+                                <i class="fa-solid fa-chevron-down accordion-icon"></i>
+                            </button>
+                            <div class="accordion-body" id="acc-body-{{ section.id }}" {% if not section.is_open_by_default %}hidden{% endif %}>
+                                <div class="accordion-content">{{ section.content|render_stored_content }}</div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+            </aside>
+        </div>
+    </div>
+</section>
+
+<script id="interactiveData" type="application/json">
+{
+    "apiUrl": "{% url 'content:get_interactive_content' 0 %}"
+}
+</script>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/subject.js' %}"></script>
+{% endblock %}

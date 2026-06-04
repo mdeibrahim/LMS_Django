@@ -13,7 +13,6 @@ from .models import (
     Category,
     Course,
     CourseCertificate,
-    CourseContent,
     CourseEnrollment,
     CourseQuiz,
     CourseQuizQuestion,
@@ -24,7 +23,6 @@ from .models import (
     LessonResourceType,
     Module,
     ModuleAccordionSection,
-    ModulePurchase,
     PaymentInstruction,
     PaymentSubmission,
     PaymentSubmissionStatus,
@@ -419,7 +417,7 @@ class ModuleAdmin(ModelAdmin):
     def frontend_editor_link(self, obj):
         if not obj.pk:
             return tone_badge("Save first", "amber")
-        return object_link(reverse("content:subject_editor", args=[obj.course.slug, obj.slug]), "Open editor", new_tab=True)
+        return object_link(reverse("content:module_editor", args=[obj.course.slug, obj.slug]), "Open editor", new_tab=True)
 
 
 class LessonResourceInline(TabularInline):
@@ -690,21 +688,6 @@ class PaymentInstructionAdmin(ModelAdmin):
     @admin.display(description="Image")
     def has_image(self, obj):
         return tone_badge("Uploaded", "emerald") if obj.image else tone_badge("Missing", "amber")
-
-
-@admin.register(CourseContent)
-class LegacyCourseContentAdmin(ModelAdmin):
-    list_display = ("title", "module", "lesson", "content_type", "created_at")
-    search_fields = ("title", "module__title", "lesson__title")
-    list_filter = ("content_type", "created_at")
-
-
-@admin.register(ModulePurchase)
-class LegacyModulePurchaseAdmin(ModelAdmin):
-    list_display = ("user", "course", "is_purchased", "purchased_at")
-    search_fields = ("user__username", "course__name")
-    list_filter = ("is_purchased", "purchased_at")
-
 
 admin.site.site_header = "Interactive Teaching Platform"
 admin.site.site_title = "Teaching Platform Admin"

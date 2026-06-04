@@ -390,23 +390,101 @@
             </div>
         </div>
 
-        <footer class="mt-16 border-t border-slate-200/80 bg-white/70 backdrop-blur">
-            <div class="mx-auto grid w-full max-w-7xl gap-8 px-4 py-10 sm:px-6 lg:grid-cols-[1.3fr_0.7fr] lg:px-8">
-                <div>
-                    <div class="inline-flex items-center gap-3 text-slate-900">
-                        <span class="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-rose-500 via-orange-500 to-cyan-600 text-white shadow-lg shadow-rose-500/20">
-                            <i class="fa-solid fa-graduation-cap text-sm"></i>
-                        </span>
-                        <span class="font-display text-lg font-bold">TeachPlatform</span>
+        <footer class="mt-16 overflow-hidden border-t border-slate-200/80 bg-[linear-gradient(180deg,rgba(255,255,255,0.92)_0%,rgba(239,246,255,0.92)_100%)] backdrop-blur">
+            <div class="mx-auto w-full max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+                <div class="rounded-[2rem] border border-white/80 bg-white/75 p-6 shadow-glow sm:p-8 lg:p-10">
+                    <div class="grid gap-8 lg:grid-cols-[1.25fr_0.75fr_0.75fr_0.9fr]">
+                        <div>
+                            <a href="{% url 'content:home' %}" class="inline-flex items-center gap-3 text-slate-900">
+                                <span class="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-rose-500 via-orange-500 to-cyan-600 text-white shadow-lg shadow-rose-500/20">
+                                    <i class="fa-solid fa-graduation-cap"></i>
+                                </span>
+                                <span>
+                                    <span class="block font-display text-xl font-bold">TeachPlatform</span>
+                                    <span class="block text-xs font-bold uppercase tracking-[0.22em] text-sky-700">Interactive Learning Hub</span>
+                                </span>
+                            </a>
+                            <p class="mt-4 max-w-md text-sm leading-7 text-slate-600">Structured courses, multimedia lessons, quizzes, certificates, and student progress tools in one polished learning experience.</p>
+                            <!-- <div class="mt-5 flex flex-wrap gap-3 text-sm">
+                                <span class="inline-flex items-center gap-2 rounded-full bg-sky-100 px-3 py-1.5 font-semibold text-sky-700"><i class="fa-solid fa-layer-group text-xs"></i> Modular courses</span>
+                                <span class="inline-flex items-center gap-2 rounded-full bg-emerald-100 px-3 py-1.5 font-semibold text-emerald-700"><i class="fa-solid fa-certificate text-xs"></i> Certificates</span>
+                                <span class="inline-flex items-center gap-2 rounded-full bg-amber-100 px-3 py-1.5 font-semibold text-amber-700"><i class="fa-solid fa-mobile-screen text-xs"></i> Responsive UI</span>
+                            </div> -->
+                        </div>
+
+                        <div>
+                            <h3 class="text-sm font-extrabold uppercase tracking-[0.22em] text-slate-900">Quick Links</h3>
+                            <div class="mt-4 space-y-3 text-sm text-slate-600">
+                                <a href="{% url 'content:home' %}" class="block transition hover:text-slate-900">Home</a>
+                                <a href="{% url 'content:my_courses' %}" class="block transition hover:text-slate-900">My Courses</a>
+                                <a href="{% url 'content:student_dashboard' %}" class="block transition hover:text-slate-900">Student Dashboard</a>
+                                <a href="{% url 'content:profile' %}" class="block transition hover:text-slate-900">Profile</a>
+                            </div>
+                        </div>
+
+                        <div>
+                            <h3 class="text-sm font-extrabold uppercase tracking-[0.22em] text-slate-900">Explore</h3>
+                            <div class="mt-4 space-y-3 text-sm text-slate-600">
+                                <a href="{% url 'content:login' %}" class="block transition hover:text-slate-900">Student Login</a>
+                                <a href="{% url 'content:signup' %}" class="block transition hover:text-slate-900">Create Account</a>
+                                <a href="{% url 'content:password_reset' %}" class="block transition hover:text-slate-900">Reset Password</a>
+                                <a href="{% url 'content:my_modules' %}" class="block transition hover:text-slate-900">Learning Modules</a>
+                            </div>
+                        </div>
+
+                        <div>
+                            <h3 class="text-sm font-extrabold uppercase tracking-[0.22em] text-slate-900">Get Started</h3>
+                            <div class="mt-4 space-y-3 text-sm text-slate-600">
+                                <p class="flex items-start gap-3"><i class="fa-solid fa-book-open mt-0.5 text-sky-500"></i><span>Continue purchased courses and track progress from one dashboard.</span></p>
+                                <p class="flex items-start gap-3"><i class="fa-solid fa-shield-heart mt-0.5 text-rose-500"></i><span>Secure account flow with OTP verification and password recovery.</span></p>
+                            </div>
+                            <!-- <div class="mt-5 flex flex-wrap gap-3">
+                                {% if request.user.is_authenticated %}
+                                <a href="{% url 'content:student_dashboard' %}" class="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-800">
+                                    <i class="fa-solid fa-gauge-high"></i> Dashboard
+                                </a>
+                                <a href="{% url 'content:my_courses' %}" class="inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-100">
+                                    <i class="fa-solid fa-book-open-reader"></i> My Courses
+                                </a>
+                                {% else %}
+                                <a href="{% url 'content:login' %}" class="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-800">
+                                    <i class="fa-solid fa-right-to-bracket"></i> Login
+                                </a>
+                                <a href="{% url 'content:signup' %}" class="inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-100">
+                                    <i class="fa-solid fa-user-plus"></i> Signup
+                                </a>
+                                {% endif %}
+                            </div> -->
+                        </div>
                     </div>
-                    <p class="mt-3 max-w-xl text-sm leading-6 text-slate-600">A modern interactive learning platform built for structured courses, rich media lessons, and smooth study experiences across every screen size.</p>
+
+                    <div class="my-8 h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent"></div>
+
+                    <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                        <div>
+                            <p class="font-display text-lg font-bold text-slate-900">Start learning from any device</p>
+                            <p class="mt-1 text-sm text-slate-600">Browse content, continue lessons, and manage your study flow smoothly across desktop and mobile.</p>
+                        </div>
+                        <div class="flex flex-wrap gap-3">
+                            <a href="{% url 'content:home' %}" class="inline-flex items-center gap-2 rounded-xl bg-sky-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-sky-700">
+                                <i class="fa-solid fa-house"></i> Explore Home
+                            </a>
+                            <a href="{% url 'content:student_dashboard' %}" class="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-emerald-700">
+                                <i class="fa-solid fa-chart-line"></i> Track Progress
+                            </a>
+                            <!-- <a href="{% url 'content:profile' %}" class="inline-flex items-center gap-2 rounded-xl bg-amber-500 px-4 py-2.5 text-sm font-semibold text-slate-900 transition hover:bg-amber-400">
+                                <i class="fa-solid fa-id-card"></i> Manage Profile
+                            </a> -->
+                        </div>
+                    </div>
                 </div>
-                <div class="lg:text-right">
-                    <p class="text-sm font-semibold text-slate-900">Platform</p>
-                    <div class="mt-3 space-y-2 text-sm text-slate-600">
-                        <p><i class="fa-solid fa-layer-group text-slate-400"></i> Modular learning experience</p>
-                        <p><i class="fa-solid fa-mobile-screen text-slate-400"></i> Responsive on mobile, tablet, and desktop</p>
-                        <p><i class="fa-solid fa-shield-heart text-slate-400"></i> Interactive Teaching Platform &copy; 2026</p>
+
+                <div class="flex flex-col gap-3 px-2 pt-6 text-sm text-slate-500 sm:flex-row sm:items-center sm:justify-between">
+                    <p>Interactive Teaching Platform &copy; {% now "Y" %}. Built for modern course delivery.</p>
+                    <div class="flex flex-wrap items-center gap-4">
+                        <a href="{% url 'content:home' %}" class="transition hover:text-slate-800">Home</a>
+                        <a href="{% url 'content:my_courses' %}" class="transition hover:text-slate-800">Courses</a>
+                        <a href="{% url 'content:student_dashboard' %}" class="transition hover:text-slate-800">Dashboard</a>
                     </div>
                 </div>
             </div>

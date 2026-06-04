@@ -1,0 +1,86 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ quiz.title }} — {{ lesson.title }}{% endblock %}
+
+{% block breadcrumb %}
+<nav class="border-y border-slate-200/80 bg-white/70 backdrop-blur">
+    <div class="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
+        <ol class="flex flex-wrap items-center gap-3 py-3 text-sm text-slate-600">
+            <li><a href="{% url 'content:home' %}" class="transition hover:text-slate-900"><i class="fa-solid fa-house"></i></a></li>
+            <li>/</li>
+            <li><a href="{% url 'content:course_detail' course.slug %}" class="transition hover:text-slate-900">{{ course.name }}</a></li>
+            <li>/</li>
+            <li><a href="{% url 'content:lesson_detail' course.slug module.slug lesson.slug %}" class="transition hover:text-slate-900">{{ lesson.title }}</a></li>
+            <li>/</li>
+            <li class="font-semibold text-slate-800">{{ quiz.title }}</li>
+        </ol>
+    </div>
+</nav>
+{% endblock %}
+
+{% block content %}
+<section class="py-8 sm:py-10 lg:py-12">
+    <div class="mx-auto w-full max-w-4xl px-4 sm:px-6 lg:px-8">
+        <div class="rounded-[1.75rem] border border-slate-200 bg-white/92 p-6 shadow-sm sm:p-8">
+            <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+                <div>
+                    <div class="flex flex-wrap items-center gap-2 text-xs font-bold uppercase tracking-[0.16em] text-slate-500">
+                        <span class="rounded-full bg-blue-100 px-3 py-1 text-blue-700">{{ module.title }}</span>
+                        <span class="rounded-full bg-amber-100 px-3 py-1 text-amber-700">Pass {{ quiz.pass_score }}%</span>
+                    </div>
+                    <h1 class="mt-4 font-display text-3xl font-bold tracking-tight text-slate-900">{{ quiz.title }}</h1>
+                    <p class="mt-2 text-sm text-slate-600">Answer all questions, then submit to see your result.</p>
+                </div>
+                <a href="{% url 'content:lesson_detail' course.slug module.slug lesson.slug %}" class="btn">Back to Lesson</a>
+            </div>
+
+            {% if submission %}
+            <div class="mt-6 rounded-2xl {% if submission.passed %}border border-emerald-200 bg-emerald-50{% else %}border border-rose-200 bg-rose-50{% endif %} p-5">
+                <div class="text-lg font-bold {% if submission.passed %}text-emerald-700{% else %}text-rose-700{% endif %}">
+                    {% if submission.passed %}Passed{% else %}Not Passed{% endif %}
+                </div>
+                <p class="mt-2 text-sm text-slate-700">Score: {{ submission.score }}% ({{ submission.correct }}/{{ submission.total }} correct)</p>
+            </div>
+            {% endif %}
+
+            <form method="post" class="mt-6 space-y-4">
+                {% csrf_token %}
+                {% for question in questions %}
+                <div class="rounded-2xl border border-slate-200 bg-slate-50 p-5">
+                    <h2 class="text-base font-semibold text-slate-900">{{ forloop.counter }}. {{ question.question }}</h2>
+                    <div class="mt-4 space-y-3">
+                        <label class="flex items-start gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3 transition hover:border-blue-300">
+                            <input type="radio" name="question_{{ question.id }}" value="A" class="mt-1">
+                            <span class="text-sm text-slate-700">{{ question.option_a }}</span>
+                        </label>
+                        <label class="flex items-start gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3 transition hover:border-blue-300">
+                            <input type="radio" name="question_{{ question.id }}" value="B" class="mt-1">
+                            <span class="text-sm text-slate-700">{{ question.option_b }}</span>
+                        </label>
+                        <label class="flex items-start gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3 transition hover:border-blue-300">
+                            <input type="radio" name="question_{{ question.id }}" value="C" class="mt-1">
+                            <span class="text-sm text-slate-700">{{ question.option_c }}</span>
+                        </label>
+                        <label class="flex items-start gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3 transition hover:border-blue-300">
+                            <input type="radio" name="question_{{ question.id }}" value="D" class="mt-1">
+                            <span class="text-sm text-slate-700">{{ question.option_d }}</span>
+                        </label>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-6 text-center text-slate-600">
+                    No questions added yet.
+                </div>
+                {% endfor %}
+
+                {% if questions %}
+                <div class="flex flex-col gap-3 sm:flex-row">
+                    <button type="submit" class="btn btn-primary">Submit Answers</button>
+                    <a href="{% url 'content:quiz_detail' course.slug module.slug lesson.slug quiz.id %}" class="btn">Reset</a>
+                </div>
+                {% endif %}
+            </form>
+        </div>
+    </div>
+</section>
+{% endblock %}

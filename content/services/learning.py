@@ -29,19 +29,3 @@ def visible_lessons_qs():
         Prefetch("resources", queryset=VISIBLE_LESSON_RESOURCES),
         "quizzes",
     )
-
-
-def module_playable_resources_qs(module):
-    return LessonResource.objects.filter(
-        lesson__module=module,
-        is_published=True,
-    ).select_related("lesson", "lesson__module", "lesson__module__course").order_by(
-        "lesson__order",
-        "order",
-        "created_at",
-    )
-
-
-def first_playable_resource_for_module(module):
-    return module_playable_resources_qs(module).first()
-

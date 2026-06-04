@@ -4,12 +4,56 @@
 
 {% block extra_css %}
 <style>
-    .desc-clamp {
-        display: -webkit-box;
-        -webkit-line-clamp: 2;
-        line-clamp: 2;
-        -webkit-box-orient: vertical;
+    .module-panel {
+        border: 1px solid #e2e8f0;
+        border-radius: 1.5rem;
+        background: rgba(255, 255, 255, 0.94);
+        box-shadow: 0 16px 38px rgba(15, 23, 42, 0.06);
         overflow: hidden;
+    }
+
+    .module-trigger {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        padding: 1.2rem 1.25rem;
+        text-align: left;
+        transition: background .2s ease;
+    }
+
+    .module-trigger:hover {
+        background: #f8fafc;
+    }
+
+    .module-body {
+        border-top: 1px solid #e2e8f0;
+        padding: 1rem 1.25rem 1.25rem;
+        background: linear-gradient(180deg, rgba(248, 250, 252, 0.88) 0%, rgba(255, 255, 255, 0.96) 100%);
+    }
+
+    .module-chevron {
+        transition: transform .2s ease;
+    }
+
+    .module-panel--open .module-chevron {
+        transform: rotate(180deg);
+    }
+
+    .content-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.45rem;
+        border-radius: 999px;
+        padding: 0.35rem 0.7rem;
+        font-size: 0.75rem;
+        font-weight: 700;
+    }
+
+    .content-list {
+        display: grid;
+        gap: 0.75rem;
     }
 </style>
 {% endblock %}
@@ -40,79 +84,97 @@
                                     <i class="fa-solid fa-layer-group"></i> Course
                                 </span>
                                 <div class="hidden rounded-full bg-white/10 p-4 text-white shadow-lg backdrop-blur sm:block">
-                                    <i class="fa-solid fa-play text-xl"></i>
+                                    <i class="fa-solid fa-book-open-reader text-xl"></i>
                                 </div>
                             </div>
                             <div class="relative">
                                 <h1 class="font-display text-3xl font-extrabold tracking-tight text-white sm:text-4xl lg:text-5xl">{{ course.name }}</h1>
-                                <p class="mt-3 max-w-2xl text-sm text-cyan-50 sm:text-base">Smart, focused and exam-ready course with a clean module-by-module learning journey.</p>
+                                <p class="mt-3 max-w-2xl text-sm text-cyan-50 sm:text-base">{{ course.description|default:"Structured module-by-module learning with lessons, quizzes, and interactive explanations." }}</p>
                             </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="rounded-[1.75rem] border border-slate-200 bg-white/92 p-5 shadow-sm sm:p-6">
-                    <h2 class="text-xl font-bold text-slate-900"><i class="fa-solid fa-circle-info text-blue-600"></i> কোর্স সম্পর্কে</h2>
-                    <p class="mt-4 text-sm leading-7 text-slate-600 sm:text-base">
-                        {{ course.description|default:"এই কোর্সে ধাপে ধাপে fundamentals থেকে advanced topic পর্যন্ত শেখানো হবে, যাতে learner সহজে concept বুঝে exam-ready হতে পারে।" }}
-                    </p>
-
-                    <div class="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-                        <div class="rounded-2xl bg-slate-50 p-4">
-                            <p class="text-xs font-bold uppercase tracking-wide text-slate-500">Course Type</p>
-                            <p class="mt-2 font-semibold text-slate-800">Self-paced course</p>
-                        </div>
-                        <div class="rounded-2xl bg-slate-50 p-4">
-                            <p class="text-xs font-bold uppercase tracking-wide text-slate-500">Modules Included</p>
-                            <p class="mt-2 font-semibold text-slate-800">{{ modules|length }} modules</p>
-                        </div>
-                        <div class="rounded-2xl bg-slate-50 p-4">
-                            <p class="text-xs font-bold uppercase tracking-wide text-slate-500">Created Date</p>
-                            <p class="mt-2 font-semibold text-slate-800">{{ course.created_at|date:"M d, Y" }}</p>
-                        </div>
-                        <div class="rounded-2xl bg-slate-50 p-4">
-                            <p class="text-xs font-bold uppercase tracking-wide text-slate-500">Access</p>
-                            {% if has_access %}
-                            <p class="mt-2 font-semibold text-emerald-700"><i class="fa-solid fa-circle-check"></i> Ready to learn</p>
-                            {% else %}
-                            <p class="mt-2 font-semibold text-rose-700"><i class="fa-solid fa-lock"></i> Purchase required</p>
-                            {% endif %}
                         </div>
                     </div>
                 </div>
 
                 <div class="rounded-[1.75rem] border border-slate-200 bg-white/92 p-5 shadow-sm sm:p-6">
                     <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                        <h2 class="text-xl font-bold text-slate-900"><i class="fa-solid fa-list-ul text-blue-600"></i> কোর্স কনটেন্ট</h2>
+                        <h2 class="text-xl font-bold text-slate-900"><i class="fa-solid fa-list-ul text-blue-600"></i> Course Modules</h2>
                         <span class="inline-flex w-fit rounded-full bg-slate-100 px-3 py-1 text-xs font-bold uppercase tracking-wide text-slate-600">{{ modules|length }} modules</span>
                     </div>
 
                     {% if modules %}
-                    <div class="mt-5 space-y-3">
+                    <div class="mt-5 space-y-4" id="moduleAccordion">
                         {% for module in modules %}
-                        <div class="group flex flex-col gap-4 rounded-2xl border border-slate-200 bg-[linear-gradient(180deg,#ffffff_0%,#f8fafc_100%)] px-4 py-4 transition hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-sm sm:flex-row sm:items-center sm:justify-between">
-                            <div class="flex min-w-0 items-start gap-3">
-                                <span class="mt-0.5 inline-flex h-8 w-8 items-center justify-center rounded-full bg-blue-600 text-xs font-bold text-white shadow-md shadow-blue-500/25">{{ forloop.counter }}</span>
-                                <div class="min-w-0">
-                                    <h3 class="truncate text-sm font-semibold text-slate-800 sm:text-base">{{ module.title }}</h3>
-                                    <div class="mt-1 flex flex-wrap gap-3 text-xs text-slate-500">
-                                        <span><i class="fa-solid fa-video"></i> {{ module.visible_content_count }} items</span>
-                                        {% if module.quiz_count %}
-                                        <span><i class="fa-solid fa-question"></i> {{ module.quiz_count }} quizzes</span>
-                                        {% endif %}
+                        <div class="module-panel" id="module-{{ module.id }}">
+                            <button class="module-trigger" type="button" aria-expanded="false" aria-controls="module-body-{{ module.id }}">
+                                <div class="flex min-w-0 items-start gap-3">
+                                    <span class="mt-0.5 inline-flex h-9 w-9 items-center justify-center rounded-full bg-blue-600 text-sm font-bold text-white shadow-md shadow-blue-500/25">{{ forloop.counter }}</span>
+                                    <div class="min-w-0">
+                                        <h3 class="truncate text-base font-semibold text-slate-900">{{ module.title }}</h3>
+                                        <div class="mt-2 flex flex-wrap gap-2 text-xs text-slate-500">
+                                            <span class="content-chip bg-blue-50 text-blue-700"><i class="fa-solid fa-file-lines"></i> {{ module.lesson_count }} lessons</span>
+                                            <span class="content-chip bg-amber-50 text-amber-700"><i class="fa-solid fa-circle-question"></i> {{ module.quiz_count }} mcq</span>
+                                            <span class="content-chip bg-slate-100 text-slate-600"><i class="fa-solid fa-photo-film"></i> {{ module.resource_count }} media</span>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                            <div class="flex shrink-0 items-center">
-                                {% if has_access %}
-                                {% if module.first_content %}
-                                <a href="{% url 'content:play_video' course.slug module.slug module.first_content.id %}" class="inline-flex items-center gap-2 rounded-xl bg-amber-400 px-4 py-2 text-sm font-semibold text-slate-900 transition hover:bg-amber-300">Play</a>
-                                {% else %}
-                                <span class="text-sm text-slate-500">No lessons</span>
-                                {% endif %}
-                                {% else %}
-                                <span class="inline-flex items-center gap-2 rounded-xl bg-rose-100 px-4 py-2 text-sm font-semibold text-rose-700">Locked</span>
-                                {% endif %}
+                                <i class="fa-solid fa-chevron-down module-chevron text-slate-400"></i>
+                            </button>
+                            <div class="module-body" id="module-body-{{ module.id }}" hidden>
+                                <div class="grid gap-5 lg:grid-cols-2">
+                                    <div>
+                                        <div class="mb-3 flex items-center gap-2 text-sm font-bold uppercase tracking-wide text-slate-500">
+                                            <i class="fa-solid fa-book text-blue-600"></i> Lessons
+                                        </div>
+                                        <div class="content-list">
+                                            {% for item in module.lesson_items %}
+                                            <div class="rounded-2xl border border-slate-200 bg-white px-4 py-4">
+                                                <div class="flex items-start justify-between gap-3">
+                                                    <div>
+                                                        <div class="font-semibold text-slate-900">{{ forloop.counter }}. {{ item.lesson.title }}</div>
+                                                        <p class="mt-1 text-sm text-slate-500">{{ item.resource_count }} linked media item{{ item.resource_count|pluralize }}</p>
+                                                    </div>
+                                                    {% if item.lesson.is_preview %}
+                                                    <span class="content-chip bg-emerald-50 text-emerald-700">Preview</span>
+                                                    {% endif %}
+                                                </div>
+                                                <div class="mt-4">
+                                                    {% if item.is_accessible %}
+                                                    <a href="{% url 'content:lesson_detail' course.slug module.slug item.lesson.slug %}" class="btn btn-primary w-full sm:w-auto">Open Lesson</a>
+                                                    {% else %}
+                                                    <span class="inline-flex items-center gap-2 rounded-xl bg-rose-100 px-4 py-2 text-sm font-semibold text-rose-700"><i class="fa-solid fa-lock"></i> Locked</span>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                            {% empty %}
+                                            <div class="rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-4 py-5 text-sm text-slate-500">No lessons added yet.</div>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <div class="mb-3 flex items-center gap-2 text-sm font-bold uppercase tracking-wide text-slate-500">
+                                            <i class="fa-solid fa-list-check text-amber-600"></i> MCQ / Quiz
+                                        </div>
+                                        <div class="content-list">
+                                            {% for item in module.quiz_items %}
+                                            <div class="rounded-2xl border border-slate-200 bg-white px-4 py-4">
+                                                <div class="font-semibold text-slate-900">{{ item.quiz.title }}</div>
+                                                <p class="mt-1 text-sm text-slate-500">From lesson: {{ item.lesson.title }}</p>
+                                                <p class="mt-1 text-sm text-slate-500">Pass score: {{ item.quiz.pass_score }}%</p>
+                                                <div class="mt-4">
+                                                    {% if item.is_accessible %}
+                                                    <a href="{% url 'content:quiz_detail' course.slug module.slug item.lesson.slug item.quiz.id %}" class="btn w-full sm:w-auto">Take MCQ</a>
+                                                    {% else %}
+                                                    <span class="inline-flex items-center gap-2 rounded-xl bg-rose-100 px-4 py-2 text-sm font-semibold text-rose-700"><i class="fa-solid fa-lock"></i> Locked</span>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                            {% empty %}
+                                            <div class="rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-4 py-5 text-sm text-slate-500">No MCQ added yet.</div>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                         {% endfor %}
@@ -126,7 +188,7 @@
 
                 {% if related_courses %}
                 <div class="rounded-[1.75rem] border border-slate-200 bg-white/92 p-5 shadow-sm sm:p-6">
-                    <h2 class="text-xl font-bold text-slate-900"><i class="fa-solid fa-shuffle text-blue-600"></i> সম্পর্কিত কোর্স</h2>
+                    <h2 class="text-xl font-bold text-slate-900"><i class="fa-solid fa-shuffle text-blue-600"></i> Related Courses</h2>
                     <div class="mt-5 grid gap-4 sm:grid-cols-2">
                         {% for rel in related_courses %}
                         <a href="{% url 'content:course_detail' rel.slug %}" class="group overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white transition duration-300 hover:-translate-y-1 hover:shadow-lg">
@@ -135,15 +197,7 @@
                                 <h3 class="mt-3 truncate text-lg font-bold text-amber-300">{{ rel.name }}</h3>
                             </div>
                             <div class="p-4">
-                                <p class="desc-clamp text-sm leading-6 text-slate-600">{{ rel.description|default:"Structured and practical learning course." }}</p>
-                                <div class="mt-4 flex flex-wrap gap-2 text-xs font-semibold">
-                                    <span class="rounded-full bg-blue-100 px-2.5 py-1 text-blue-700"><i class="fa-solid fa-file-lines"></i> {{ rel.modules.count }} modules</span>
-                                    {% if rel.is_free %}
-                                    <span class="rounded-full bg-emerald-100 px-2.5 py-1 text-emerald-700"><i class="fa-solid fa-gift"></i> Free</span>
-                                    {% else %}
-                                    <span class="rounded-full bg-amber-100 px-2.5 py-1 text-amber-700"><i class="fa-solid fa-tag"></i> ৳{{ rel.price }}</span>
-                                    {% endif %}
-                                </div>
+                                <p class="text-sm leading-6 text-slate-600">{{ rel.description|default:"Structured and practical learning course."|truncatechars:120 }}</p>
                             </div>
                         </a>
                         {% endfor %}
@@ -161,46 +215,71 @@
                         </div>
                         <div class="space-y-4 p-5">
                             <div class="text-3xl font-extrabold">
-                                {% if course.is_free %}
-                                Free
-                                {% else %}
-                                ৳{{ course.price }}
-                                {% endif %}
+                                {% if course.is_free %}Free{% else %}৳{{ course.price }}{% endif %}
                             </div>
                             <div class="space-y-2 text-sm text-blue-100">
                                 <p><i class="fa-regular fa-clock"></i> Self-paced learning</p>
                                 <p><i class="fa-solid fa-file-lines"></i> {{ modules|length }} modules included</p>
-                                <p><i class="fa-solid fa-language"></i> বাংলা</p>
+                                <p><i class="fa-solid fa-list-check"></i> Lessons + MCQ structure</p>
                             </div>
 
                             {% if has_access %}
-                            {% if first_content %}
-                            <a href="{% url 'content:play_video' course.slug first_content.lesson.module.slug first_content.id %}" class="inline-flex w-full items-center justify-center rounded-xl bg-yellow-400 px-4 py-3 font-bold text-slate-900 transition hover:bg-yellow-300">শুরু করুন</a>
-                            {% else %}
-                            <a href="#" onclick="event.preventDefault(); document.querySelector('#course-list-jump').scrollIntoView({behavior:'smooth'});" class="inline-flex w-full items-center justify-center rounded-xl bg-yellow-400 px-4 py-3 font-bold text-slate-900 transition hover:bg-yellow-300">শুরু করুন</a>
-                            {% endif %}
+                            <p class="rounded-2xl bg-emerald-400/15 px-4 py-3 text-sm font-semibold text-emerald-100">You can open any unlocked lesson and quiz from the module list.</p>
                             {% elif user.is_authenticated %}
                             <a href="{% url 'content:start_purchase' course.slug %}" class="inline-flex w-full items-center justify-center rounded-xl bg-yellow-400 px-4 py-3 font-bold text-slate-900 transition hover:bg-yellow-300">
-                                {% if course.is_free %}এখনই ফ্রি আনলক{% else %}এখনই কিনুন{% endif %}
+                                {% if course.is_free %}Unlock Free Course{% else %}Buy This Course{% endif %}
                             </a>
                             {% else %}
-                            <a href="{% url 'content:login' %}?next={{ request.path }}" class="inline-flex w-full items-center justify-center rounded-xl bg-yellow-400 px-4 py-3 font-bold text-slate-900 transition hover:bg-yellow-300">লগইন করে কিনুন</a>
+                            <a href="{% url 'content:login' %}?next={{ request.path }}" class="inline-flex w-full items-center justify-center rounded-xl bg-yellow-400 px-4 py-3 font-bold text-slate-900 transition hover:bg-yellow-300">Log in to continue</a>
                             {% endif %}
                         </div>
-                    </div>
-
-                    <div id="course-list-jump" class="rounded-[1.5rem] border border-slate-200 bg-white/92 p-5 shadow-sm">
-                        <h3 class="text-lg font-bold text-slate-900">কুইক ইনফো</h3>
-                        <ul class="mt-4 space-y-3 text-sm text-slate-600">
-                            <li class="flex items-start gap-2"><i class="fa-solid fa-circle-check mt-1 text-emerald-600"></i> Lifetime access after purchase</li>
-                            <li class="flex items-start gap-2"><i class="fa-solid fa-circle-check mt-1 text-emerald-600"></i> Structured modules and resources</li>
-                            <li class="flex items-start gap-2"><i class="fa-solid fa-circle-check mt-1 text-emerald-600"></i> Video-based learning flow</li>
-                            <li class="flex items-start gap-2"><i class="fa-solid fa-circle-check mt-1 text-emerald-600"></i> Mobile and desktop friendly</li>
-                        </ul>
                     </div>
                 </div>
             </aside>
         </div>
     </div>
 </section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    (function () {
+        const panels = document.querySelectorAll('#moduleAccordion .module-panel');
+        if (!panels.length) return;
+
+        function openPanel(panel) {
+            const button = panel.querySelector('.module-trigger');
+            const body = panel.querySelector('.module-body');
+            panel.classList.add('module-panel--open');
+            button.setAttribute('aria-expanded', 'true');
+            body.hidden = false;
+        }
+
+        function closePanel(panel) {
+            const button = panel.querySelector('.module-trigger');
+            const body = panel.querySelector('.module-body');
+            panel.classList.remove('module-panel--open');
+            button.setAttribute('aria-expanded', 'false');
+            body.hidden = true;
+        }
+
+        panels.forEach((panel) => {
+            const button = panel.querySelector('.module-trigger');
+            button.addEventListener('click', () => {
+                const isOpen = button.getAttribute('aria-expanded') === 'true';
+                panels.forEach((item) => closePanel(item));
+                if (!isOpen) {
+                    openPanel(panel);
+                    history.replaceState(null, '', `#${panel.id}`);
+                }
+            });
+        });
+
+        const targetId = window.location.hash ? window.location.hash.slice(1) : '';
+        const targetPanel = targetId ? document.getElementById(targetId) : null;
+        if (targetPanel && targetPanel.classList.contains('module-panel')) {
+            openPanel(targetPanel);
+        }
+    })();
+</script>
 {% endblock %}

@@ -22,6 +22,7 @@ from .models import (
     Course,
     CourseCertificate,
     CourseEnrollment,
+    CourseQuiz,
     Lesson,
     LessonResource,
     LessonResourceType,
@@ -30,6 +31,7 @@ from .models import (
     PaymentInstruction,
     PaymentSubmission,
     PaymentSubmissionStatus,
+    QuizAttempt,
     UserProfile,
     UserRole,
 )
@@ -38,10 +40,8 @@ from .services import (
     ensure_enrollment,
     ensure_primary_lesson,
     ensure_profile,
-    first_playable_resource_for_module,
     get_owned_course_ids,
     has_course_access,
-    module_playable_resources_qs,
     visible_lessons_qs,
 )
 from .utils import send_payment_submission_email, send_verification_email
@@ -67,29 +67,45 @@ def home(request):
 
 def course_detail(request, course_slug):
     course = get_object_or_404(Course.objects.select_related("subcategory__category"), slug=course_slug)
+    has_access = has_course_access(request.user, course)
     modules = list(
         course.modules.prefetch_related(
             Prefetch("lessons", queryset=visible_lessons_qs()),
+            Prefetch("accordion_sections", queryset=ModuleAccordionSection.objects.order_by("order", "created_at")),
         ).all()
     )
 
     for module in modules:
         module_lessons = list(module.lessons.all())
-        module.first_content = None
-        module.visible_content_count = 0
+        module.lesson_count = len(module_lessons)
+        module.resource_count = 0
         module.quiz_count = 0
+        module.lesson_items = []
+        module.quiz_items = []
 
         for lesson in module_lessons:
             resources = list(lesson.resources.all())
-            module.visible_content_count += len(resources)
-            module.quiz_count += len(getattr(lesson, "quizzes").all())
-            if module.first_content is None and resources:
-                module.first_content = resources[0]
+            quizzes = list(getattr(lesson, "quizzes").all())
+            module.resource_count += len(resources)
+            module.quiz_count += len(quizzes)
+            module.lesson_items.append(
+                {
+                    "lesson": lesson,
+                    "resource_count": len(resources),
+                    "is_accessible": has_access or lesson.is_preview,
+                }
+            )
+            for quiz in quizzes:
+                module.quiz_items.append(
+                    {
+                        "quiz": quiz,
+                        "lesson": lesson,
+                        "is_accessible": has_access or lesson.is_preview,
+                    }
+                )
 
-    has_access = has_course_access(request.user, course)
     related_courses = Course.objects.exclude(id=course.id).prefetch_related("modules")[:3]
     owned_course_ids = get_owned_course_ids(request.user)
-    first_content = next((module.first_content for module in modules if getattr(module, "first_content", None)), None)
 
     return render(
         request,
@@ -100,7 +116,6 @@ def course_detail(request, course_slug):
             "has_access": has_access,
             "related_courses": related_courses,
             "owned_course_ids": owned_course_ids,
-            "first_content": first_content,
         },
     )
 
@@ -108,10 +123,7 @@ def course_detail(request, course_slug):
 def module_detail(request, course_slug, module_slug):
     course = get_object_or_404(Course, slug=course_slug)
     module = get_object_or_404(Module, course=course, slug=module_slug)
-    first_resource = first_playable_resource_for_module(module)
-    if first_resource:
-        return redirect("content:play_video", course.slug, module.slug, first_resource.id)
-    return redirect("content:course_detail", course.slug)
+    return redirect(f"{reverse('content:course_detail', args=[course.slug])}#module-{module.id}")
 
 
 @staff_member_required
@@ -141,7 +153,7 @@ def module_editor(request, course_slug, module_slug):
             "interactive_contents_payload": [_serialize_resource(resource) for resource in interactive_contents],
             "accordion_sections_payload": [_serialize_accordion(section) for section in accordion_sections],
             "preview_url": (
-                reverse("content:play_video", args=[course.slug, module.slug, first_content.id])
+                reverse("content:lesson_detail", args=[course.slug, module.slug, lesson.slug])
                 if first_content
                 else reverse("content:course_detail", args=[course.slug])
             ),
@@ -150,39 +162,120 @@ def module_editor(request, course_slug, module_slug):
 
 
 def play_video(request, course_slug, module_slug, video_id):
+    resource = get_object_or_404(
+        LessonResource.objects.select_related("lesson", "lesson__module", "lesson__module__course"),
+        id=video_id,
+        lesson__module__slug=module_slug,
+        lesson__module__course__slug=course_slug,
+    )
+    return redirect(
+        "content:lesson_detail",
+        course_slug=resource.lesson.module.course.slug,
+        module_slug=resource.lesson.module.slug,
+        lesson_slug=resource.lesson.slug,
+    )
+
+
+def lesson_detail(request, course_slug, module_slug, lesson_slug):
     course = get_object_or_404(Course, slug=course_slug)
     module = get_object_or_404(
         Module.objects.prefetch_related(
-            Prefetch("lessons", queryset=Lesson.objects.order_by("order", "created_at")),
             Prefetch("accordion_sections", queryset=ModuleAccordionSection.objects.order_by("order", "created_at")),
+            Prefetch("lessons", queryset=visible_lessons_qs()),
         ),
         course=course,
         slug=module_slug,
     )
-    video = get_object_or_404(
-        LessonResource.objects.select_related("lesson", "lesson__module", "lesson__module__course"),
-        id=video_id,
-        lesson__module=module,
+    lesson = get_object_or_404(
+        Lesson.objects.prefetch_related(
+            Prefetch("resources", queryset=LessonResource.objects.filter(is_published=True).order_by("order", "created_at")),
+            Prefetch("quizzes", queryset=CourseQuiz.objects.filter(is_active=True).prefetch_related("questions")),
+        ),
+        module=module,
+        slug=lesson_slug,
+        is_published=True,
     )
 
-    has_access = has_course_access(request.user, course) or video.is_preview or video.lesson.is_preview
-    videos = module_playable_resources_qs(module)
-    interactive_contents = list(videos)
-    accordion_sections = list(module.accordion_sections.all())
-    embed = _build_embed_payload(video)
+    has_access = has_course_access(request.user, course) or lesson.is_preview
+    if not has_access:
+        return redirect("content:course_detail", course.slug)
+
+    module_lessons = list(module.lessons.all())
+    lesson_navigation = [
+        {
+            "lesson": sibling,
+            "is_current": sibling.id == lesson.id,
+        }
+        for sibling in module_lessons
+    ]
+    quizzes = list(lesson.quizzes.all())
 
     return render(
         request,
-        "content/video_player.html",
+        "content/lesson_detail.html",
         {
             "course": course,
             "module": module,
-            "video": video,
-            "videos": videos,
-            "interactive_contents": interactive_contents,
-            "accordion_sections": accordion_sections,
+            "lesson": lesson,
+            "interactive_contents": list(lesson.resources.all()),
+            "accordion_sections": list(module.accordion_sections.all()),
+            "lesson_navigation": lesson_navigation,
+            "quizzes": quizzes,
             "has_access": has_access,
-            "embed": embed,
+        },
+    )
+
+
+@require_http_methods(["GET", "POST"])
+def quiz_detail(request, course_slug, module_slug, lesson_slug, quiz_id):
+    course = get_object_or_404(Course, slug=course_slug)
+    module = get_object_or_404(Module, course=course, slug=module_slug)
+    lesson = get_object_or_404(Lesson, module=module, slug=lesson_slug, is_published=True)
+    quiz = get_object_or_404(
+        CourseQuiz.objects.prefetch_related("questions"),
+        id=quiz_id,
+        lesson=lesson,
+        is_active=True,
+    )
+
+    has_access = has_course_access(request.user, course) or lesson.is_preview
+    if not has_access:
+        return redirect("content:course_detail", course.slug)
+
+    questions = list(quiz.questions.all())
+    submission = None
+    score = None
+    passed = None
+
+    if request.method == "POST":
+        total = len(questions)
+        correct = 0
+        for question in questions:
+            answer = (request.POST.get(f"question_{question.id}") or "").upper()
+            if answer == question.correct_option:
+                correct += 1
+
+        score = round((correct / total) * 100) if total else 0
+        passed = score >= quiz.pass_score
+        submission = {
+            "score": score,
+            "correct": correct,
+            "total": total,
+            "passed": passed,
+        }
+        if request.user.is_authenticated:
+            QuizAttempt.objects.create(user=request.user, quiz=quiz, score=score)
+
+    return render(
+        request,
+        "content/quiz_detail.html",
+        {
+            "course": course,
+            "module": module,
+            "lesson": lesson,
+            "quiz": quiz,
+            "questions": questions,
+            "submission": submission,
         },
     )
 
@@ -553,30 +646,6 @@ def get_course_content(request, content_id):
 
 def get_interactive_content(request, content_id):
     return get_course_content(request, content_id)
-
-
-def _build_embed_payload(resource):
-    file_url = resource.file.url if resource.file else ""
-
-    if resource.content_type == LessonResourceType.VIDEO:
-        youtube_embed_url = resource.get_youtube_embed_url()
-        if youtube_embed_url:
-            return {
-                "type": "youtube",
-                "video_id": youtube_embed_url.rsplit("/", 1)[-1],
-                "embed_url": youtube_embed_url,
-            }
-        if file_url and file_url.lower().endswith(".mp4"):
-            return {"type": "mp4", "url": file_url}
-        if resource.external_url:
-            return {"type": "link", "url": resource.external_url}
-    if resource.content_type == LessonResourceType.IMAGE and file_url:
-        return {"type": "image", "url": file_url}
-    if resource.content_type in (LessonResourceType.EXTERNAL_LINK, LessonResourceType.EMBED):
-        return {"type": "link", "url": resource.external_url or resource.embed_url}
-    if file_url:
-        return {"type": "file", "url": file_url}
-    return {"type": "link", "url": resource.external_url or ""}
 
 
 def _serialize_resource(resource):

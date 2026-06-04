@@ -40,7 +40,7 @@ templates/content/
   home.html
   category_detail.html
   subcategory_detail.html
-  subject_detail.html
+  lesson_detail.html
   subject_editor.html
 static/js/
   subject.js
@@ -77,8 +77,9 @@ Open:
 - `/` -> home (all categories)
 - `/category/<cat_slug>/` -> subcategories
 - `/category/<cat_slug>/<subcat_slug>/` -> subjects
-- `/category/<cat_slug>/<subcat_slug>/<subject_slug>/` -> subject details page
-- `/editor/subject/<subject_id>/` -> frontend subject editor
+- `/courses/<course_slug>/` -> course modules page with collapsible lessons and MCQ
+- `/courses/<course_slug>/modules/<module_slug>/lessons/<lesson_slug>/` -> lesson details page
+- `/courses/<course_slug>/modules/<module_slug>/lessons/<lesson_slug>/quizzes/<quiz_id>/` -> lesson MCQ page
 
 ## API Endpoints (AJAX)
 
