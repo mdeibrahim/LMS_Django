@@ -16,3 +16,5 @@ staticfiles/
 .DS_Store
 .vscode/
 .codex
+.agent
+.agent/
