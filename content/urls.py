@@ -1,4 +1,4 @@
-from django.urls import path, include
+from django.urls import path
 from django.contrib.auth import views as auth_views
 from . import views
 
@@ -68,6 +68,4 @@ urlpatterns = [
     path('api/accordion/<int:section_id>/update/', views.api_accordion_update, name='api_accordion_update'),
     path('api/accordion/<int:section_id>/delete/', views.api_accordion_delete, name='api_accordion_delete'),
 
-    # ── Read API ────────────────────────────────────────────────
-    path('api/v1/', include('content.api_urls')),
 ]

@@ -4,7 +4,6 @@ from content.models import Lesson, LessonResource, Module
 
 
 VISIBLE_LESSON_RESOURCES = LessonResource.objects.filter(is_published=True).order_by("order", "created_at")
-VISIBLE_LESSONS = Lesson.objects.filter(is_published=True).order_by("order", "created_at")
 
 
 def ensure_primary_lesson(module):

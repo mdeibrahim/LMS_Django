@@ -3,1042 +3,351 @@
 {% block title %}Dashboard | Teaching Platform Admin{% endblock %}
 
 {% block extrastyle %}
+{{ block.super }}
 <style>
-    .ops-shell {
-        --bg: #f4f7fb;
-        --bg-elevated: rgba(255, 255, 255, 0.92);
-        --bg-elevated-strong: rgba(255, 255, 255, 0.98);
-        --bg-muted: #edf2f7;
-        --bg-soft: #f8fbff;
-        --line: #d7e0ea;
-        --line-strong: #c2cfdd;
-        --text: #0f172a;
-        --text-soft: #475569;
-        --text-muted: #64748b;
-        --brand: #0f172a;
-        --brand-2: #1d4ed8;
-        --brand-3: #0f766e;
-        --success: #166534;
-        --success-bg: #dcfce7;
-        --warning: #92400e;
-        --warning-bg: #fef3c7;
-        --danger: #9f1239;
-        --danger-bg: #ffe4e6;
-        --table-head: #f8fafc;
-        --table-hover: #fbfdff;
-        --meter-track: #e2e8f0;
-        --shadow: 0 22px 48px rgba(15, 23, 42, 0.08);
-        color-scheme: light;
-        background:
-            radial-gradient(circle at top left, rgba(29, 78, 216, 0.10), transparent 28%),
-            radial-gradient(circle at top right, rgba(15, 118, 110, 0.10), transparent 24%),
-            linear-gradient(180deg, #f8fbff 0%, var(--bg) 100%);
-        border: 1px solid var(--line);
-        border-radius: 28px;
-        padding: 24px;
-        box-shadow: var(--shadow);
-    }
-
-    .ops-grid {
+    .admin-dashboard {
         display: grid;
-        grid-template-columns: minmax(0, 1fr) 320px;
         gap: 18px;
-        align-items: start;
+        margin-top: 8px;
     }
 
-    .panel,
-    .metric-card,
-    .management-card,
-    .queue-item {
-        background: linear-gradient(180deg, var(--bg-elevated-strong), var(--bg-elevated));
-        border: 1px solid var(--line);
-        border-radius: 24px;
-        box-shadow: 0 14px 36px rgba(15, 23, 42, 0.05);
-        backdrop-filter: blur(14px);
+    .admin-hero,
+    .admin-panel,
+    .admin-card {
+        background: var(--bg, #fff);
+        border: 1px solid var(--border-color, #e5e7eb);
+        border-radius: 20px;
+        box-shadow: 0 10px 30px rgba(15, 23, 42, 0.05);
+        transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
     }
 
-    .hero {
-        margin-bottom: 18px;
-        padding: 28px;
+    .admin-card:hover,
+    .admin-panel:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 16px 36px rgba(15, 23, 42, 0.10);
+        border-color: rgba(37, 99, 235, 0.18);
+    }
+
+    .admin-hero {
+        padding: 24px;
         display: flex;
         justify-content: space-between;
-        gap: 18px;
+        gap: 20px;
         flex-wrap: wrap;
-        border-radius: 28px;
-        background: linear-gradient(135deg, rgba(15, 23, 42, 0.98), rgba(30, 41, 59, 0.96) 52%, rgba(13, 148, 136, 0.88));
+        background: linear-gradient(135deg, #0f172a, #1e293b 60%, #0f766e);
         color: #f8fafc;
     }
 
-    .hero-kicker {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        margin-bottom: 12px;
-        padding: 7px 12px;
-        border-radius: 999px;
-        background: rgba(255, 255, 255, 0.10);
-        color: rgba(248, 250, 252, 0.92);
-        font-size: 11px;
-        font-weight: 800;
-        letter-spacing: 0.08em;
-        text-transform: uppercase;
-    }
-
-    .hero h1 {
-        margin: 0;
-        font-size: 34px;
-        line-height: 1.05;
-        font-weight: 900;
-    }
-
-    .hero p {
-        margin: 12px 0 0;
-        max-width: 760px;
-        color: rgba(226, 232, 240, 0.9);
-        font-size: 14px;
-        line-height: 1.7;
-    }
-
-    .hero-stats {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(120px, 1fr));
-        gap: 12px;
-        min-width: 260px;
-    }
-
-    .hero-stat {
-        padding: 16px;
-        border-radius: 20px;
-        background: rgba(255, 255, 255, 0.10);
-        border: 1px solid rgba(255, 255, 255, 0.12);
-    }
-
-    .hero-stat-label {
-        margin: 0;
-        font-size: 11px;
-        text-transform: uppercase;
-        letter-spacing: 0.08em;
-        color: rgba(226, 232, 240, 0.8);
+    .admin-hero h1 {
+        margin: 0 0 8px;
+        font-size: 28px;
+        line-height: 1.1;
         font-weight: 800;
     }
 
-    .hero-stat-value {
-        margin: 10px 0 0;
-        font-size: 24px;
-        font-weight: 900;
+    .admin-hero p {
+        margin: 0;
+        max-width: 68ch;
+        color: rgba(248, 250, 252, 0.82);
+        line-height: 1.6;
     }
 
-    .hero-actions {
-        margin-top: 18px;
+    .admin-actions {
         display: flex;
         flex-wrap: wrap;
         gap: 10px;
+        align-self: end;
     }
 
-    .action-btn {
+    .admin-action {
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        gap: 8px;
-        padding: 11px 16px;
+        padding: 10px 14px;
         border-radius: 999px;
-        font-size: 12px;
-        font-weight: 800;
         text-decoration: none;
-        transition: transform .16s ease, box-shadow .16s ease, background .16s ease;
+        font-weight: 700;
+        font-size: 13px;
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        box-shadow: 0 10px 24px rgba(15, 23, 42, 0.12);
+        transition: transform 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
     }
 
-    .action-btn:hover {
+    .admin-action:hover {
         transform: translateY(-1px);
         text-decoration: none;
+        box-shadow: 0 14px 30px rgba(15, 23, 42, 0.18);
     }
 
-    .action-btn-primary {
+    .admin-action-primary {
+        background: #fff;
         color: #0f172a;
-        background: #ffffff;
-        box-shadow: 0 12px 28px rgba(255, 255, 255, 0.14);
     }
 
-    .action-btn-secondary {
-        color: #f8fafc;
+    .admin-action-secondary {
         background: rgba(255, 255, 255, 0.08);
-        border: 1px solid rgba(255, 255, 255, 0.14);
+        color: #f8fafc;
     }
 
-    .content-stack {
-        display: grid;
-        gap: 18px;
-    }
-
-    .metrics-grid {
+    .metric-grid {
         display: grid;
         grid-template-columns: repeat(4, minmax(0, 1fr));
         gap: 14px;
     }
 
-    .metric-card {
+    .admin-card {
         padding: 18px;
     }
 
     .metric-label {
         margin: 0;
-        color: var(--text-muted);
         font-size: 11px;
         font-weight: 800;
         letter-spacing: 0.08em;
         text-transform: uppercase;
+        color: var(--body-quiet-color, #6b7280);
     }
 
     .metric-value {
-        margin: 12px 0 8px;
-        color: var(--text);
-        font-size: 30px;
+        margin: 10px 0 6px;
+        font-size: 28px;
         line-height: 1;
         font-weight: 900;
+        color: var(--body-fg, #111827);
     }
 
     .metric-note {
         margin: 0;
-        color: var(--text-soft);
-        font-size: 12px;
-        line-height: 1.6;
+        color: var(--body-quiet-color, #6b7280);
+        font-size: 13px;
+        line-height: 1.5;
     }
 
-    .metric-tone-emerald { background: linear-gradient(180deg, rgba(220, 252, 231, 0.72), rgba(255, 255, 255, 0.94)); }
-    .metric-tone-blue { background: linear-gradient(180deg, rgba(219, 234, 254, 0.72), rgba(255, 255, 255, 0.94)); }
-    .metric-tone-violet { background: linear-gradient(180deg, rgba(237, 233, 254, 0.72), rgba(255, 255, 255, 0.94)); }
-    .metric-tone-amber { background: linear-gradient(180deg, rgba(254, 243, 199, 0.76), rgba(255, 255, 255, 0.94)); }
-
-    .section-head {
-        display: flex;
-        align-items: flex-start;
-        justify-content: space-between;
-        gap: 16px;
-        margin-bottom: 16px;
+    .admin-grid {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 18px;
+        align-items: start;
     }
 
-    .section-title {
-        margin: 0;
-        color: var(--text);
-        font-size: 18px;
-        font-weight: 900;
-    }
-
-    .section-note {
-        margin: 6px 0 0;
-        color: var(--text-muted);
-        font-size: 12px;
-        line-height: 1.6;
-    }
-
-    .panel {
+    .admin-panel {
         padding: 20px;
     }
 
-    .two-col,
-    .three-col {
-        display: grid;
-        gap: 18px;
-    }
-
-    .two-col {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-
-    .three-col {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-    }
-
-    .management-grid {
-        display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap: 14px;
-    }
-
-    .management-card {
-        padding: 18px;
-    }
-
-    .management-list,
-    .queue-list,
-    .mix-list,
-    .summary-list,
-    .watch-list {
-        display: grid;
-        gap: 10px;
-    }
-
-    .management-link,
-    .queue-item-link {
+    .section-head {
         display: flex;
-        align-items: center;
         justify-content: space-between;
+        gap: 12px;
+        align-items: baseline;
+        margin-bottom: 14px;
+    }
+
+    .section-head h2 {
+        margin: 0;
+        font-size: 18px;
+        font-weight: 800;
+        color: var(--body-fg, #111827);
+    }
+
+    .section-head p {
+        margin: 0;
+        color: var(--body-quiet-color, #6b7280);
+        font-size: 13px;
+    }
+
+    .simple-list {
+        display: grid;
         gap: 10px;
+    }
+
+    .simple-item {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        align-items: flex-start;
         padding: 12px 14px;
-        border-radius: 16px;
-        background: var(--bg-elevated-strong);
-        border: 1px solid var(--line);
-        color: var(--text);
-        text-decoration: none;
-        transition: border-color .16s ease, transform .16s ease, background .16s ease;
+        border-radius: 14px;
+        background: rgba(148, 163, 184, 0.08);
+        box-shadow: 0 4px 12px rgba(15, 23, 42, 0.03);
+        transition: transform 0.16s ease, box-shadow 0.16s ease, background 0.16s ease;
     }
 
-    .management-link:hover,
-    .queue-item-link:hover {
-        border-color: var(--line-strong);
-        background: var(--bg-soft);
+    .simple-item strong {
+        display: block;
+        margin-bottom: 3px;
+        font-weight: 800;
+        color: var(--body-fg, #111827);
+    }
+
+    .simple-item span,
+    .simple-item small {
+        color: var(--body-quiet-color, #6b7280);
+    }
+
+    .simple-link:hover .simple-item,
+    .simple-item:hover {
         transform: translateY(-1px);
-        text-decoration: none;
+        background: rgba(148, 163, 184, 0.12);
+        box-shadow: 0 10px 22px rgba(15, 23, 42, 0.08);
     }
 
-    .count-chip,
-    .status-chip {
+    .status-pill {
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        border-radius: 999px;
         padding: 5px 10px;
+        border-radius: 999px;
         font-size: 11px;
         font-weight: 800;
         white-space: nowrap;
     }
 
-    .count-chip {
-        background: var(--bg-muted);
-        color: var(--text);
-        border: 1px solid var(--line);
-    }
-
-    .status-emerald { color: var(--success); background: var(--success-bg); }
-    .status-amber { color: var(--warning); background: var(--warning-bg); }
-    .status-rose { color: var(--danger); background: var(--danger-bg); }
-    .status-slate { color: var(--text-soft); background: #e2e8f0; }
-
-    .progress-list {
-        display: grid;
-        gap: 14px;
-    }
-
-    .progress-row-head {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 12px;
-        margin-bottom: 6px;
-        color: var(--text-soft);
-        font-size: 13px;
-        font-weight: 700;
-    }
-
-    .meter {
-        height: 10px;
-        border-radius: 999px;
-        background: var(--meter-track);
-        overflow: hidden;
-    }
-
-    .meter > span {
-        display: block;
-        height: 100%;
-        border-radius: 999px;
-        background: linear-gradient(90deg, #1d4ed8, #0f766e);
-    }
-
-    .queue-item {
-        padding: 14px;
-    }
-
-    .queue-item-head {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 12px;
-        margin-bottom: 8px;
-    }
-
-    .queue-title {
-        margin: 0;
-        color: var(--text);
-        font-size: 14px;
-        font-weight: 800;
-    }
-
-    .queue-note {
-        margin: 0;
-        color: var(--text-muted);
-        font-size: 12px;
-        line-height: 1.6;
-    }
-
-    .summary-item,
-    .watch-item {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 12px;
-        padding: 12px 14px;
-        border-radius: 16px;
-        background: var(--bg-elevated-strong);
-        border: 1px solid var(--line);
-    }
+    .status-emerald { background: rgba(34, 197, 94, 0.14); color: #166534; }
+    .status-amber { background: rgba(245, 158, 11, 0.16); color: #92400e; }
+    .status-rose { background: rgba(244, 63, 94, 0.14); color: #9f1239; }
+    .status-slate { background: rgba(100, 116, 139, 0.12); color: #334155; }
 
     .table-wrap {
         overflow-x: auto;
     }
 
-    .ops-table {
+    .simple-table {
         width: 100%;
-        border-collapse: separate;
-        border-spacing: 0;
+        border-collapse: collapse;
     }
 
-    .ops-table th,
-    .ops-table td {
-        padding: 12px 12px;
+    .simple-table th,
+    .simple-table td {
+        padding: 12px 10px;
         text-align: left;
+        border-bottom: 1px solid rgba(148, 163, 184, 0.18);
         font-size: 13px;
-        border-bottom: 1px solid #e6edf5;
         vertical-align: top;
+        transition: background 0.16s ease;
     }
 
-    .ops-table th {
-        color: var(--text-muted);
+    .simple-table th {
         font-size: 11px;
-        font-weight: 800;
-        letter-spacing: 0.08em;
         text-transform: uppercase;
-        background: var(--table-head);
+        letter-spacing: 0.08em;
+        color: var(--body-quiet-color, #6b7280);
     }
 
-    .ops-table tr:hover td {
-        background: var(--table-hover);
-    }
-
-    .inline-link {
-        color: var(--brand-2);
+    .simple-link {
+        color: var(--link-fg, #2563eb);
         text-decoration: none;
-        font-weight: 800;
+        font-weight: 700;
     }
 
-    .inline-link:hover {
+    .simple-link:hover {
         text-decoration: underline;
     }
 
-    .muted {
-        color: var(--text-muted);
-        font-size: 12px;
+    .simple-table tbody tr {
+        transition: transform 0.16s ease, background 0.16s ease;
     }
 
-    .sidebar-stack {
+    .simple-table tbody tr:hover td {
+        background: rgba(148, 163, 184, 0.08);
+    }
+
+    .compact-stack {
         display: grid;
         gap: 18px;
     }
 
-    .sidebar-card {
-        padding: 18px;
-    }
-
-    .empty {
-        margin: 0;
-        color: var(--text-muted);
-        font-size: 12px;
-        line-height: 1.6;
-    }
-
-    html.dark .ops-shell,
-    body.dark .ops-shell,
-    [data-theme="dark"] .ops-shell {
-        --bg: #030712;
-        --bg-elevated: rgba(13, 18, 31, 0.94);
-        --bg-elevated-strong: rgba(17, 24, 39, 0.96);
-        --bg-muted: #172033;
-        --bg-soft: #111827;
-        --line: #263244;
-        --line-strong: #3a4a61;
-        --text: #f8fafc;
-        --text-soft: #d7e0ee;
-        --text-muted: #93a4ba;
-        --brand: #f8fafc;
-        --brand-2: #7dd3fc;
-        --brand-3: #2dd4bf;
-        --success: #86efac;
-        --success-bg: rgba(20, 83, 45, 0.42);
-        --warning: #fcd34d;
-        --warning-bg: rgba(120, 53, 15, 0.42);
-        --danger: #fda4af;
-        --danger-bg: rgba(136, 19, 55, 0.42);
-        --table-head: #0f172a;
-        --table-hover: #0f1b2d;
-        --meter-track: #1c2940;
-        --shadow: 0 24px 52px rgba(2, 6, 23, 0.52);
-        color-scheme: dark;
-        background:
-            radial-gradient(circle at top left, rgba(56, 189, 248, 0.18), transparent 24%),
-            radial-gradient(circle at top right, rgba(45, 212, 191, 0.16), transparent 22%),
-            linear-gradient(180deg, #020617 0%, #07101c 100%);
-    }
-
-    html.dark .panel,
-    html.dark .metric-card,
-    html.dark .management-card,
-    html.dark .queue-item,
-    body.dark .panel,
-    body.dark .metric-card,
-    body.dark .management-card,
-    body.dark .queue-item,
-    [data-theme="dark"] .panel,
-    [data-theme="dark"] .metric-card,
-    [data-theme="dark"] .management-card,
-    [data-theme="dark"] .queue-item {
-        box-shadow: 0 18px 36px rgba(2, 6, 23, 0.34);
-    }
-
-    html.dark .management-link,
-    html.dark .queue-item-link,
-    html.dark .summary-item,
-    html.dark .watch-item,
-    html.dark .ops-table th,
-    body.dark .management-link,
-    body.dark .queue-item-link,
-    body.dark .summary-item,
-    body.dark .watch-item,
-    body.dark .ops-table th,
-    [data-theme="dark"] .management-link,
-    [data-theme="dark"] .queue-item-link,
-    [data-theme="dark"] .summary-item,
-    [data-theme="dark"] .watch-item,
-    [data-theme="dark"] .ops-table th {
-        background: var(--bg-soft);
-    }
-
-    html.dark .ops-table th,
-    html.dark .ops-table td,
-    body.dark .ops-table th,
-    body.dark .ops-table td,
-    [data-theme="dark"] .ops-table th,
-    [data-theme="dark"] .ops-table td {
-        border-color: #1e293b;
-    }
-
-    html.dark .ops-table tr:hover td,
-    body.dark .ops-table tr:hover td,
-    [data-theme="dark"] .ops-table tr:hover td {
-        background: var(--table-hover);
-    }
-
-    html.dark .metric-tone-emerald,
-    body.dark .metric-tone-emerald,
-    [data-theme="dark"] .metric-tone-emerald {
-        background: linear-gradient(180deg, rgba(20, 83, 45, 0.55), rgba(13, 18, 31, 0.96));
-    }
-
-    html.dark .metric-tone-blue,
-    body.dark .metric-tone-blue,
-    [data-theme="dark"] .metric-tone-blue {
-        background: linear-gradient(180deg, rgba(30, 64, 175, 0.52), rgba(13, 18, 31, 0.96));
-    }
-
-    html.dark .metric-tone-violet,
-    body.dark .metric-tone-violet,
-    [data-theme="dark"] .metric-tone-violet {
-        background: linear-gradient(180deg, rgba(91, 33, 182, 0.52), rgba(13, 18, 31, 0.96));
-    }
-
-    html.dark .metric-tone-amber,
-    body.dark .metric-tone-amber,
-    [data-theme="dark"] .metric-tone-amber {
-        background: linear-gradient(180deg, rgba(146, 64, 14, 0.56), rgba(13, 18, 31, 0.96));
-    }
-
-    html.dark .hero,
-    body.dark .hero,
-    [data-theme="dark"] .hero {
-        background:
-            radial-gradient(circle at top right, rgba(34, 211, 238, 0.16), transparent 28%),
-            linear-gradient(135deg, rgba(2, 6, 23, 0.98), rgba(15, 23, 42, 0.96) 58%, rgba(17, 94, 89, 0.88));
-        border: 1px solid rgba(125, 211, 252, 0.12);
-        box-shadow: 0 22px 44px rgba(2, 6, 23, 0.36);
-    }
-
-    html.dark .hero-kicker,
-    body.dark .hero-kicker,
-    [data-theme="dark"] .hero-kicker {
-        background: rgba(148, 163, 184, 0.14);
-        color: rgba(226, 232, 240, 0.96);
-    }
-
-    html.dark .hero-stat,
-    body.dark .hero-stat,
-    [data-theme="dark"] .hero-stat {
-        background: rgba(15, 23, 42, 0.44);
-        border-color: rgba(148, 163, 184, 0.14);
-    }
-
-    html.dark .action-btn-primary,
-    body.dark .action-btn-primary,
-    [data-theme="dark"] .action-btn-primary {
-        color: #031525;
-        background: linear-gradient(135deg, #a5f3fc, #67e8f9);
-        box-shadow: 0 12px 26px rgba(34, 211, 238, 0.18);
-    }
-
-    html.dark .action-btn-secondary,
-    body.dark .action-btn-secondary,
-    [data-theme="dark"] .action-btn-secondary {
-        color: #e2e8f0;
-        background: rgba(148, 163, 184, 0.10);
-        border-color: rgba(148, 163, 184, 0.18);
-    }
-
-    html.dark .count-chip,
-    body.dark .count-chip,
-    [data-theme="dark"] .count-chip {
-        background: rgba(15, 23, 42, 0.7);
-        border-color: #334155;
-        color: #e2e8f0;
-    }
-
-    html.dark .status-slate,
-    body.dark .status-slate,
-    [data-theme="dark"] .status-slate {
-        color: #cbd5e1;
-        background: rgba(71, 85, 105, 0.42);
-    }
-
-    html.dark .inline-link,
-    body.dark .inline-link,
-    [data-theme="dark"] .inline-link {
-        color: #7dd3fc;
-    }
-
-    html.dark .management-link:hover,
-    html.dark .queue-item-link:hover,
-    body.dark .management-link:hover,
-    body.dark .queue-item-link:hover,
-    [data-theme="dark"] .management-link:hover,
-    [data-theme="dark"] .queue-item-link:hover {
-        background: #162235;
-    }
-
-    html.dark .summary-item,
-    html.dark .watch-item,
-    body.dark .summary-item,
-    body.dark .watch-item,
-    [data-theme="dark"] .summary-item,
-    [data-theme="dark"] .watch-item {
-        box-shadow: inset 0 1px 0 rgba(148, 163, 184, 0.04);
-    }
-
-    @media (max-width: 1280px) {
-        .ops-grid { grid-template-columns: 1fr; }
-        .metrics-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-        .management-grid,
-        .three-col { grid-template-columns: 1fr; }
-    }
-
-    @media (max-width: 900px) {
-        .two-col { grid-template-columns: 1fr; }
-        .hero { padding: 22px; }
-        .hero h1 { font-size: 28px; }
-        .hero-stats { width: 100%; }
-    }
-
-    @media (max-width: 640px) {
-        .ops-shell { padding: 14px; border-radius: 22px; }
-        .metrics-grid { grid-template-columns: 1fr; }
-        .hero-stat-value,
-        .metric-value { font-size: 24px; }
-        .hero-actions,
-        .section-head {
-            flex-direction: column;
-            align-items: stretch;
+    @media (max-width: 1100px) {
+        .metric-grid,
+        .admin-grid {
+            grid-template-columns: 1fr;
         }
-        .action-btn { width: 100%; }
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="ops-shell">
-    <div class="ops-grid">
-        <main class="content-stack">
-            <section class="hero">
+<div class="admin-dashboard">
+    <section class="admin-hero">
+        <div>
+            <h1>Admin Dashboard</h1>
+            <p>A compact overview of the platform. It keeps only the signals that need regular attention: revenue, courses, students, and pending payments.</p>
+        </div>
+        <div class="admin-actions">
+            {% for action in quick_actions %}
+                <a href="{{ action.url }}" class="admin-action {% if action.tone == 'primary' %}admin-action-primary{% else %}admin-action-secondary{% endif %}">{{ action.label }}</a>
+            {% endfor %}
+        </div>
+    </section>
+
+    <section class="metric-grid">
+        {% for metric in overview_metrics %}
+            <article class="admin-card">
+                <p class="metric-label">{{ metric.label }}</p>
+                <div class="metric-value">{{ metric.value }}</div>
+                <p class="metric-note">{{ metric.note }}</p>
+            </article>
+        {% endfor %}
+    </section>
+
+    <section class="admin-grid">
+        <div class="admin-panel">
+            <div class="section-head">
                 <div>
-                    <div class="hero-kicker">Internal Operations Dashboard</div>
-                    <h1>Run the teaching platform with fewer clicks and clearer signals.</h1>
-                    <p>Track course readiness, purchase approvals, learner growth, and content operations from one production-style admin home tuned for a learning platform.</p>
-                    <div class="hero-actions">
-                        {% for action in quick_actions %}
-                            <a href="{{ action.url }}" class="action-btn {% if action.tone == 'primary' %}action-btn-primary{% else %}action-btn-secondary{% endif %}">{{ action.label }}</a>
+                    <h2>Recent Purchases</h2>
+                    <p>The latest payment submissions waiting for review or confirmation.</p>
+                </div>
+            </div>
+            <div class="table-wrap">
+                <table class="simple-table">
+                    <thead>
+                        <tr>
+                            <th>User</th>
+                            <th>Course</th>
+                            <th>Status</th>
+                            <th>Submitted</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for purchase in recent_purchases %}
+                            <tr>
+                                <td>{{ purchase.user.username }}</td>
+                                <td>{{ purchase.course.name }}</td>
+                                <td>
+                                    <span class="status-pill status-{% if purchase.status == 'approved' %}emerald{% elif purchase.status == 'pending' %}amber{% else %}slate{% endif %}">
+                                        {{ purchase.get_status_display }}
+                                    </span>
+                                </td>
+                                <td>{{ purchase.submitted_at|date:"M d, Y" }}</td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="4">No payment submissions yet.</td>
+                            </tr>
                         {% endfor %}
-                    </div>
-                </div>
-                <div class="hero-stats">
-                    <div class="hero-stat">
-                        <p class="hero-stat-label">Confirmed Revenue</p>
-                        <p class="hero-stat-value">{{ stats.confirmed_revenue }}</p>
-                    </div>
-                    <div class="hero-stat">
-                        <p class="hero-stat-label">Pending Purchases</p>
-                        <p class="hero-stat-value">{{ stats.pending_purchase_count }}</p>
-                    </div>
-                    <div class="hero-stat">
-                        <p class="hero-stat-label">7-Day Signups</p>
-                        <p class="hero-stat-value">{{ signup_summary.last_7_days }}</p>
-                    </div>
-                    <div class="hero-stat">
-                        <p class="hero-stat-label">Active Sessions</p>
-                        <p class="hero-stat-value">{{ stats.active_device_sessions }}</p>
-                    </div>
-                </div>
-            </section>
+                    </tbody>
+                </table>
+            </div>
+        </div>
 
-            <section class="metrics-grid">
-                {% for item in primary_metrics %}
-                    <article class="metric-card metric-tone-{{ item.tone }}">
-                        <p class="metric-label">{{ item.label }}</p>
-                        <p class="metric-value">{{ item.value }}</p>
-                        <p class="metric-note">{{ item.note }}</p>
-                    </article>
+        <div class="admin-panel">
+            <div class="section-head">
+                <div>
+                    <h2>Needs Attention</h2>
+                    <p>Only the most important queue item is shown here.</p>
+                </div>
+            </div>
+            <div class="simple-list">
+                {% for item in priority_queue %}
+                    <a href="{{ item.url }}" class="simple-item simple-link">
+                        <div>
+                            <strong>{{ item.label }}</strong>
+                            <small>{{ item.note }}</small>
+                        </div>
+                        <span class="status-pill status-{{ item.tone }}">{{ item.value }}</span>
+                    </a>
                 {% endfor %}
-            </section>
-
-            <section class="panel">
-                <div class="section-head">
-                    <div>
-                        <h2 class="section-title">Management Areas</h2>
-                        <p class="section-note">Shortcuts grouped around how an LMS team actually works: curriculum, commerce, and account operations.</p>
-                    </div>
-                </div>
-                <div class="management-grid">
-                    {% for section in management_sections %}
-                        <article class="management-card">
-                            <h3 class="section-title">{{ section.title }}</h3>
-                            <p class="section-note">{{ section.note }}</p>
-                            <div class="management-list">
-                                {% for item in section.items %}
-                                    <a href="{{ item.url }}" class="management-link">
-                                        <span>{{ item.label }}</span>
-                                        <span class="count-chip">{% if item.count is not None %}{{ item.count }}{% else %}Open{% endif %}</span>
-                                    </a>
-                                {% endfor %}
-                            </div>
-                        </article>
-                    {% endfor %}
-                </div>
-            </section>
-
-            <section class="two-col">
-                <article class="panel">
-                    <div class="section-head">
-                        <div>
-                            <h2 class="section-title">Platform Health</h2>
-                            <p class="section-note">Coverage scores highlight whether catalog records are actually usable for learners.</p>
-                        </div>
-                    </div>
-                    <div class="progress-list">
-                        <div>
-                            <div class="progress-row-head"><span>Courses with module structure</span><span>{{ health.course_structure_coverage }}%</span></div>
-                            <div class="meter"><span style="width: {{ health.course_structure_coverage }}%;"></span></div>
-                        </div>
-                        <div>
-                            <div class="progress-row-head"><span>Modules with interactive content</span><span>{{ health.content_coverage }}%</span></div>
-                            <div class="meter"><span style="width: {{ health.content_coverage }}%;"></span></div>
-                        </div>
-                        <div>
-                            <div class="progress-row-head"><span>Modules with quiz support</span><span>{{ health.quiz_coverage }}%</span></div>
-                            <div class="meter"><span style="width: {{ health.quiz_coverage }}%;"></span></div>
-                        </div>
-                        <div>
-                            <div class="progress-row-head"><span>Courses linked to subcategories</span><span>{{ health.subcategory_assignment_coverage }}%</span></div>
-                            <div class="meter"><span style="width: {{ health.subcategory_assignment_coverage }}%;"></span></div>
-                        </div>
-                        <div>
-                            <div class="progress-row-head"><span>Quizzes currently active</span><span>{{ health.active_quiz_coverage }}%</span></div>
-                            <div class="meter"><span style="width: {{ health.active_quiz_coverage }}%;"></span></div>
-                        </div>
-                    </div>
-                </article>
-
-                <article class="panel">
-                    <div class="section-head">
-                        <div>
-                            <h2 class="section-title">Weekly Pulse</h2>
-                            <p class="section-note">Recent growth and activity trends to help admins spot momentum or operational slowdowns.</p>
-                        </div>
-                    </div>
-                    <div class="summary-list">
-                        <div class="summary-item"><span>New accounts in last 7 days</span><span class="count-chip">{{ signup_summary.last_7_days }}</span></div>
-                        <div class="summary-item"><span>New accounts in last 30 days</span><span class="count-chip">{{ signup_summary.last_30_days }}</span></div>
-                        <div class="summary-item"><span>Purchases in last 7 days</span><span class="count-chip">{{ signup_summary.recent_purchase_count }}</span></div>
-                        <div class="summary-item"><span>Quiz attempts in last 7 days</span><span class="count-chip">{{ signup_summary.recent_attempt_count }}</span></div>
-                        {% for item in secondary_metrics %}
-                            <div class="summary-item">
-                                <span>{{ item.label }}</span>
-                                <span class="muted">{{ item.value }}</span>
-                            </div>
-                        {% endfor %}
-                    </div>
-                </article>
-            </section>
-
-            <section class="two-col">
-                <article class="panel">
-                    <div class="section-head">
-                        <div>
-                            <h2 class="section-title">Top Courses</h2>
-                            <p class="section-note">Courses with the strongest fulfillment signals based on confirmed purchases and content depth.</p>
-                        </div>
-                    </div>
-                    <div class="table-wrap">
-                        <table class="ops-table">
-                            <thead>
-                                <tr><th>Course</th><th>Category</th><th>Modules</th><th>Items</th><th>Sales</th></tr>
-                            </thead>
-                            <tbody>
-                                {% for course in top_courses %}
-                                    <tr>
-                                        <td><a class="inline-link" href="{% url 'admin:content_course_change' course.id %}">{{ course.name }}</a></td>
-                                        <td>{% if course.subcategory %}{{ course.subcategory.category.name }} / {{ course.subcategory.name }}{% else %}<span class="muted">Unassigned</span>{% endif %}</td>
-                                        <td>{{ course.module_total }}</td>
-                                        <td>{{ course.content_total }}</td>
-                                        <td>{{ course.confirmed_sales }}</td>
-                                    </tr>
-                                {% empty %}
-                                    <tr><td colspan="5" class="empty">No course records available yet.</td></tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                </article>
-
-                <article class="panel">
-                    <div class="section-head">
-                        <div>
-                            <h2 class="section-title">Learning Content Mix</h2>
-                            <p class="section-note">Understand whether the catalog leans text-heavy or uses a broader interactive media strategy.</p>
-                        </div>
-                    </div>
-                    <div class="mix-list">
-                        {% for item in learning_mix %}
-                            <div class="summary-item">
-                                <span>{{ item.label }}</span>
-                                <span class="muted">{{ item.total }} items · {{ item.share }}%</span>
-                            </div>
-                        {% empty %}
-                            <p class="empty">Interactive content has not been added yet.</p>
-                        {% endfor %}
-                    </div>
-                </article>
-            </section>
-
-            <section class="two-col">
-                <article class="panel">
-                    <div class="section-head">
-                        <div>
-                            <h2 class="section-title">Recent Purchases</h2>
-                            <p class="section-note">A focused purchase review queue for fast payment approval and student support.</p>
-                        </div>
-                    </div>
-                    <div class="table-wrap">
-                        <table class="ops-table">
-                            <thead>
-                                <tr><th>Student</th><th>Course</th><th>Status</th><th>Time</th></tr>
-                            </thead>
-                            <tbody>
-                                {% for purchase in recent_purchases %}
-                                    <tr>
-                                        <td>{{ purchase.user.username }}</td>
-                                        <td><a class="inline-link" href="{% url 'admin:content_course_change' purchase.course.id %}">{{ purchase.course.name }}</a></td>
-                                        <td>
-                                            <span class="status-chip {% if purchase.status == 'approved' %}status-emerald{% elif purchase.status == 'rejected' %}status-rose{% else %}status-amber{% endif %}">
-                                                {{ purchase.get_status_display }}
-                                            </span>
-                                        </td>
-                                        <td>{{ purchase.submitted_at|date:"d M Y, H:i" }}</td>
-                                    </tr>
-                                {% empty %}
-                                    <tr><td colspan="4" class="empty">No purchases recorded yet.</td></tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                </article>
-
-                <article class="panel">
-                    <div class="section-head">
-                        <div>
-                            <h2 class="section-title">Recent Quiz Attempts</h2>
-                            <p class="section-note">Monitor recent learner performance and identify where support or content tuning may be needed.</p>
-                        </div>
-                    </div>
-                    <div class="table-wrap">
-                        <table class="ops-table">
-                            <thead>
-                                <tr><th>Student</th><th>Quiz</th><th>Score</th><th>Submitted</th></tr>
-                            </thead>
-                            <tbody>
-                                {% for attempt in recent_attempts %}
-                                    <tr>
-                                        <td>{{ attempt.user.username }}</td>
-                                        <td>{{ attempt.quiz.title }}</td>
-                                        <td>
-                                            <span class="status-chip {% if attempt.score >= 80 %}status-emerald{% elif attempt.score >= 50 %}status-amber{% else %}status-rose{% endif %}">
-                                                {{ attempt.score }}%
-                                            </span>
-                                        </td>
-                                        <td>{{ attempt.submitted_at|date:"d M Y, H:i" }}</td>
-                                    </tr>
-                                {% empty %}
-                                    <tr><td colspan="4" class="empty">No quiz attempts yet.</td></tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                </article>
-            </section>
-
-            <section class="two-col">
-                <article class="panel">
-                    <div class="section-head">
-                        <div>
-                            <h2 class="section-title">Recent Publishing Activity</h2>
-                            <p class="section-note">Keep an eye on the newest modules and content items entering the catalog.</p>
-                        </div>
-                    </div>
-                    <div class="table-wrap">
-                        <table class="ops-table">
-                            <thead>
-                                <tr><th>Record</th><th>Course</th><th>Type</th><th>Created</th></tr>
-                            </thead>
-                            <tbody>
-                                {% for item in recent_content %}
-                                    <tr>
-                                        <td><a class="inline-link" href="{% url 'admin:content_lessonresource_change' item.id %}">{{ item.title }}</a></td>
-                                        <td>{% if item.lesson %}{{ item.lesson.module.course.name }}{% else %}<span class="muted">Unassigned</span>{% endif %}</td>
-                                        <td>{{ item.get_content_type_display }}</td>
-                                        <td>{{ item.created_at|date:"d M Y, H:i" }}</td>
-                                    </tr>
-                                {% empty %}
-                                    <tr><td colspan="4" class="empty">No content items published yet.</td></tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                </article>
-
-                <article class="panel">
-                    <div class="section-head">
-                        <div>
-                            <h2 class="section-title">Recent Signups</h2>
-                            <p class="section-note">New account visibility helps support onboarding and role assignment tasks.</p>
-                        </div>
-                    </div>
-                    <div class="table-wrap">
-                        <table class="ops-table">
-                            <thead>
-                                <tr><th>User</th><th>Email</th><th>Last Login</th><th>Joined</th></tr>
-                            </thead>
-                            <tbody>
-                                {% for user in recent_signups %}
-                                    <tr>
-                                        <td><a class="inline-link" href="{% url 'admin:auth_user_change' user.id %}">{{ user.username }}</a></td>
-                                        <td>{{ user.email|default:"—" }}</td>
-                                        <td>{% if user.last_login %}{{ user.last_login|date:"d M Y, H:i" }}{% else %}<span class="muted">Never</span>{% endif %}</td>
-                                        <td>{{ user.date_joined|date:"d M Y, H:i" }}</td>
-                                    </tr>
-                                {% empty %}
-                                    <tr><td colspan="4" class="empty">No user accounts created yet.</td></tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                </article>
-            </section>
-        </main>
-
-        <aside class="sidebar-stack">
-            <section class="panel sidebar-card">
-                <div class="section-head">
-                    <div>
-                        <h2 class="section-title">Priority Queue</h2>
-                        <p class="section-note">The highest-value internal tasks to review today.</p>
-                    </div>
-                </div>
-                <div class="queue-list">
-                    {% for item in priority_queue %}
-                        <article class="queue-item">
-                            <a href="{{ item.url }}" class="queue-item-link">
-                                <div style="flex:1;">
-                                    <div class="queue-item-head">
-                                        <h3 class="queue-title">{{ item.label }}</h3>
-                                        <span class="status-chip status-{{ item.tone }}">{{ item.value }}</span>
-                                    </div>
-                                    <p class="queue-note">{{ item.note }}</p>
-                                </div>
-                            </a>
-                        </article>
-                    {% endfor %}
-                </div>
-            </section>
-
-            <section class="panel sidebar-card">
-                <div class="section-head">
-                    <div>
-                        <h2 class="section-title">Needs Structure</h2>
-                        <p class="section-note">A small watchlist of content records that need operational follow-up.</p>
-                    </div>
-                </div>
-                <div class="watch-list">
-                    <div>
-                        <p class="metric-label">Courses Without Modules</p>
-                        {% for course in courses_without_modules_sample %}
-                            <div class="watch-item"><a class="inline-link" href="{% url 'admin:content_course_change' course.id %}">{{ course.name }}</a><span class="status-chip status-rose">No modules</span></div>
-                        {% empty %}
-                            <p class="empty">Every course has at least one module.</p>
-                        {% endfor %}
-                    </div>
-                    <div>
-                        <p class="metric-label">Modules Missing Content</p>
-                        {% for module in modules_without_content_sample %}
-                            <div class="watch-item"><a class="inline-link" href="{% url 'admin:content_module_change' module.id %}">{{ module.title }}</a><span class="status-chip status-amber">{{ module.course.name }}</span></div>
-                        {% empty %}
-                            <p class="empty">All sampled modules have interactive content.</p>
-                        {% endfor %}
-                    </div>
-                    <div>
-                        <p class="metric-label">Modules Missing Quizzes</p>
-                        {% for module in modules_without_quiz_sample %}
-                            <div class="watch-item"><a class="inline-link" href="{% url 'admin:content_module_change' module.id %}">{{ module.title }}</a><span class="status-chip status-amber">{{ module.course.name }}</span></div>
-                        {% empty %}
-                            <p class="empty">All sampled modules have quiz coverage.</p>
-                        {% endfor %}
-                    </div>
-                </div>
-            </section>
-
-            <section class="panel sidebar-card">
-                <div class="section-head">
-                    <div>
-                        <h2 class="section-title">Recent Modules</h2>
-                        <p class="section-note">Fast access to the latest curriculum work.</p>
-                    </div>
-                </div>
-                <div class="watch-list">
-                    {% for module in latest_modules %}
-                        <div class="watch-item">
-                            <div>
-                                <a class="inline-link" href="{% url 'admin:content_module_change' module.id %}">{{ module.title }}</a>
-                                <div class="muted">{{ module.course.name }}</div>
-                            </div>
-                            <span class="muted">{{ module.created_at|date:"d M" }}</span>
-                        </div>
-                    {% empty %}
-                        <p class="empty">No modules added yet.</p>
-                    {% endfor %}
-                </div>
-            </section>
-        </aside>
-    </div>
+            </div>
+        </div>
+    </section>
 </div>
 {% endblock %}

@@ -4,4 +4,4 @@ from .learning import (
     visible_lessons_qs,
 )
 from .payments import approve_payment_submission, create_or_update_payment_submission, ensure_enrollment
-from .profiles import ensure_profile, get_profile_role
+from .profiles import ensure_profile
