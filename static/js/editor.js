@@ -9,20 +9,16 @@
     const state = {
         interactiveContents: initialIc,
         accordionSections: initialAcc,
-        selectedContentId: null,
         savedRange: null,
+        pendingAutoLink: false,
     };
 
     const statusEl = document.getElementById('editorStatus');
     const titleInput = document.getElementById('editorTitleInput');
     const rteContent = document.getElementById('rteContent');
     const saveBodyBtn = document.getElementById('btn-save-body');
-    const linkInlinePanel = document.getElementById('linkInlinePanel');
-    const linkPickerList = document.getElementById('linkPickerList');
-    const insertLinkConfirm = document.getElementById('insertLinkConfirm');
 
     const icList = document.getElementById('icList');
-    const icEmpty = document.getElementById('icEmpty');
     const icPanel = document.getElementById('icInlinePanel');
     const icForm = document.getElementById('icForm');
     const icFormId = document.getElementById('icFormId');
@@ -32,7 +28,6 @@
     const icYoutubeUrl = document.getElementById('icYoutubeUrl');
 
     const accList = document.getElementById('accordionList');
-    const accEmpty = document.getElementById('accEmpty');
     const accPanel = document.getElementById('accInlinePanel');
     const accForm = document.getElementById('accForm');
     const accFormId = document.getElementById('accFormId');
@@ -51,46 +46,15 @@
         return div.innerHTML;
     }
 
-    function getSelectedLinkStyle() {
-        return document.querySelector('input[name="link_style"]:checked')?.value || 'blue_bold';
-    }
-
-    function renderLinkPicker() {
-        linkPickerList.innerHTML = '';
-        state.selectedContentId = null;
-        insertLinkConfirm.disabled = true;
-
-        if (!state.interactiveContents.length) {
-            linkPickerList.innerHTML = '<div class="panel-empty"><p>No media items available yet.</p></div>';
-            return;
-        }
-
-        state.interactiveContents.forEach((item) => {
-            const row = document.createElement('button');
-            row.type = 'button';
-            row.className = 'link-picker-item';
-            row.dataset.contentId = item.id;
-            row.innerHTML = `<i class="fa-solid fa-link"></i><div><div class="ic-item-title">${escapeHtml(item.title)}</div><div class="ic-item-type">${escapeHtml(item.content_type)}</div></div>`;
-            row.addEventListener('click', () => {
-                state.selectedContentId = item.id;
-                linkPickerList.querySelectorAll('.link-picker-item').forEach((el) => el.classList.remove('selected'));
-                row.classList.add('selected');
-                insertLinkConfirm.disabled = false;
-            });
-            linkPickerList.appendChild(row);
-        });
-    }
-
     function renderIcList() {
         if (!icList) return;
         icList.innerHTML = '';
         if (!state.interactiveContents.length) {
-            icList.innerHTML = '<div class="panel-empty" id="icEmpty"><i class="fa-solid fa-puzzle-piece"></i><p>No media items yet.<br>Click <strong>+</strong> to add Text, Image, Audio, Video or YouTube.</p></div>';
-            renderLinkPicker();
+            icList.innerHTML = '<div class="panel-empty"><i class="fa-solid fa-puzzle-piece"></i><p>No media items yet.<br>Click <strong>+</strong> to add Text, Image, Audio, Video or YouTube.</p></div>';
             return;
         }
 
-        state.interactiveContents.forEach((item) => {
+        state.interactiveContents.filter(Boolean).forEach((item) => {
             const card = document.createElement('div');
             card.className = `ic-item ic-item--${item.content_type}`;
             card.dataset.icId = item.id;
@@ -108,14 +72,13 @@
             `;
             icList.appendChild(card);
         });
-        renderLinkPicker();
     }
 
     function renderAccList() {
         if (!accList) return;
         accList.innerHTML = '';
         if (!state.accordionSections.length) {
-            accList.innerHTML = '<div class="panel-empty" id="accEmpty"><i class="fa-solid fa-layer-group"></i><p>No sidebar sections yet.<br>Click <strong>+</strong> to add collapsible sections.</p></div>';
+            accList.innerHTML = '<div class="panel-empty"><i class="fa-solid fa-layer-group"></i><p>No sidebar sections yet.<br>Click <strong>+</strong> to add collapsible sections.</p></div>';
             return;
         }
 
@@ -149,7 +112,7 @@
         });
     }
 
-    function openIcPanel(item) {
+    function openIcPanel(item, options = {}) {
         icPanel.hidden = false;
         document.getElementById('icInlineTitle').innerHTML = item ? '<i class="fa-solid fa-wand-magic-sparkles"></i> Edit Media Item' : '<i class="fa-solid fa-wand-magic-sparkles"></i> Add Media Item';
         icForm.reset();
@@ -158,10 +121,16 @@
         icTextContent.value = item?.text_content || '';
         icYoutubeUrl.value = item?.youtube_url || '';
         toggleContentFields(item?.content_type || 'text');
+        state.pendingAutoLink = Boolean(options.autoLink);
+        if (state.pendingAutoLink) {
+            saveSelection();
+        }
+        icTitle.focus();
     }
 
     function closeIcPanel() {
         icPanel.hidden = true;
+        state.pendingAutoLink = false;
     }
 
     function openAccPanel(item) {
@@ -224,21 +193,35 @@
         return true;
     }
 
-    function applyMediaLink() {
-        if (!state.selectedContentId || !restoreSelection()) return;
+    function applyMediaLink(contentId) {
+        if (!contentId || !restoreSelection()) return false;
         const selection = window.getSelection();
         if (!selection || selection.rangeCount === 0 || selection.isCollapsed) return;
 
         const range = selection.getRangeAt(0);
         const text = range.toString();
         const span = document.createElement('span');
-        span.className = `highlight-link ${getSelectedLinkStyle() === 'red_bold' ? 'highlight-link--red link-media-red' : 'highlight-link--blue link-media-blue'}`;
-        span.dataset.contentId = state.selectedContentId;
+        span.className = 'highlight-link highlight-link--blue link-media-blue';
+        span.dataset.contentId = contentId;
         span.textContent = text;
         range.deleteContents();
         range.insertNode(span);
         selection.removeAllRanges();
-        linkInlinePanel.hidden = true;
+        markDirty();
+        return true;
+    }
+
+    function applyHighlight() {
+        if (!restoreSelection()) return;
+        const selection = window.getSelection();
+        if (!selection || selection.rangeCount === 0 || selection.isCollapsed) return;
+
+        const highlighted = document.execCommand('hiliteColor', false, '#fde68a')
+            || document.execCommand('backColor', false, '#fde68a');
+        if (!highlighted) {
+            return;
+        }
+        rteContent.focus();
         markDirty();
     }
 
@@ -266,17 +249,26 @@
             body: formData,
         });
         const data = await response.json();
-        if (!response.ok || !data.ok) {
-            throw new Error(data.error || 'Unable to save media item.');
+        const resource = data?.ic || data?.resource || data;
+        const requestOk = response.ok && (data?.ok === undefined || data?.ok === true);
+        if (!requestOk || !resource || !resource.id || !resource.content_type) {
+            throw new Error(data?.error || 'Unable to save media item.');
         }
 
         if (isEdit) {
-            state.interactiveContents = state.interactiveContents.map((item) => item.id === data.ic.id ? data.ic : item);
+            state.interactiveContents = state.interactiveContents.map((item) => item.id === resource.id ? resource : item);
         } else {
-            state.interactiveContents.push(data.ic);
+            state.interactiveContents.push(resource);
         }
         renderIcList();
+        const shouldAutoLink = state.pendingAutoLink && state.savedRange && state.savedRange.toString().trim();
         closeIcPanel();
+        if (shouldAutoLink) {
+            const linked = applyMediaLink(resource.id);
+            if (!linked) {
+                setStatus('Saved media item, but could not attach it to the selected text.', 'error');
+            }
+        }
     }
 
     async function submitAccForm(event) {
@@ -338,7 +330,15 @@
     }
 
     document.querySelectorAll('[data-cmd]').forEach((button) => {
+        button.addEventListener('mousedown', (event) => {
+            if (event.button !== 0) return;
+            saveSelection();
+        });
         button.addEventListener('click', () => {
+            if (button.dataset.cmd === 'highlight') {
+                applyHighlight();
+                return;
+            }
             document.execCommand(button.dataset.cmd, false, null);
             rteContent.focus();
             markDirty();
@@ -352,39 +352,16 @@
     const insertLinkButton = document.getElementById('btn-insert-link');
     insertLinkButton?.addEventListener('mousedown', (event) => {
         if (event.button !== 0) return;
-
-        const selection = window.getSelection();
-        if (!selection || selection.rangeCount === 0 || selection.isCollapsed) {
-            state.savedRange = null;
-            return;
-        }
-
-        const range = selection.getRangeAt(0);
-        if (!rteContent.contains(range.commonAncestorContainer)) {
-            state.savedRange = null;
-            return;
-        }
-
         saveSelection();
     });
-    insertLinkButton?.addEventListener('click', (event) => {
-        event.preventDefault();
-        if (!state.savedRange) {
-            setStatus('Select some text first', 'error');
-            return;
-        }
-        renderLinkPicker();
-        linkInlinePanel.hidden = false;
-    });
-
-    document.getElementById('insertLinkCancel')?.addEventListener('click', () => {
-        linkInlinePanel.hidden = true;
-    });
-    insertLinkConfirm?.addEventListener('click', applyMediaLink);
-
     document.getElementById('btn-add-ic')?.addEventListener('click', () => openIcPanel(null));
     document.getElementById('icInlineClose')?.addEventListener('click', closeIcPanel);
     document.getElementById('icInlineCancel')?.addEventListener('click', closeIcPanel);
+    icPanel?.addEventListener('click', (event) => {
+        if (event.target === icPanel) {
+            closeIcPanel();
+        }
+    });
     document.querySelectorAll('#typeSelector .type-btn').forEach((button) => {
         button.addEventListener('click', () => toggleContentFields(button.dataset.type));
     });
@@ -401,7 +378,7 @@
         const deleteBtn = event.target.closest('.ic-delete-btn');
         if (editBtn) {
             const item = state.interactiveContents.find((entry) => entry.id === Number(editBtn.dataset.icId));
-            openIcPanel(item || null);
+            openIcPanel(item || null, { autoLink: false });
             return;
         }
         if (deleteBtn) {
@@ -411,6 +388,11 @@
                 setStatus(error.message, 'error');
             }
         }
+    });
+
+    insertLinkButton?.addEventListener('click', (event) => {
+        event.preventDefault();
+        openIcPanel(null, { autoLink: Boolean(state.savedRange) });
     });
 
     document.getElementById('btn-add-accordion')?.addEventListener('click', () => openAccPanel(null));
@@ -443,4 +425,10 @@
 
     renderIcList();
     renderAccList();
+
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && icPanel && !icPanel.hidden) {
+            closeIcPanel();
+        }
+    });
 })();
