@@ -1,5 +1,6 @@
 from django.contrib.auth import authenticate, get_user_model
 from rest_framework import serializers
+from apps.teacher_dashboard.models import TeacherProfile
 from content.models import UserRole
 
 
@@ -69,3 +70,32 @@ class TeacherLoginSerializer(serializers.Serializer):
 
         data["user"] = user
         return data
+
+
+class TeacherProfileSerializer(serializers.ModelSerializer):
+    email = serializers.EmailField(source="user.email", read_only=True)
+
+    class Meta:
+        model = TeacherProfile
+        fields = (
+            "full_name",
+            "email",
+            "phone_number",
+            "profile_picture",
+            "teacher_institution",
+            "teacher_subject",
+            "teacher_experience_years",
+        )
+        read_only_fields = ("email",)
+
+    def update(self, instance, validated_data):
+        user_data = validated_data.pop("user", {})
+        email = user_data.get("email")
+
+        if email and email != instance.user.email:
+            if User.objects.filter(email=email).exists():
+                raise serializers.ValidationError({"email": "Email is already in use"})
+            instance.user.email = email
+            instance.user.save(update_fields=["email"])
+
+        return super().update(instance, validated_data)

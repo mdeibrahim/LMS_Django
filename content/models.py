@@ -133,7 +133,10 @@ class Course(models.Model):
     name = models.CharField(max_length=255)
     slug = models.SlugField(unique=True)
     description = models.TextField(blank=True)
+    cover_image = models.ImageField(upload_to="course_covers/", blank=True, null=True)
     price = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    enrollment_count = models.PositiveIntegerField(default=0)
+    is_published = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
