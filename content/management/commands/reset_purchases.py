@@ -9,13 +9,13 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument('--yes', action='store_true', help='Apply changes (otherwise dry-run)')
-        parser.add_argument('--user', type=str, help='Filter by username')
+        parser.add_argument('--user', type=str, help='Filter by user email')
         parser.add_argument('--course', type=str, help='Filter by course slug')
 
     def handle(self, *args, **options):
         qs = ModulePurchase.objects.all()
         if options.get('user'):
-            qs = qs.filter(user__username=options.get('user'))
+            qs = qs.filter(user__email=options.get('user'))
         course_slug = options.get('course')
         if course_slug:
             qs = qs.filter(course__slug=course_slug)
@@ -31,4 +31,3 @@ class Command(BaseCommand):
             updated = qs.update(is_purchased=False)
 
         self.stdout.write(self.style.SUCCESS(f'Updated {updated} records: set is_purchased=False.'))
-

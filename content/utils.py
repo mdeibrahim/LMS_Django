@@ -103,7 +103,7 @@ def send_password_reset_email(user, token: str) -> bool:
 def render_payment_submission_email(user, course, amount, payment_method: str, transaction_id: str, note: str):
         """Return (subject, text_body, html_body) for admin notification when a student submits payment details."""
         site = getattr(settings, 'SITE_URL', 'http://localhost:8000')
-        student_name = f"{getattr(user, 'first_name', '')} {getattr(user, 'last_name', '')}".strip() or user.get_username()
+        student_name = user.get_full_name() or user.email
         subject = f"Payment submission — {course.name} — {student_name}"
 
         html_body = f"""

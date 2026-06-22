@@ -310,7 +310,7 @@
                     <tbody>
                         {% for purchase in recent_purchases %}
                             <tr>
-                                <td>{{ purchase.user.username }}</td>
+                                <td>{{ purchase.user.get_full_name|default:purchase.user.email }}</td>
                                 <td>{{ purchase.course.name }}</td>
                                 <td>
                                     <span class="status-pill status-{% if purchase.status == 'approved' %}emerald{% elif purchase.status == 'pending' %}amber{% else %}slate{% endif %}">

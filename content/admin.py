@@ -1,6 +1,5 @@
 from django import forms
 from django.contrib import admin, messages
-from django.contrib.admin import StackedInline
 from django.contrib.auth import get_user_model
 from django.contrib.auth.admin import UserAdmin as DjangoUserAdmin
 from django.db.models import Count, Q
@@ -9,6 +8,7 @@ from django.utils import timezone
 from django.utils.html import format_html
 from unfold.admin import ModelAdmin, TabularInline
 
+from apps.student_dashboard.models import StudentDeviceSession
 from .models import (
     Category,
     Course,
@@ -27,9 +27,7 @@ from .models import (
     PaymentSubmission,
     PaymentSubmissionStatus,
     QuizAttempt,
-    StudentDeviceSession,
     Subcategory,
-    UserProfile,
     UserRole,
 )
 from .services import approve_payment_submission
@@ -176,13 +174,6 @@ class OTPStateFilter(admin.SimpleListFilter):
         return queryset
 
 
-class UserProfileInline(StackedInline):
-    model = UserProfile
-    extra = 0
-    can_delete = False
-    fk_name = "user"
-
-
 try:
     admin.site.unregister(User)
 except admin.sites.NotRegistered:
@@ -191,10 +182,35 @@ except admin.sites.NotRegistered:
 
 @admin.register(User)
 class UserAdmin(DjangoUserAdmin, ModelAdmin):
-    inlines = [UserProfileInline]
+    fieldsets = (
+        (None, {"fields": ("email", "password")}),
+        ("Personal info", {"fields": ("full_name",)}),
+        (
+            "Permissions",
+            {
+                "fields": (
+                    "is_active",
+                    "is_staff",
+                    "is_superuser",
+                    "groups",
+                    "user_permissions",
+                ),
+            },
+        ),
+        ("Important dates", {"fields": ("last_login", "date_joined")}),
+    )
+    add_fieldsets = (
+        (
+            None,
+            {
+                "classes": ("wide",),
+                "fields": ("email", "full_name", "password1", "password2"),
+            },
+        ),
+    )
     list_display = (
-        "username",
         "email",
+        "full_name",
         "profile_role",
         "is_staff",
         "is_active",
@@ -203,7 +219,7 @@ class UserAdmin(DjangoUserAdmin, ModelAdmin):
         "date_joined",
     )
     list_filter = ("is_staff", "is_superuser", "is_active", "groups", "date_joined")
-    search_fields = ("username", "first_name", "last_name", "email")
+    search_fields = ("email", "full_name")
     ordering = ("-date_joined",)
     date_hierarchy = "date_joined"
 
@@ -211,13 +227,13 @@ class UserAdmin(DjangoUserAdmin, ModelAdmin):
         return (
             super()
             .get_queryset(request)
-            .select_related("profile")
+            .select_related("student_profile", "teacher_profile")
             .annotate(active_enrollment_total=Count("course_enrollments", filter=Q(course_enrollments__status="active")))
         )
 
-    @admin.display(description="Role", ordering="profile__role")
+    @admin.display(description="Role", ordering="role")
     def profile_role(self, obj):
-        role = getattr(getattr(obj, "profile", None), "role", None)
+        role = getattr(obj, "role", None)
         if role == UserRole.TEACHER:
             return tone_badge("Teacher", "blue")
         if role == UserRole.STUDENT:
@@ -227,6 +243,10 @@ class UserAdmin(DjangoUserAdmin, ModelAdmin):
     @admin.display(description="Enrollments", ordering="active_enrollment_total")
     def active_enrollments(self, obj):
         return obj.active_enrollment_total
+
+    @admin.display(description="Full name", ordering="full_name")
+    def full_name(self, obj):
+        return getattr(getattr(obj, "profile", None), "full_name", "") or obj.get_full_name() or "—"
 
 
 @admin.register(Category)
@@ -299,7 +319,9 @@ class CourseAdmin(ModelAdmin):
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         if db_field.name == "teacher":
-            kwargs["queryset"] = User.objects.filter(profile__role=UserRole.TEACHER).select_related("profile").distinct()
+            from apps.teacher_dashboard.models import TeacherProfile
+
+            kwargs["queryset"] = TeacherProfile.objects.select_related("user").all()
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
     @admin.display(description="Price", ordering="price")
@@ -585,7 +607,7 @@ class CourseQuizAdmin(ModelAdmin):
 class QuizAttemptAdmin(ModelAdmin):
     list_display = ("user", "quiz", "score_badge", "submitted_at")
     list_filter = ("submitted_at", RelatedCourseCategoryFilter)
-    search_fields = ("user__username", "user__email", "quiz__title")
+    search_fields = ("user__email", "quiz__title")
     autocomplete_fields = ("user", "quiz")
 
     @admin.display(description="Score", ordering="score")
@@ -601,7 +623,7 @@ class QuizAttemptAdmin(ModelAdmin):
 class CourseEnrollmentAdmin(ModelAdmin):
     list_display = ("user", "course", "status_badge", "granted_by", "granted_at")
     list_filter = ("status", RelatedCourseCategoryFilter, "granted_at")
-    search_fields = ("user__username", "user__email", "course__name")
+    search_fields = ("user__email", "course__name")
     autocomplete_fields = ("user", "course", "granted_by")
 
     @admin.display(description="Status", ordering="status")
@@ -633,7 +655,7 @@ def reject_submissions(modeladmin, request, queryset):
 class PaymentSubmissionAdmin(ModelAdmin):
     list_display = ("user", "course", "payment_method", "transaction_id", "status_badge", "submitted_at", "reviewed_at")
     list_filter = ("status", "payment_method", RelatedCourseCategoryFilter, "submitted_at")
-    search_fields = ("user__username", "user__email", "course__name", "transaction_id", "note")
+    search_fields = ("user__email", "course__name", "transaction_id", "note")
     autocomplete_fields = ("user", "course", "reviewed_by")
     readonly_fields = ("submitted_at", "updated_at", "reviewed_at")
     actions = (approve_submissions, reject_submissions)
@@ -658,20 +680,8 @@ class PaymentSubmissionAdmin(ModelAdmin):
 class CourseCertificateAdmin(ModelAdmin):
     list_display = ("user", "course", "certificate_code", "issued_at")
     list_filter = ("issued_at", "course")
-    search_fields = ("user__username", "course__name", "certificate_code")
+    search_fields = ("user__email", "course__name", "certificate_code")
     autocomplete_fields = ("user", "course")
-
-
-@admin.register(UserProfile)
-class UserProfileAdmin(ModelAdmin):
-    list_display = ("user", "role_badge", "full_name", "phone_number", "created_at", "updated_at")
-    list_filter = ("role", "created_at")
-    search_fields = ("user__username", "user__email", "full_name", "phone_number")
-    autocomplete_fields = ("user",)
-
-    @admin.display(description="Role", ordering="role")
-    def role_badge(self, obj):
-        return tone_badge(obj.get_role_display(), "blue" if obj.role == UserRole.TEACHER else "teal")
 
 
 @admin.action(description="Remove expired sessions")
@@ -684,7 +694,7 @@ def remove_expired_sessions(modeladmin, request, queryset):
 class StudentDeviceSessionAdmin(ModelAdmin):
     list_display = ("user", "session_state", "ip_address", "created_at", "expires_at", "last_seen")
     list_filter = (SessionStateFilter, "created_at", "expires_at")
-    search_fields = ("user__username", "jti", "ip_address", "user_agent")
+    search_fields = ("user__email", "jti", "ip_address", "user_agent")
     autocomplete_fields = ("user",)
     actions = (remove_expired_sessions,)
 
@@ -697,7 +707,7 @@ class StudentDeviceSessionAdmin(ModelAdmin):
 class EmailOTPAdmin(ModelAdmin):
     list_display = ("user", "code", "otp_state", "created_at", "expires_at")
     list_filter = (OTPStateFilter, "created_at", "expires_at")
-    search_fields = ("user__username", "user__email", "code")
+    search_fields = ("user__email", "code")
     autocomplete_fields = ("user",)
 
     @admin.display(description="State")

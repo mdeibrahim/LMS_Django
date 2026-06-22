@@ -77,17 +77,12 @@ UNFOLD = {
                     {
                         "title": "Users",
                         "icon": "person",
-                        "link": reverse_lazy("admin:auth_user_changelist"),
+                        "link": reverse_lazy("admin:content_user_changelist"),
                     },
                     {
                         "title": "Teachers",
                         "icon": "school",
                         "link": reverse_lazy("admin:teacher_dashboard_teacherprofile_changelist"),
-                    },
-                    {
-                        "title": "User Profiles",
-                        "icon": "badge",
-                        "link": reverse_lazy("admin:content_userprofile_changelist"),
                     },
                     {
                         "title": "Groups",
@@ -97,7 +92,7 @@ UNFOLD = {
                     {
                         "title": "Device Sessions",
                         "icon": "devices",
-                        "link": reverse_lazy("admin:content_studentdevicesession_changelist"),
+                        "link": reverse_lazy("admin:student_dashboard_studentdevicesession_changelist"),
                     },
                     {
                         "title": "Email OTPs",

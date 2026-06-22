@@ -32,7 +32,6 @@ from .models import (
     PaymentSubmission,
     PaymentSubmissionStatus,
     QuizAttempt,
-    UserProfile,
     UserRole,
 )
 from .services import (
@@ -546,7 +545,7 @@ def _role_login(request, template_name):
             form.add_error("email", "No account found with this email.")
             return render(request, template_name, {"form": form})
 
-        user = authenticate(request=request, username=user_obj.get_username(), password=password)
+        user = authenticate(request=request, email=user_obj.email, password=password)
         if not user:
             form.add_error("password", "Invalid email or password.")
             return render(request, template_name, {"form": form})
@@ -557,7 +556,7 @@ def _role_login(request, template_name):
             return render(request, template_name, {"form": form})
 
         login(request, user)
-        messages.success(request, f"Welcome back, {user.username}!")
+        messages.success(request, f"Welcome back, {user.get_full_name() or user.email}!")
         next_url = request.POST.get("next") or request.GET.get("next")
         if next_url:
             return redirect(next_url)

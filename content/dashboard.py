@@ -13,9 +13,9 @@ from content.models import (
     Module,
     PaymentSubmission,
     PaymentSubmissionStatus,
-    UserProfile,
     UserRole,
 )
+from apps.student_dashboard.models import StudentProfile
 
 
 User = get_user_model()
@@ -32,7 +32,7 @@ def admin_dashboard(request):
     confirmed_purchase_count = CourseEnrollment.objects.filter(status="active").count()
     pending_purchase_count = PaymentSubmission.objects.filter(status=PaymentSubmissionStatus.PENDING).count()
     total_users = User.objects.count()
-    student_profiles_count = UserProfile.objects.filter(role=UserRole.STUDENT).count()
+    student_profiles_count = StudentProfile.objects.count()
     confirmed_revenue = (
         CourseEnrollment.objects.filter(status="active").aggregate(total=Sum("course__price")).get("total")
         or Decimal("0")
@@ -85,7 +85,7 @@ def admin_dashboard(request):
     quick_actions = [
         {"label": "Create Course", "url": reverse("admin:content_course_add"), "tone": "primary"},
         {"label": "Review Payments", "url": reverse("admin:content_paymentsubmission_changelist"), "tone": "secondary"},
-        {"label": "Manage Users", "url": reverse("admin:auth_user_changelist"), "tone": "secondary"},
+        {"label": "Manage Users", "url": reverse("admin:content_user_changelist"), "tone": "secondary"},
     ]
 
     context = {

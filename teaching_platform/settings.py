@@ -24,6 +24,22 @@ SECRET_KEY = config('SECRET_KEY', default='django-insecure-change-me')
 DEBUG = config('DEBUG', default=True, cast=_cast_debug)
 ALLOWED_HOSTS = [host.strip() for host in config('ALLOWED_HOSTS', default='*').split(',') if host.strip()]
 
+def _parse_csv_setting(name, default):
+    raw_value = config(name, default=default)
+    return [item.strip() for item in raw_value.split(',') if item.strip()]
+
+
+# CORS / CSRF settings for the React frontend.
+CORS_ALLOWED_ORIGINS = _parse_csv_setting(
+    'CORS_ALLOWED_ORIGINS',
+    'http://localhost:3000,http://127.0.0.1:3000',
+)
+CORS_ALLOW_CREDENTIALS = config('CORS_ALLOW_CREDENTIALS', default=True, cast=_cast_debug)
+CSRF_TRUSTED_ORIGINS = _parse_csv_setting(
+    'CSRF_TRUSTED_ORIGINS',
+    'http://localhost:3000,http://127.0.0.1:3000',
+)
+
 
 INSTALLED_APPS = [
     'unfold',
@@ -47,6 +63,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
+    'teaching_platform.cors.SimpleCorsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -116,6 +133,8 @@ MEDIA_ROOT = BASE_DIR / 'media'
 
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+AUTH_USER_MODEL = 'content.User'
 
 
 LOGIN_URL = 'content:login'

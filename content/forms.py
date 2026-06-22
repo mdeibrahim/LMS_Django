@@ -1,9 +1,8 @@
 from django import forms
 from django.contrib.auth import get_user_model
 from django.contrib.auth.forms import UserCreationForm
-import re
 
-from .models import UserProfile, UserRole
+from .models import UserRole
 
 User = get_user_model()
 
@@ -27,16 +26,6 @@ class BaseRoleSignupForm(UserCreationForm):
         if User.objects.filter(email__iexact=email).exists():
             raise forms.ValidationError('This email is already in use.')
         return email
-
-    def _build_unique_username(self, email):
-        local = email.split('@', 1)[0]
-        base = re.sub(r'[^a-zA-Z0-9_]+', '_', local).strip('_').lower() or 'user'
-        candidate = base
-        idx = 1
-        while User.objects.filter(username=candidate).exists():
-            idx += 1
-            candidate = f"{base}{idx}"
-        return candidate
 
     def clean_full_name(self):
         full_name = self.cleaned_data.get('full_name', '').strip()
@@ -65,7 +54,6 @@ class BaseRoleSignupForm(UserCreationForm):
         user = super().save(commit=False)
         email = self.cleaned_data['email']
         user.email = email
-        user.username = self._build_unique_username(email)
         if commit:
             user.save()
         return user
@@ -82,10 +70,15 @@ class StudentSignupForm(BaseRoleSignupForm):
         fields = BaseRoleSignupForm.Meta.fields + ('student_institution', 'student_level')
 
     def save_profile(self, user, role):
-        UserProfile.objects.update_or_create(
+        from apps.student_dashboard.models import StudentProfile
+
+        user.role = UserRole.STUDENT
+        user.full_name = self.cleaned_data['full_name'].strip()
+        user.save(update_fields=['role', 'full_name'])
+
+        StudentProfile.objects.update_or_create(
             user=user,
             defaults={
-                'role': role,
                 'full_name': self.cleaned_data['full_name'].strip(),
                 'phone_number': self.cleaned_data['phone_number'],
                 'student_institution': self.cleaned_data['student_institution'].strip(),
@@ -188,7 +181,8 @@ class ProfileUpdateForm(forms.Form):
         profile = self.profile
 
         user.email = self.cleaned_data['email']
-        user.save(update_fields=['email'])
+        user.full_name = self.cleaned_data['full_name'].strip()
+        user.save(update_fields=['email', 'full_name'])
 
         profile.full_name = self.cleaned_data['full_name'].strip()
         profile.phone_number = self.cleaned_data['phone_number']

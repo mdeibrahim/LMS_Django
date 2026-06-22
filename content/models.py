@@ -1,56 +1,82 @@
-from django.contrib.auth import get_user_model
+from django.conf import settings
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.utils.text import slugify
+from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, BaseUserManager
 
+class UserManager(BaseUserManager):
+    def create_user(self, email, password=None, **extra_fields):
+        if not email:
+            raise ValueError("Email is required")
+        email = self.normalize_email(email)
+        user = self.model(email=email, **extra_fields)
+        user.set_password(password)
+        user.is_active = True
 
-User = get_user_model()
+        user.save(using=self._db)
+        return user
+
+    def create_superuser(self, email, password=None, **extra_fields):
+        extra_fields.setdefault("is_staff", True)
+        extra_fields.setdefault("is_superuser", True)
+        extra_fields.setdefault("is_active", True)
+        extra_fields.setdefault("role", "teacher")
+
+        if extra_fields.get("is_staff") is not True:
+            raise ValueError("Superuser must have is_staff=True.")
+        if extra_fields.get("is_superuser") is not True:
+            raise ValueError("Superuser must have is_superuser=True.")
+
+        return self.create_user(email, password, **extra_fields)
 
 
 class UserRole(models.TextChoices):
     TEACHER = "teacher", "Teacher"
     STUDENT = "student", "Student"
+    
 
-
-class UserProfile(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="profile")
-    role = models.CharField(max_length=20, choices=UserRole.choices, default=UserRole.STUDENT)
-    profile_picture = models.ImageField(upload_to="profile_pictures/", blank=True, null=True)
+class User(AbstractBaseUser, PermissionsMixin):
+    email = models.EmailField(unique=True)
     full_name = models.CharField(max_length=160, blank=True, default="")
+    role = models.CharField(max_length=20, choices=UserRole.choices, default=UserRole.STUDENT)
     phone_number = models.CharField(max_length=20, blank=True, default="")
-    student_institution = models.CharField(max_length=180, blank=True, default="")
-    student_level = models.CharField(max_length=80, blank=True, default="")
-    teacher_institution = models.CharField(max_length=180, blank=True, default="")
-    teacher_subject = models.CharField(max_length=120, blank=True, default="")
-    teacher_experience_years = models.PositiveSmallIntegerField(blank=True, null=True)
-    assigned_categories = models.ManyToManyField(
-        "Category",
-        blank=True,
-        related_name="assigned_teachers",
-        help_text="Categories that this teacher is allowed to manage.",
-    )
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    is_active = models.BooleanField(default=True)
+    is_staff = models.BooleanField(default=False)
+    date_joined = models.DateTimeField(auto_now_add=True)
+
+    objects = UserManager()
+
+    USERNAME_FIELD = "email"
+    REQUIRED_FIELDS = []
+    EMAIL_FIELD = "email"
 
     class Meta:
-        ordering = ["user__username"]
+        ordering = ["email"]
 
     def __str__(self):
-        return f"{self.user.username} ({self.role})"
+        return self.email
+
+    def get_full_name(self):
+        return (self.full_name or "").strip() or self.email
+
+    def get_short_name(self):
+        return (self.full_name or "").strip() or self.email
 
     @property
-    def is_teacher(self):
-        return self.role == UserRole.TEACHER
+    def profile(self):
+        profile = None
+        if self.role == UserRole.TEACHER:
+            profile = getattr(self, "teacher_profile", None)
+        elif self.role == UserRole.STUDENT:
+            profile = getattr(self, "student_profile", None)
 
-    @property
-    def assigned_subcategories(self):
-        if not self.pk:
-            return Subcategory.objects.none()
-        return Subcategory.objects.filter(category__in=self.assigned_categories.all()).select_related("category")
+        if profile is None:
+            profile = getattr(self, "legacy_profile", None)
+        return profile
 
 
 class EmailOTP(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="email_otps")
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="email_otps")
     code = models.CharField(max_length=6)
     is_used = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -66,23 +92,6 @@ class EmailOTP(models.Model):
         return f"OTP for {self.user.email} - {self.code}"
 
 
-class StudentDeviceSession(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="student_device_sessions")
-    jti = models.CharField(max_length=64, unique=True)
-    user_agent = models.CharField(max_length=255, blank=True)
-    ip_address = models.GenericIPAddressField(blank=True, null=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    last_seen = models.DateTimeField(auto_now=True)
-    expires_at = models.DateTimeField()
-
-    class Meta:
-        ordering = ["-created_at"]
-        indexes = [
-            models.Index(fields=["user", "expires_at"]),
-        ]
-
-    def __str__(self):
-        return f"{self.user.username} device session ({self.jti})"
 
 
 class Category(models.Model):
@@ -116,10 +125,10 @@ class Subcategory(models.Model):
 class Course(models.Model):
     subcategory = models.ForeignKey("Subcategory", on_delete=models.CASCADE, related_name="courses")
     teacher = models.ForeignKey(
-        User,
+        "teacher_dashboard.TeacherProfile",
         on_delete=models.CASCADE,
         related_name="teacher_courses",
-        limit_choices_to={"profile__role": UserRole.TEACHER},
+        limit_choices_to={"user__role": UserRole.TEACHER},
     )
     name = models.CharField(max_length=255)
     slug = models.SlugField(unique=True)
@@ -271,11 +280,11 @@ class PaymentSubmissionStatus(models.TextChoices):
 
 
 class CourseEnrollment(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="course_enrollments")
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="course_enrollments")
     course = models.ForeignKey("Course", on_delete=models.CASCADE, related_name="enrollments")
     status = models.CharField(max_length=20, choices=EnrollmentStatus.choices, default=EnrollmentStatus.ACTIVE)
     granted_by = models.ForeignKey(
-        User,
+        settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,
         blank=True,
         null=True,
@@ -299,14 +308,14 @@ class CourseEnrollment(models.Model):
 
 
 class PaymentSubmission(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="payment_submissions")
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="payment_submissions")
     course = models.ForeignKey("Course", on_delete=models.CASCADE, related_name="payment_submissions")
     payment_method = models.CharField(max_length=20, choices=PAYMENT_METHOD_CHOICES, default="other")
     transaction_id = models.CharField(max_length=255)
     note = models.TextField(blank=True, default="")
     status = models.CharField(max_length=20, choices=PaymentSubmissionStatus.choices, default=PaymentSubmissionStatus.PENDING)
     reviewed_by = models.ForeignKey(
-        User,
+        settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,
         blank=True,
         null=True,
@@ -330,7 +339,7 @@ class PaymentSubmission(models.Model):
 
 
 class ModulePurchase(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="module_purchases")
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="module_purchases")
     course = models.ForeignKey("Course", on_delete=models.CASCADE, related_name="legacy_purchases")
     payment_method = models.CharField(max_length=20, choices=PAYMENT_METHOD_CHOICES, default="other", blank=True, null=True)
     transaction_id = models.CharField(max_length=255, blank=True, null=True)
@@ -595,7 +604,7 @@ class CourseQuizQuestion(models.Model):
 
 
 class QuizAttempt(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="quiz_attempts")
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="quiz_attempts")
     quiz = models.ForeignKey(CourseQuiz, on_delete=models.CASCADE, related_name="attempts")
     score = models.PositiveSmallIntegerField(default=0, validators=[MinValueValidator(0), MaxValueValidator(100)])
     submitted_at = models.DateTimeField(auto_now_add=True)
@@ -607,11 +616,11 @@ class QuizAttempt(models.Model):
         ]
 
     def __str__(self):
-        return f"{self.user.username} - {self.quiz.title} ({self.score}%)"
+        return f"{self.user.email} - {self.quiz.title} ({self.score}%)"
 
 
 class CourseCertificate(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="course_certificates")
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="course_certificates")
     course = models.ForeignKey("Course", on_delete=models.CASCADE, related_name="certificates")
     certificate_code = models.CharField(max_length=40, unique=True)
     issued_at = models.DateTimeField(auto_now_add=True)
@@ -621,7 +630,7 @@ class CourseCertificate(models.Model):
         unique_together = [("user", "course")]
 
     def __str__(self):
-        return f"{self.user.username} - {self.course.name} certificate"
+        return f"{self.user.email} - {self.course.name} certificate"
 
 
 class PaymentInstruction(models.Model):

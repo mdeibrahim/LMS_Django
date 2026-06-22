@@ -320,7 +320,7 @@
                         </a>
                         {% with profile=user.profile %}
                         {% with role_label=profile.role|default:'student' %}
-                        {% with display_name=profile.full_name|default:user.username %}
+                        {% with display_name=profile.full_name|default:user.get_full_name|default:user.email %}
                         <div class="relative ml-2">
                             <button id="profileMenuBtn" type="button" class="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white/90 p-1 pr-2.5 transition hover:border-slate-300 hover:bg-white" aria-expanded="false" aria-controls="profileMenuPanel">
                                 {% if profile.profile_picture %}
@@ -328,7 +328,7 @@
                                 {% else %}
                                 <span class="profile-avatar">{{ display_name|slice:":1"|upper }}</span>
                                 {% endif %}
-                                <span class="hidden text-xs font-semibold text-slate-700 lg:inline">{{ user.username }}</span>
+                                <span class="hidden text-xs font-semibold text-slate-700 lg:inline">{{ display_name }}</span>
                                 <i class="fa-solid fa-chevron-down text-[10px] text-slate-400"></i>
                             </button>
                             <div id="profileMenuPanel" class="profile-menu absolute right-0 top-full z-50 mt-2 hidden p-3">
@@ -376,7 +376,7 @@
                         </a>
                         {% with profile=user.profile %}
                         {% with role_label=profile.role|default:'student' %}
-                        {% with display_name=profile.full_name|default:user.username %}
+                        {% with display_name=profile.full_name|default:user.get_full_name|default:user.email %}
                         <div class="rounded-2xl bg-slate-100 px-3 py-3 text-xs text-slate-700">
                             <p class="font-semibold"><i class="fa-solid fa-user"></i> {{ display_name }}</p>
                             <p class="text-[11px] text-slate-600">{{ user.email|default:"No email" }}</p>

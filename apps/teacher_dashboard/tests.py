@@ -2,7 +2,8 @@ from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
 
-from content.models import Category, Subcategory, UserProfile, UserRole
+from apps.student_dashboard.models import StudentProfile
+from content.models import Category, Subcategory, UserRole
 
 from .models import TeacherProfile
 
@@ -13,7 +14,6 @@ User = get_user_model()
 class TeacherDashboardTests(TestCase):
     def setUp(self):
         self.admin = User.objects.create_superuser(
-            username="admin",
             email="admin@example.com",
             password="adminpass123",
         )
@@ -23,26 +23,22 @@ class TeacherDashboardTests(TestCase):
         self.subcategory_2 = Subcategory.objects.create(category=self.category_2, name="UI", slug="ui")
 
         self.teacher_user = User.objects.create_user(
-            username="teacher1",
             email="teacher1@example.com",
             password="teacherpass123",
         )
-        self.teacher_profile = UserProfile.objects.create(
+        self.teacher_profile = TeacherProfile.objects.create(
             user=self.teacher_user,
-            role=UserRole.TEACHER,
             full_name="Teacher One",
             phone_number="01234567890",
         )
         self.teacher_profile.assigned_categories.add(self.category_1, self.category_2)
 
         self.student_user = User.objects.create_user(
-            username="student1",
             email="student1@example.com",
             password="studentpass123",
         )
-        UserProfile.objects.create(
+        StudentProfile.objects.create(
             user=self.student_user,
-            role=UserRole.STUDENT,
             full_name="Student One",
             phone_number="09876543210",
         )

@@ -21,7 +21,7 @@ User = get_user_model()
 
 class PurchaseAccessTests(TestCase):
     def setUp(self):
-        self.user = User.objects.create_user(username='student', email='student@example.com', password='testpass123')
+        self.user = User.objects.create_user(email='student@example.com', password='testpass123')
         self.category = Category.objects.create(name="Programming", slug="programming")
         self.subcategory = Subcategory.objects.create(category=self.category, name="Python", slug="python")
         self.course = Course.objects.create(
@@ -113,7 +113,6 @@ class PurchaseAccessTests(TestCase):
 class StaffEditorTests(TestCase):
     def setUp(self):
         self.staff = User.objects.create_user(
-            username='admin',
             email='admin@example.com',
             password='adminpass123',
             is_staff=True,
