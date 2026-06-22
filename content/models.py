@@ -23,6 +23,12 @@ class UserProfile(models.Model):
     teacher_institution = models.CharField(max_length=180, blank=True, default="")
     teacher_subject = models.CharField(max_length=120, blank=True, default="")
     teacher_experience_years = models.PositiveSmallIntegerField(blank=True, null=True)
+    assigned_categories = models.ManyToManyField(
+        "Category",
+        blank=True,
+        related_name="assigned_teachers",
+        help_text="Categories that this teacher is allowed to manage.",
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -31,6 +37,16 @@ class UserProfile(models.Model):
 
     def __str__(self):
         return f"{self.user.username} ({self.role})"
+
+    @property
+    def is_teacher(self):
+        return self.role == UserRole.TEACHER
+
+    @property
+    def assigned_subcategories(self):
+        if not self.pk:
+            return Subcategory.objects.none()
+        return Subcategory.objects.filter(category__in=self.assigned_categories.all()).select_related("category")
 
 
 class EmailOTP(models.Model):
@@ -99,6 +115,12 @@ class Subcategory(models.Model):
 
 class Course(models.Model):
     subcategory = models.ForeignKey("Subcategory", on_delete=models.CASCADE, related_name="courses")
+    teacher = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="teacher_courses",
+        limit_choices_to={"profile__role": UserRole.TEACHER},
+    )
     name = models.CharField(max_length=255)
     slug = models.SlugField(unique=True)
     description = models.TextField(blank=True)
@@ -452,80 +474,80 @@ CONTENT_TYPE_CHOICES = [
 ]
 
 
-# class CourseContent(models.Model):
-#     module = models.ForeignKey("Module", on_delete=models.CASCADE, related_name="course_contents", blank=True, null=True)
-#     lesson = models.ForeignKey("Lesson", on_delete=models.SET_NULL, related_name="legacy_contents", blank=True, null=True)
-#     title = models.CharField(max_length=255)
-#     content_type = models.CharField(max_length=20, choices=CONTENT_TYPE_CHOICES, default="text")
-#     is_inline_reference = models.BooleanField(default=False)
-#     order = models.PositiveIntegerField(default=0)
-#     video_url = models.URLField(blank=True, null=True)
-#     duration_seconds = models.PositiveIntegerField(blank=True, null=True, default=0)
-#     text_content = models.TextField(blank=True, help_text="Plain text or HTML for text items.")
-#     image = models.ImageField(upload_to="interactive/images/", blank=True, null=True)
-#     audio = models.FileField(upload_to="interactive/audio/", blank=True, null=True)
-#     video = models.FileField(upload_to="interactive/videos/", blank=True, null=True)
-#     youtube_url = models.URLField(blank=True, help_text="Full YouTube URL e.g. https://www.youtube.com/watch?v=...")
-#     created_at = models.DateTimeField(auto_now_add=True)
+class CourseContent(models.Model):
+    module = models.ForeignKey("Module", on_delete=models.CASCADE, related_name="course_contents", blank=True, null=True)
+    lesson = models.ForeignKey("Lesson", on_delete=models.SET_NULL, related_name="legacy_contents", blank=True, null=True)
+    title = models.CharField(max_length=255)
+    content_type = models.CharField(max_length=20, choices=CONTENT_TYPE_CHOICES, default="text")
+    is_inline_reference = models.BooleanField(default=False)
+    order = models.PositiveIntegerField(default=0)
+    video_url = models.URLField(blank=True, null=True)
+    duration_seconds = models.PositiveIntegerField(blank=True, null=True, default=0)
+    text_content = models.TextField(blank=True, help_text="Plain text or HTML for text items.")
+    image = models.ImageField(upload_to="interactive/images/", blank=True, null=True)
+    audio = models.FileField(upload_to="interactive/audio/", blank=True, null=True)
+    video = models.FileField(upload_to="interactive/videos/", blank=True, null=True)
+    youtube_url = models.URLField(blank=True, help_text="Full YouTube URL e.g. https://www.youtube.com/watch?v=...")
+    created_at = models.DateTimeField(auto_now_add=True)
 
-#     class Meta:
-#         ordering = ["order", "created_at"]
-#         indexes = [
-#             models.Index(fields=["module", "is_inline_reference", "order"]),
-#         ]
+    class Meta:
+        ordering = ["order", "created_at"]
+        indexes = [
+            models.Index(fields=["module", "is_inline_reference", "order"]),
+        ]
 
-#     def __str__(self):
-#         source = self.module.title if self.module_id else "Content"
-#         return f"{source} - {self.title}"
+    def __str__(self):
+        source = self.module.title if self.module_id else "Content"
+        return f"{source} - {self.title}"
 
-#     def get_youtube_embed_url(self):
-#         from urllib.parse import parse_qs, urlparse
-#         import re
+    def get_youtube_embed_url(self):
+        from urllib.parse import parse_qs, urlparse
+        import re
 
-#         if not self.youtube_url:
-#             return ""
+        if not self.youtube_url:
+            return ""
 
-#         raw_url = self.youtube_url.strip()
-#         video_id = None
+        raw_url = self.youtube_url.strip()
+        video_id = None
 
-#         try:
-#             parsed = urlparse(raw_url)
-#             host = (parsed.netloc or "").lower().replace("www.", "")
+        try:
+            parsed = urlparse(raw_url)
+            host = (parsed.netloc or "").lower().replace("www.", "")
 
-#             if host in ("youtube.com", "m.youtube.com"):
-#                 if parsed.path == "/watch":
-#                     video_id = (parse_qs(parsed.query).get("v") or [None])[0]
-#                 elif parsed.path.startswith("/shorts/"):
-#                     video_id = parsed.path.split("/shorts/", 1)[1].split("/", 1)[0]
-#                 elif parsed.path.startswith("/live/"):
-#                     video_id = parsed.path.split("/live/", 1)[1].split("/", 1)[0]
-#                 elif parsed.path.startswith("/embed/"):
-#                     video_id = parsed.path.split("/embed/", 1)[1].split("/", 1)[0]
-#             elif host == "youtu.be":
-#                 video_id = parsed.path.lstrip("/").split("/", 1)[0]
-#         except Exception:
-#             video_id = None
+            if host in ("youtube.com", "m.youtube.com"):
+                if parsed.path == "/watch":
+                    video_id = (parse_qs(parsed.query).get("v") or [None])[0]
+                elif parsed.path.startswith("/shorts/"):
+                    video_id = parsed.path.split("/shorts/", 1)[1].split("/", 1)[0]
+                elif parsed.path.startswith("/live/"):
+                    video_id = parsed.path.split("/live/", 1)[1].split("/", 1)[0]
+                elif parsed.path.startswith("/embed/"):
+                    video_id = parsed.path.split("/embed/", 1)[1].split("/", 1)[0]
+            elif host == "youtu.be":
+                video_id = parsed.path.lstrip("/").split("/", 1)[0]
+        except Exception:
+            video_id = None
 
-#         if not video_id:
-#             match = re.search(r"(?:v=|youtu\.be/|/embed/|/shorts/|/live/)([a-zA-Z0-9_-]{11})", raw_url)
-#             if match:
-#                 video_id = match.group(1)
+        if not video_id:
+            match = re.search(r"(?:v=|youtu\.be/|/embed/|/shorts/|/live/)([a-zA-Z0-9_-]{11})", raw_url)
+            if match:
+                video_id = match.group(1)
 
-#         if video_id and re.fullmatch(r"[a-zA-Z0-9_-]{11}", video_id):
-#             return f"https://www.youtube.com/embed/{video_id}"
+        if video_id and re.fullmatch(r"[a-zA-Z0-9_-]{11}", video_id):
+            return f"https://www.youtube.com/embed/{video_id}"
 
-#         return ""
+        return ""
 
-#     @property
-#     def duration(self):
-#         secs = int(self.duration_seconds or 0)
-#         if secs < 60:
-#             return f"0:{secs:02d}"
-#         minutes, seconds = divmod(secs, 60)
-#         hours, minutes = divmod(minutes, 60)
-#         if hours:
-#             return f"{hours}:{minutes:02d}:{seconds:02d}"
-#         return f"{minutes}:{seconds:02d}"
+    @property
+    def duration(self):
+        secs = int(self.duration_seconds or 0)
+        if secs < 60:
+            return f"0:{secs:02d}"
+        minutes, seconds = divmod(secs, 60)
+        hours, minutes = divmod(minutes, 60)
+        if hours:
+            return f"{hours}:{minutes:02d}:{seconds:02d}"
+        return f"{minutes}:{seconds:02d}"
 
 
 class CourseQuiz(models.Model):

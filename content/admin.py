@@ -280,7 +280,7 @@ class CourseAdmin(ModelAdmin):
     )
     list_filter = (CourseCategoryFilter, "subcategory", "created_at")
     search_fields = ("name", "slug", "description", "subcategory__name", "subcategory__category__name")
-    autocomplete_fields = ("subcategory",)
+    autocomplete_fields = ("subcategory", "teacher")
     prepopulated_fields = {"slug": ("name",)}
     date_hierarchy = "created_at"
 
@@ -296,6 +296,11 @@ class CourseAdmin(ModelAdmin):
                 enrollment_total=Count("enrollments", filter=Q(enrollments__status="active"), distinct=True),
             )
         )
+
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        if db_field.name == "teacher":
+            kwargs["queryset"] = User.objects.filter(profile__role=UserRole.TEACHER).select_related("profile").distinct()
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
     @admin.display(description="Price", ordering="price")
     def price_display(self, obj):

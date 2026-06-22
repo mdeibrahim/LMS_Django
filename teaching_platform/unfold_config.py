@@ -70,28 +70,6 @@ UNFOLD = {
                 ],
             },
             {
-                "title": "Commerce",
-                "separator": True,
-                "collapsible": False,
-                "items": [
-                    {
-                        "title": "Payment Submissions",
-                        "icon": "shopping_cart",
-                        "link": reverse_lazy("admin:content_paymentsubmission_changelist"),
-                    },
-                    {
-                        "title": "Enrollments",
-                        "icon": "how_to_reg",
-                        "link": reverse_lazy("admin:content_courseenrollment_changelist"),
-                    },
-                    {
-                        "title": "Certificates",
-                        "icon": "verified",
-                        "link": reverse_lazy("admin:content_coursecertificate_changelist"),
-                    },
-                ],
-            },
-            {
                 "title": "People",
                 "separator": True,
                 "collapsible": False,
@@ -100,6 +78,11 @@ UNFOLD = {
                         "title": "Users",
                         "icon": "person",
                         "link": reverse_lazy("admin:auth_user_changelist"),
+                    },
+                    {
+                        "title": "Teachers",
+                        "icon": "school",
+                        "link": reverse_lazy("admin:teacher_dashboard_teacherprofile_changelist"),
                     },
                     {
                         "title": "User Profiles",
@@ -120,6 +103,28 @@ UNFOLD = {
                         "title": "Email OTPs",
                         "icon": "mark_email_read",
                         "link": reverse_lazy("admin:content_emailotp_changelist"),
+                    },
+                ],
+            },
+            {
+                "title": "Commerce",
+                "separator": True,
+                "collapsible": False,
+                "items": [
+                    {
+                        "title": "Payment Submissions",
+                        "icon": "shopping_cart",
+                        "link": reverse_lazy("admin:content_paymentsubmission_changelist"),
+                    },
+                    {
+                        "title": "Enrollments",
+                        "icon": "how_to_reg",
+                        "link": reverse_lazy("admin:content_courseenrollment_changelist"),
+                    },
+                    {
+                        "title": "Certificates",
+                        "icon": "verified",
+                        "link": reverse_lazy("admin:content_coursecertificate_changelist"),
                     },
                 ],
             },

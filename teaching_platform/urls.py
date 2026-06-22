@@ -10,6 +10,10 @@ urlpatterns = [
     path('admin/dashboard/', admin.site.admin_view(admin_dashboard), name='admin_dashboard'),
     path('admin/', admin.site.urls),
     path('', include(('content.urls', 'content'), namespace='content')),
+
+    
+    path('api/', include(('apps.teacher_dashboard.urls', 'apps.teacher_dashboard'), namespace='teacher_dashboard')),
+    path('api/', include(('apps.student_dashboard.urls', 'apps.student_dashboard'), namespace='student_dashboard'))
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 # In production, static() does not serve media when DEBUG=False.
