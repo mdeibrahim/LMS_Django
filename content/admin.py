@@ -363,6 +363,7 @@ class ModuleAccordionSectionInline(TabularInline):
 @admin.register(Module)
 class ModuleAdmin(ModelAdmin):
     list_display = (
+        "id",
         "title",
         "course",
         "order",

@@ -111,3 +111,21 @@ class TeacherDashboardTests(TestCase):
         created_course = Course.objects.get(slug="django-basics")
         self.assertEqual(created_course.subcategory.category, self.category_1)
         self.assertEqual(created_course.subcategory.slug, "all")
+
+    def test_teacher_create_subcategory_duplicate_name_returns_custom_message(self):
+        self.client.force_login(self.teacher_user)
+
+        response = self.client.post(
+            reverse("teacher_dashboard:teacher_create_subcategory"),
+            data={
+                "name": "Python",
+                "category": self.category_1.id,
+                "description": "Another python subcategory",
+            },
+        )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(
+            response.data["non_field_errors"][0],
+            "subcategory already exist in this category",
+        )

@@ -2,7 +2,7 @@ from django.contrib.auth import authenticate, get_user_model
 from django.utils.text import slugify
 from rest_framework import serializers
 from apps.teacher_dashboard.models import TeacherProfile
-from content.models import Category, Course, Subcategory, UserRole
+from content.models import Category, Course, Module, Subcategory, UserRole
 
 
 User = get_user_model()
@@ -104,10 +104,18 @@ class TeacherProfileSerializer(serializers.ModelSerializer):
         return super().update(instance, validated_data)
     
 
-from django.utils.text import slugify
-from rest_framework import serializers
 
-from .models import Subcategory
+class CategorySubcategorySerializer(serializers.ModelSerializer):
+    subcategories = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Category
+        fields = ("id", "name", "subcategories")
+
+    def get_subcategories(self, obj):
+        subcategories = obj.subcategories.all()
+        return SubcategorySerializer(subcategories, many=True).data
+
 
 
 class SubcategorySerializer(serializers.ModelSerializer):
@@ -122,6 +130,9 @@ class SubcategorySerializer(serializers.ModelSerializer):
             "created_at",
         )
         read_only_fields = ("created_at",)
+
+    def get_unique_together_validators(self):
+        return []
 
     def validate_category(self, value):
         request = self.context.get("request")
@@ -149,9 +160,7 @@ class SubcategorySerializer(serializers.ModelSerializer):
             category=category,
             name__iexact=name
         ).exists():
-            raise serializers.ValidationError({
-                "name": "This subcategory already exists in this category."
-            })
+            raise serializers.ValidationError("subcategory already exist in this category")
 
         return attrs
 
@@ -191,6 +200,8 @@ class CourseSerializer(serializers.ModelSerializer):
     )
     slug = serializers.SlugField(read_only=True)
 
+    modules_count = serializers.IntegerField(source="modules.count", read_only=True)
+
     class Meta:
         model = Course
         fields = (
@@ -205,6 +216,7 @@ class CourseSerializer(serializers.ModelSerializer):
             "enrollment_count",
             "is_published",
             "created_at",
+            "modules_count",
         )
 
     def _get_teacher_profile(self):
@@ -268,3 +280,16 @@ class CourseSerializer(serializers.ModelSerializer):
             subcategory=subcategory,
             **validated_data
         )
+
+
+class ModuleSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Module
+        fields = (
+            "id",
+            "title",
+            "description",
+            "order",
+            "is_published",
+        )
+        read_only_fields = ("id", "course", "module", "order")

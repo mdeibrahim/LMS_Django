@@ -4,7 +4,9 @@ from rest_framework import status
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.permissions import IsAuthenticated
 
-from .serializers import TeacherLoginSerializer, TeacherRegisterSerializer, TeacherProfileSerializer, CourseSerializer, SubcategorySerializer
+from content.models import Course
+from .models import Category
+from .serializers import TeacherLoginSerializer, TeacherRegisterSerializer, TeacherProfileSerializer, CourseSerializer, SubcategorySerializer, CategorySubcategorySerializer, ModuleSerializer
 
 class RegisterView(APIView):
     def post(self, request):
@@ -97,6 +99,27 @@ class TeacherProfileView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
 
+class CategorySubcategoryListView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        
+        teacher_profile = getattr(
+            request.user,
+            "teacher_profile",
+            None
+        )
+        categories = Category.objects.prefetch_related('subcategories').filter(assigned_teachers=teacher_profile)
+        serializer = CategorySubcategorySerializer(categories, many=True)
+
+        return Response(
+            {
+                "message": "Category and subcategory list retrieved successfully",
+                "data": serializer.data
+            },
+            status=status.HTTP_200_OK
+        )
+
 class SubcategoryCreateView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -188,3 +211,37 @@ class CourseListView(APIView):
             )
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+class ModuleListView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, course_id):
+        user = request.user
+        profile = getattr(user, "teacher_profile", None)
+
+        if not profile:
+            return Response(
+                {"detail": "Teacher profile not found."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        try:
+            course = profile.teacher_courses.get(id=course_id)
+        except Course.DoesNotExist:
+            return Response(
+                {"detail": "Course not found."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        modules = course.modules.all()
+        serializer = ModuleSerializer(modules, many=True)
+
+        return Response(
+            {
+                "message": "Module list retrieved successfully",
+                "data": serializer.data
+            },
+            status=status.HTTP_200_OK
+        )
