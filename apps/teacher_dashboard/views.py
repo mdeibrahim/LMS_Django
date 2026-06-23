@@ -4,7 +4,7 @@ from rest_framework import status
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.permissions import IsAuthenticated
 
-from .serializers import TeacherLoginSerializer, TeacherRegisterSerializer, TeacherProfileSerializer
+from .serializers import TeacherLoginSerializer, TeacherRegisterSerializer, TeacherProfileSerializer, CourseSerializer, SubcategorySerializer
 
 class RegisterView(APIView):
     def post(self, request):
@@ -61,17 +61,13 @@ class TeacherProfileView(APIView):
                 {"detail": "Teacher profile not found."},
                 status=status.HTTP_404_NOT_FOUND
             )
+        
+        serializer = TeacherProfileSerializer(profile, context={"request": request})
 
         return Response(
             {
-                "id": profile.id,
-                "full_name": profile.full_name,
-                "phone_number": profile.phone_number,
-                "profile_picture": profile.profile_picture.url if profile.profile_picture else None,
-                "teacher_institution": profile.teacher_institution,
-                "teacher_subject": profile.teacher_subject,
-                "teacher_experience_years": profile.teacher_experience_years,
-                "date_joined": profile.created_at,
+                "message": "Teacher profile retrieved successfully",
+                "data": serializer.data,
             },
             status=status.HTTP_200_OK
         )
@@ -86,10 +82,109 @@ class TeacherProfileView(APIView):
                 status=status.HTTP_404_NOT_FOUND
             )
 
-        serializer = TeacherProfileSerializer(profile, data=request.data, partial=True)
+        serializer = TeacherProfileSerializer(profile, data=request.data, partial=True, context={"request": request})
 
         if serializer.is_valid():
             serializer.save()
-            return Response(serializer.data, status=status.HTTP_200_OK)
+            return Response(
+                {
+                    "message": "Teacher profile updated successfully",
+                    "data": serializer.data
+                },
+                status=status.HTTP_200_OK
+            )
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+
+class SubcategoryCreateView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+
+        teacher_profile = getattr(
+            request.user,
+            "teacher_profile",
+            None
+        )
+
+        if not teacher_profile:
+            return Response(
+                {
+                    "detail": "Only teachers can create subcategories."
+                },
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        serializer = SubcategorySerializer(
+            data=request.data,
+            context={"request": request}
+        )
+
+        if serializer.is_valid():
+            subcategory = serializer.save()
+
+            return Response(
+                {
+                    "message": "Subcategory created successfully",
+                    "data": SubcategorySerializer(
+                        subcategory,
+                        context={"request": request}
+                    ).data
+                },
+                status=status.HTTP_201_CREATED
+            )
+
+        return Response(
+            serializer.errors,
+            status=status.HTTP_400_BAD_REQUEST
+        )
+    
+
+class CourseListView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+        profile = getattr(user, "teacher_profile", None)
+
+        if not profile:
+            return Response(
+                {"detail": "Teacher profile not found."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        courses = profile.teacher_courses.all()
+        serializer = CourseSerializer(courses, context={"request": request}, many=True)
+
+        return Response(
+            {
+                "message": "Course list retrieved successfully",
+                "data": serializer.data
+            },
+            status=status.HTTP_200_OK
+        )
+    
+    def post(self, request):
+        user = request.user
+        profile = getattr(user, "teacher_profile", None)
+
+        if not profile:
+            return Response(
+                {"detail": "Teacher profile not found."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        serializer = CourseSerializer(data=request.data, context={"request": request})
+
+        if serializer.is_valid():
+            course = serializer.save()
+            return Response(
+                {
+                    "message": "Course created successfully",
+                    "data": CourseSerializer(course, context={"request": request}).data
+                },
+                status=status.HTTP_201_CREATED
+            )
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

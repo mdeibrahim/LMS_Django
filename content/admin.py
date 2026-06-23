@@ -251,7 +251,7 @@ class UserAdmin(DjangoUserAdmin, ModelAdmin):
 
 @admin.register(Category)
 class CategoryAdmin(ModelAdmin):
-    list_display = ("name", "subcategory_total", "course_total", "created_at")
+    list_display = ("id","name", "subcategory_total", "course_total", "created_at")
     search_fields = ("name", "slug", "description")
     prepopulated_fields = {"slug": ("name",)}
 

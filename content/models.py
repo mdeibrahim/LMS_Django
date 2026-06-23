@@ -106,17 +106,39 @@ class Category(models.Model):
     def __str__(self):
         return self.name
 
+    def ensure_default_subcategory(self):
+        return Subcategory.objects.get_or_create(
+            category=self,
+            slug="all",
+            defaults={
+                "name": "all",
+                "description": "",
+            },
+        )[0]
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        self.ensure_default_subcategory()
+
 
 class Subcategory(models.Model):
-    category = models.ForeignKey("Category", on_delete=models.CASCADE, related_name="subcategories")
+    category = models.ForeignKey(
+        "Category",
+        on_delete=models.CASCADE,
+        related_name="subcategories"
+    )
     name = models.CharField(max_length=255)
-    slug = models.SlugField()
+    slug = models.SlugField(max_length=255)
     description = models.TextField(default="", blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         ordering = ["name"]
-        unique_together = [("category", "slug")]
+        unique_together = ("category", "name")
+
+    def save(self, *args, **kwargs):
+        self.slug = slugify(self.name)
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return f"{self.category.name} -> {self.name}"

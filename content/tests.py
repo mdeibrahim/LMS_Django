@@ -2,6 +2,8 @@ from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
 
+from apps.teacher_dashboard.models import TeacherProfile
+
 from .models import (
     Category,
     Course,
@@ -22,10 +24,13 @@ User = get_user_model()
 class PurchaseAccessTests(TestCase):
     def setUp(self):
         self.user = User.objects.create_user(email='student@example.com', password='testpass123')
+        self.teacher_user = User.objects.create_user(email='teacher@example.com', password='testpass123')
+        self.teacher_profile = TeacherProfile.objects.create(user=self.teacher_user, full_name='Teacher', phone_number='01234567890')
         self.category = Category.objects.create(name="Programming", slug="programming")
         self.subcategory = Subcategory.objects.create(category=self.category, name="Python", slug="python")
         self.course = Course.objects.create(
             subcategory=self.subcategory,
+            teacher=self.teacher_profile,
             name='Python Basics',
             slug='python-basics',
             price=999,
@@ -117,10 +122,13 @@ class StaffEditorTests(TestCase):
             password='adminpass123',
             is_staff=True,
         )
+        self.teacher_user = User.objects.create_user(email='teacher-staff@example.com', password='testpass123')
+        self.teacher_profile = TeacherProfile.objects.create(user=self.teacher_user, full_name='Teacher', phone_number='01234567890')
         self.category = Category.objects.create(name="Programming", slug="programming-staff")
         self.subcategory = Subcategory.objects.create(category=self.category, name="Python", slug="python-staff")
         self.course = Course.objects.create(
             subcategory=self.subcategory,
+            teacher=self.teacher_profile,
             name='Python Advanced',
             slug='python-advanced',
             price=999,
@@ -174,9 +182,11 @@ class ContentRenderTests(TestCase):
         self.assertEqual(str(render_stored_content(html)), html)
 
     def test_highlight_link_gets_variant_class_from_multimedia_content(self):
+        teacher_user = User.objects.create_user(email='teacher-render@example.com', password='testpass123')
+        teacher_profile = TeacherProfile.objects.create(user=teacher_user, full_name='Teacher', phone_number='01234567890')
         category = Category.objects.create(name="Media", slug="media")
         subcategory = Subcategory.objects.create(category=category, name="Audio", slug="audio")
-        course = Course.objects.create(subcategory=subcategory, name='Media Course', slug='media-course')
+        course = Course.objects.create(subcategory=subcategory, teacher=teacher_profile, name='Media Course', slug='media-course')
         module = Module.objects.create(course=course, title='Lesson 1', slug='lesson-1', body_content='')
         lesson = Lesson.objects.create(module=module, title="Intro Lesson", slug="intro-lesson", body_content="")
         item = LessonResource.objects.create(

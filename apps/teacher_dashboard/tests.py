@@ -3,7 +3,7 @@ from django.test import TestCase
 from django.urls import reverse
 
 from apps.student_dashboard.models import StudentProfile
-from content.models import Category, Subcategory, UserRole
+from content.models import Category, Course, Subcategory, UserRole
 
 from .models import TeacherProfile
 
@@ -51,7 +51,7 @@ class TeacherDashboardTests(TestCase):
         teacher_profile = TeacherProfile.objects.get(user=self.teacher_user)
         subcategory_names = list(teacher_profile.assigned_subcategories.values_list("name", flat=True))
 
-        self.assertCountEqual(subcategory_names, ["Python", "UI"])
+        self.assertCountEqual(subcategory_names, ["all", "Python", "all", "UI"])
 
     def test_teacher_admin_changelist_is_available(self):
         self.client.force_login(self.admin)
@@ -67,3 +67,47 @@ class TeacherDashboardTests(TestCase):
         category_names = list(teacher_profile.assigned_categories.values_list("name", flat=True))
 
         self.assertCountEqual(category_names, ["Programming", "Design"])
+
+    def test_teacher_course_list_returns_teacher_courses(self):
+        course = Course.objects.create(
+            subcategory=self.subcategory_1,
+            teacher=self.teacher_profile,
+            name="Intro to Python",
+            slug="intro-to-python",
+            description="",
+            price=0,
+            is_published=True,
+        )
+
+        self.client.force_login(self.teacher_user)
+
+        response = self.client.get(reverse("teacher_dashboard:teacher_course_list"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.data["data"]), 1)
+        self.assertEqual(response.data["data"][0]["id"], course.id)
+        self.assertEqual(response.data["data"][0]["name"], "Intro to Python")
+
+    def test_teacher_create_course_auto_generates_slug_and_subcategory(self):
+        self.client.force_login(self.teacher_user)
+
+        response = self.client.post(
+            reverse("teacher_dashboard:teacher_create_course"),
+            data={
+                "name": "Django Basics",
+                "category": self.category_1.id,
+                "description": "Intro course",
+                "price": "150.00",
+                "is_published": True,
+            },
+        )
+
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.data["data"]["name"], "Django Basics")
+        self.assertEqual(response.data["data"]["slug"], "django-basics")
+        self.assertEqual(response.data["data"]["subcategory"], "all")
+        self.assertEqual(response.data["data"]["category"], "Programming")
+        self.assertTrue(Course.objects.filter(slug="django-basics", teacher=self.teacher_profile).exists())
+        created_course = Course.objects.get(slug="django-basics")
+        self.assertEqual(created_course.subcategory.category, self.category_1)
+        self.assertEqual(created_course.subcategory.slug, "all")
