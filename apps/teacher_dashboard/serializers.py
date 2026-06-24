@@ -1,8 +1,9 @@
 from django.contrib.auth import authenticate, get_user_model
+from django.db import transaction
 from django.utils.text import slugify
 from rest_framework import serializers
 from apps.teacher_dashboard.models import TeacherProfile
-from content.models import Category, Course, Module, Subcategory, UserRole
+from content.models import Category, Course, Lesson, LessonResource, LessonResourceType, Module, Subcategory, UserRole
 
 
 User = get_user_model()
@@ -318,3 +319,161 @@ class ModuleSerializer(serializers.ModelSerializer):
             instance.slug = self._generate_unique_slug(validated_data["title"])
         return super().update(instance, validated_data)
     
+
+class LessonResourceSerializer(serializers.ModelSerializer):
+    file_url = serializers.SerializerMethodField()
+    youtube_embed_url = serializers.SerializerMethodField()
+    youtube_url = serializers.ReadOnlyField()
+
+    class Meta:
+        model = LessonResource
+        fields = (
+            "id",
+            "title",
+            "slug",
+            "content_type",
+            "order",
+            "is_preview",
+            "is_published",
+            "text_content",
+            "file_url",
+            "youtube_url",
+            "youtube_embed_url",
+            "external_url",
+            "embed_url",
+            "duration_seconds",
+            "metadata",
+            "created_at",
+        )
+
+    def get_file_url(self, obj):
+        if not obj.file:
+            return ""
+        request = self.context.get("request")
+        url = obj.file.url
+        if request is not None:
+            return request.build_absolute_uri(url)
+        return url
+
+    def get_youtube_embed_url(self, obj):
+        return obj.get_youtube_embed_url()
+
+
+class LessonSerializer(serializers.ModelSerializer):
+    resources = LessonResourceSerializer(many=True, read_only=True)
+    module_title = serializers.CharField(source="module.title", read_only=True)
+    course_title = serializers.CharField(source="module.course.name", read_only=True)
+    course_slug = serializers.CharField(source="module.course.slug", read_only=True)
+
+    class Meta:
+        model = Lesson
+        fields = (
+            "id",
+            "module",
+            "module_title",
+            "course_title",
+            "course_slug",
+            "title",
+            "slug",
+            "description",
+            "body_content",
+            "order",
+            "duration_seconds",
+            "thumbnail",
+            "is_preview",
+            "is_published",
+            "created_at",
+            "updated_at",
+            "resources",
+        )
+        read_only_fields = ("id", "slug", "created_at", "updated_at", "resources")
+
+
+class LessonCreateSerializer(serializers.ModelSerializer):
+    resources = serializers.JSONField(required=False, write_only=True, default=list)
+
+    class Meta:
+        model = Lesson
+        fields = (
+            "id",
+            "module",
+            "title",
+            "description",
+            "body_content",
+            "order",
+            "duration_seconds",
+            "thumbnail",
+            "is_preview",
+            "is_published",
+            "resources",
+        )
+        read_only_fields = ("id",)
+
+    def validate_module(self, module):
+        teacher_profile = getattr(getattr(self.context.get("request"), "user", None), "teacher_profile", None)
+        if teacher_profile and module.course.teacher_id != teacher_profile.id:
+            raise serializers.ValidationError("You can only add lessons to your own modules.")
+        return module
+
+    def validate_resources(self, resources):
+        if resources in (None, ""):
+            return []
+        if not isinstance(resources, list):
+            raise serializers.ValidationError("resources must be a list of media items.")
+        allowed_types = {choice[0] for choice in LessonResourceType.choices}
+        allowed_types.add("youtube")
+        for resource in resources:
+            content_type = str(resource.get("content_type") or LessonResourceType.TEXT).strip().lower()
+            if content_type not in allowed_types:
+                raise serializers.ValidationError(f"Unsupported content_type '{content_type}'.")
+            if content_type == "youtube" and not (resource.get("youtube_url") or resource.get("external_url")):
+                raise serializers.ValidationError("YouTube media items require a youtube_url or external_url.")
+        return resources
+
+    @transaction.atomic
+    def create(self, validated_data):
+        resources = validated_data.pop("resources", [])
+        lesson = Lesson.objects.create(**validated_data)
+
+        request = self.context.get("request")
+        files = getattr(request, "FILES", {})
+
+        for index, resource_data in enumerate(resources, start=1):
+            file_key = (resource_data.get("file_key") or "").strip()
+            uploaded_file = files.get(file_key) if file_key else None
+
+            content_type = str(resource_data.get("content_type") or LessonResourceType.TEXT).strip().lower()
+            if content_type == "youtube":
+                content_type = LessonResourceType.VIDEO
+            text_content = resource_data.get("text_content", "")
+            external_url = resource_data.get("external_url", "") or resource_data.get("youtube_url", "") or resource_data.get("video_url", "")
+            embed_url = resource_data.get("embed_url", "")
+
+            if content_type == LessonResourceType.VIDEO and not embed_url:
+                embed_url = external_url
+
+            resource = LessonResource.objects.create(
+                lesson=lesson,
+                title=(resource_data.get("title") or "Untitled").strip() or "Untitled",
+                content_type=content_type,
+                order=int(resource_data.get("order") or index),
+                is_preview=bool(resource_data.get("is_preview", lesson.is_preview)),
+                is_published=bool(resource_data.get("is_published", True)),
+                text_content=text_content,
+                external_url=external_url,
+                embed_url=embed_url,
+                duration_seconds=int(resource_data.get("duration_seconds") or 0),
+                metadata=resource_data.get("metadata") or {},
+            )
+
+            if uploaded_file:
+                resource.file = uploaded_file
+                resource.save(update_fields=["file"])
+
+        return lesson
+
+    def to_internal_value(self, data):
+        mutable_data = data.copy() if hasattr(data, "copy") else dict(data)
+        if mutable_data.get("module_id") and not mutable_data.get("module"):
+            mutable_data["module"] = mutable_data["module_id"]
+        return super().to_internal_value(mutable_data)

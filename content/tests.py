@@ -1,3 +1,4 @@
+from django.contrib import admin
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
@@ -15,6 +16,7 @@ from .models import (
     Module,
     Subcategory,
 )
+from .admin import LessonAdmin, ModuleAdmin
 from .templatetags.content_render import render_stored_content
 
 
@@ -177,6 +179,34 @@ class StaffEditorTests(TestCase):
             reverse('content:module_editor', args=[self.course.slug, legacy_module.slug]),
             f'/courses/{self.course.slug}/modules/{legacy_module.slug}/editor/',
         )
+
+    def test_lesson_admin_frontend_link_handles_blank_module_slug(self):
+        legacy_module = Module.objects.create(course=self.course, title='Legacy Module', slug='legacy-module')
+        Module.objects.filter(pk=legacy_module.pk).update(slug='')
+        legacy_module.refresh_from_db()
+        lesson = Lesson.objects.create(module=legacy_module, title='Legacy Lesson', slug='legacy-lesson')
+        Lesson.objects.filter(pk=lesson.pk).update(slug='')
+        lesson.refresh_from_db()
+
+        admin_view = LessonAdmin(Lesson, admin.site)
+
+        self.assertIn('Set related slugs first', str(admin_view.frontend_editor_link(lesson)))
+
+    def test_module_admin_frontend_link_handles_blank_course_slug(self):
+        legacy_course = Course.objects.create(
+            subcategory=self.subcategory,
+            teacher=self.teacher_profile,
+            name='Legacy Course',
+            slug='legacy-course',
+            price=999,
+        )
+        Course.objects.filter(pk=legacy_course.pk).update(slug='')
+        legacy_course.refresh_from_db()
+        legacy_module = Module.objects.create(course=legacy_course, title='Legacy Module', slug='legacy-module')
+
+        admin_view = ModuleAdmin(Module, admin.site)
+
+        self.assertIn('Set course slug first', str(admin_view.frontend_editor_link(legacy_module)))
 
 
 class ContentRenderTests(TestCase):

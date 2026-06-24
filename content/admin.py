@@ -446,9 +446,12 @@ class ModuleAdmin(ModelAdmin):
     def frontend_editor_link(self, obj):
         if not obj.pk:
             return tone_badge("Save first", "amber")
+        course_slug = getattr(getattr(obj, "course", None), "slug", "")
+        if not course_slug:
+            return tone_badge("Set course slug first", "rose")
         if not obj.slug:
             return tone_badge("Set slug first", "rose")
-        return object_link(reverse("content:module_editor", args=[obj.course.slug, obj.slug]), "Open editor", new_tab=True)
+        return object_link(reverse("content:module_editor", args=[course_slug, obj.slug]), "Open editor", new_tab=True)
 
 
 class LessonResourceInline(TabularInline):
@@ -516,8 +519,13 @@ class LessonAdmin(ModelAdmin):
     def frontend_editor_link(self, obj):
         if not obj.pk:
             return tone_badge("Save first", "amber")
+        course_slug = getattr(getattr(obj.module, "course", None), "slug", "")
+        module_slug = getattr(obj.module, "slug", "")
+        lesson_slug = getattr(obj, "slug", "")
+        if not course_slug or not module_slug or not lesson_slug:
+            return tone_badge("Set related slugs first", "rose")
         return object_link(
-            reverse("content:lesson_editor", args=[obj.module.course.slug, obj.module.slug, obj.slug]),
+            reverse("content:lesson_editor", args=[course_slug, module_slug, lesson_slug]),
             "Open editor",
             new_tab=True,
         )

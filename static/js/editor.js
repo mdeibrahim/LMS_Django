@@ -20,7 +20,7 @@
 
     const icList = document.getElementById('icList');
     const icPanel = document.getElementById('icInlinePanel');
-    const icForm = document.getElementById('icForm');
+    const ic= document.getElementById('icForm');
     const icFormId = document.getElementById('icFormId');
     const icTitle = document.getElementById('icTitle');
     const icType = document.getElementById('icType');

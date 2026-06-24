@@ -4,9 +4,19 @@ from rest_framework import status
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.permissions import IsAuthenticated
 
-from content.models import Course, Module
+from content.models import Course, Module, Lesson
 from .models import Category
-from .serializers import TeacherLoginSerializer, TeacherRegisterSerializer, TeacherProfileSerializer, CourseSerializer, SubcategorySerializer, CategorySubcategorySerializer, ModuleSerializer
+from .serializers import (
+    CategorySubcategorySerializer,
+    CourseSerializer,
+    LessonCreateSerializer,
+    LessonSerializer,
+    ModuleSerializer,
+    SubcategorySerializer,
+    TeacherLoginSerializer,
+    TeacherProfileSerializer,
+    TeacherRegisterSerializer,
+)
 
 class RegisterView(APIView):
     def post(self, request):
@@ -386,3 +396,97 @@ class ModuleListView(APIView):
             },
             status=status.HTTP_200_OK
         )
+    
+
+# ------------------------------- Lesson Views -------------------------------
+
+class LessonListView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+        profile = getattr(user, "teacher_profile", None)
+
+        lesson_id = request.query_params.get("lesson_id", None)
+        module_id = request.query_params.get("module_id", None)
+        course_id = request.query_params.get("course_id", None)
+
+        if not profile:
+            return Response(
+                {"detail": "Teacher profile not found."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        try:
+            course = profile.teacher_courses.get(id=course_id)
+        except Course.DoesNotExist:
+            return Response(
+                {"detail": "Course not found."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        try:
+            module = course.modules.get(id=module_id)
+        except Module.DoesNotExist:
+            return Response(
+                {"detail": "Module not found."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        if lesson_id:
+            try:
+                lesson = module.lessons.get(id=lesson_id)
+            except Lesson.DoesNotExist:
+                return Response(
+                    {"detail": "Lesson not found."},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            serializer = LessonSerializer(lesson, context={"request": request})
+            return Response(
+                {
+                    "message": "Lesson retrieved successfully",
+                    "data": serializer.data
+                },
+                status=status.HTTP_200_OK
+            )
+        lessons = module.lessons.all()
+        serializer = LessonSerializer(lessons, many=True, context={"request": request})
+
+        return Response(
+            {
+                "message": "Lesson list retrieved successfully",
+                "data": serializer.data
+            },
+            status=status.HTTP_200_OK
+        )
+
+    def post(self, request):
+        user = request.user
+        profile = getattr(user, "teacher_profile", None)
+
+        if not profile:
+            return Response(
+                {"detail": "Teacher profile not found."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        payload = request.data.copy() if hasattr(request.data, "copy") else dict(request.data)
+        if payload.get("module_id") and not payload.get("module"):
+            payload["module"] = payload["module_id"]
+        serializer = LessonCreateSerializer(
+            data=payload,
+            context={"request": request},
+        )
+
+        if serializer.is_valid():
+            lesson = serializer.save()
+            return Response(
+                {
+                    "message": "Lesson created successfully",
+                    "data": LessonSerializer(lesson, context={"request": request}).data,
+                },
+                status=status.HTTP_201_CREATED,
+            )
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
