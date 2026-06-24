@@ -10,7 +10,15 @@ urlpatterns = [
 
     path('category-subcategory-list/', CategorySubcategoryListView.as_view(), name='teacher_category_subcategory_list'),
     path('create-subcategory/', SubcategoryCreateView.as_view(), name='teacher_create_subcategory'),
+
     path('create-course/', CourseListView.as_view(), name='teacher_create_course'),
     path('course-list/', CourseListView.as_view(), name='teacher_course_list'),
-    path('module-list/<int:course_id>/', ModuleListView.as_view(), name='teacher_module_list'),
+
+
+    # Module URLs
+    path('module-list/', ModuleListView.as_view(), name='teacher_module_list'),
+    path('module-detail/', ModuleListView.as_view(), name='teacher_module_detail'),
+    path('create-module/', ModuleListView.as_view(), name='teacher_create_module'),
+    path('update-module/', ModuleListView.as_view(), name='teacher_update_module'),
+    path('delete-module/', ModuleListView.as_view(), name='teacher_delete_module'),
 ]

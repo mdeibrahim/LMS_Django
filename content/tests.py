@@ -169,6 +169,15 @@ class StaffEditorTests(TestCase):
         self.assertEqual(self.lesson.body_content, '<p>Updated lesson</p>')
         self.assertEqual(self.module.title, 'Module 1')
 
+    def test_module_save_backfills_missing_slug(self):
+        legacy_module = Module.objects.create(course=self.course, title='Legacy Module', slug='')
+
+        self.assertEqual(legacy_module.slug, 'legacy-module')
+        self.assertEqual(
+            reverse('content:module_editor', args=[self.course.slug, legacy_module.slug]),
+            f'/courses/{self.course.slug}/modules/{legacy_module.slug}/editor/',
+        )
+
 
 class ContentRenderTests(TestCase):
     def test_plain_text_preserves_line_breaks(self):

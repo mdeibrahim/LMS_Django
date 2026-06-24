@@ -283,6 +283,8 @@ class CourseSerializer(serializers.ModelSerializer):
 
 
 class ModuleSerializer(serializers.ModelSerializer):
+    slug = serializers.SlugField(read_only=True)
+    lesson_count = serializers.IntegerField(source="lessons.count", read_only=True)
     class Meta:
         model = Module
         fields = (
@@ -291,5 +293,28 @@ class ModuleSerializer(serializers.ModelSerializer):
             "description",
             "order",
             "is_published",
+            "slug",
+            "lesson_count",
         )
-        read_only_fields = ("id", "course", "module", "order")
+        read_only_fields = ("id", "course", "slug", "lesson_count")
+
+
+    def _generate_unique_slug(self, title):
+        base_slug = slugify(title) or "module"
+        slug = base_slug
+        counter = 2
+        while Module.objects.filter(slug=slug).exists():
+            slug = f"{base_slug}-{counter}"
+            counter += 1
+        return slug
+
+    def create(self, validated_data):
+        course = validated_data["course"]
+        validated_data["slug"] = self._generate_unique_slug(validated_data["title"])
+        return Module.objects.create(**validated_data)
+    
+    def update(self, instance, validated_data):
+        if "title" in validated_data:
+            instance.slug = self._generate_unique_slug(validated_data["title"])
+        return super().update(instance, validated_data)
+    

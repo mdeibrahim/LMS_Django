@@ -289,6 +289,7 @@ class SubcategoryAdmin(ModelAdmin):
 @admin.register(Course)
 class CourseAdmin(ModelAdmin):
     list_display = (
+        "id",
         "name",
         "subcategory",
         "price_display",
@@ -445,6 +446,8 @@ class ModuleAdmin(ModelAdmin):
     def frontend_editor_link(self, obj):
         if not obj.pk:
             return tone_badge("Save first", "amber")
+        if not obj.slug:
+            return tone_badge("Set slug first", "rose")
         return object_link(reverse("content:module_editor", args=[obj.course.slug, obj.slug]), "Open editor", new_tab=True)
 
 

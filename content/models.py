@@ -175,7 +175,7 @@ class Course(models.Model):
 class Module(models.Model):
     course = models.ForeignKey("Course", on_delete=models.CASCADE, related_name="modules")
     title = models.CharField(max_length=255)
-    slug = models.SlugField()
+    slug = models.SlugField(unique=True)
     body_content = models.TextField(
         blank=True,
         default="",
@@ -201,6 +201,17 @@ class Module(models.Model):
 
     def __str__(self):
         return f"{self.course.name} -> {self.title}"
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            base_slug = slugify(self.title) or "module"
+            slug = base_slug
+            counter = 2
+            while Module.objects.filter(course=self.course, slug=slug).exclude(pk=self.pk).exists():
+                slug = f"{base_slug}-{counter}"
+                counter += 1
+            self.slug = slug
+        super().save(*args, **kwargs)
 
     @property
     def primary_lesson(self):

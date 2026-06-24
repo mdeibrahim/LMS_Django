@@ -4,7 +4,7 @@ from rest_framework import status
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.permissions import IsAuthenticated
 
-from content.models import Course
+from content.models import Course, Module
 from .models import Category
 from .serializers import TeacherLoginSerializer, TeacherRegisterSerializer, TeacherProfileSerializer, CourseSerializer, SubcategorySerializer, CategorySubcategorySerializer, ModuleSerializer
 
@@ -198,6 +198,16 @@ class CourseListView(APIView):
                 status=status.HTTP_404_NOT_FOUND
             )
 
+        course_id = request.query_params.get("course_id", None)
+
+        try:
+            course = profile.teacher_courses.get(id=course_id)
+        except Course.DoesNotExist:
+            return Response(
+                {"detail": "Course not found."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
         serializer = CourseSerializer(data=request.data, context={"request": request})
 
         if serializer.is_valid():
@@ -217,9 +227,12 @@ class CourseListView(APIView):
 class ModuleListView(APIView):
     permission_classes = [IsAuthenticated]
 
-    def get(self, request, course_id):
+    def get(self, request):
         user = request.user
         profile = getattr(user, "teacher_profile", None)
+
+        module_id = request.query_params.get("module_id", None)
+        course_id = request.query_params.get("course_id", None)
 
         if not profile:
             return Response(
@@ -235,6 +248,22 @@ class ModuleListView(APIView):
                 status=status.HTTP_404_NOT_FOUND
             )
 
+        if module_id:
+            try:
+                module = course.modules.get(id=module_id)
+            except Module.DoesNotExist:
+                return Response(
+                    {"detail": "Module not found."},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            serializer = ModuleSerializer(module)
+            return Response(
+                {
+                    "message": "Module retrieved successfully",
+                    "data": serializer.data
+                },
+                status=status.HTTP_200_OK
+            )
         modules = course.modules.all()
         serializer = ModuleSerializer(modules, many=True)
 
@@ -242,6 +271,118 @@ class ModuleListView(APIView):
             {
                 "message": "Module list retrieved successfully",
                 "data": serializer.data
+            },
+            status=status.HTTP_200_OK
+        )
+    
+    def post(self, request):
+        user = request.user
+        profile = getattr(user, "teacher_profile", None)
+
+        if not profile:
+            return Response(
+                {"detail": "Teacher profile not found."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        course_id = request.query_params.get("course_id", None)
+
+        try:
+            course = profile.teacher_courses.get(id=course_id)
+        except Course.DoesNotExist:
+            return Response(
+                {"detail": "Course not found."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        serializer = ModuleSerializer(data=request.data)
+
+        if serializer.is_valid():
+            module = serializer.save(course=course)
+            return Response(
+                {
+                    "message": "Module created successfully",
+                    "data": ModuleSerializer(module).data
+                },
+                status=status.HTTP_201_CREATED
+            )
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+
+    def patch(self, request):
+        user = request.user
+        profile = getattr(user, "teacher_profile", None)
+
+        course_id = request.query_params.get("course_id", None)
+        module_id = request.query_params.get("module_id", None)
+
+        if not profile:
+            return Response(
+                {"detail": "Teacher profile not found."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        if not module_id:
+            return Response(
+                {"detail": "Module ID is required for updating."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            module = Module.objects.get(id=module_id, course__in=profile.teacher_courses.filter(id=course_id))
+        except Module.DoesNotExist:
+            return Response(
+                {"detail": "Module not found."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        serializer = ModuleSerializer(module, data=request.data, partial=True)
+
+        if serializer.is_valid():
+            serializer.save()
+            return Response(
+                {
+                    "message": "Module updated successfully",
+                    "data": serializer.data
+                },
+                status=status.HTTP_200_OK
+            )
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    def delete(self, request):
+        user = request.user
+        profile = getattr(user, "teacher_profile", None)
+
+        course_id = request.query_params.get("course_id", None)
+        module_id = request.query_params.get("module_id", None)
+
+        if not profile:
+            return Response(
+                {"detail": "Teacher profile not found."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        if not module_id:
+            return Response(
+                {"detail": "Module ID is required for deletion."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            module = Module.objects.get(id=module_id, course__in=profile.teacher_courses.filter(id=course_id))
+        except Module.DoesNotExist:
+            return Response(
+                {"detail": "Module not found."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        module.delete()
+
+        return Response(
+            {
+                "message": "Module deleted successfully"
             },
             status=status.HTTP_200_OK
         )
