@@ -233,8 +233,6 @@ class Lesson(models.Model):
         ),
     )
     order = models.PositiveIntegerField(default=0)
-    duration_seconds = models.PositiveIntegerField(default=0, validators=[MinValueValidator(0)])
-    thumbnail = models.ImageField(upload_to="lesson_thumbnails/", blank=True, null=True)
     is_preview = models.BooleanField(default=False)
     is_published = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)

@@ -461,8 +461,7 @@ class LessonListView(APIView):
         )
 
     def post(self, request):
-        user = request.user
-        profile = getattr(user, "teacher_profile", None)
+        profile = getattr(request.user, "teacher_profile", None)
 
         if not profile:
             return Response(
@@ -470,9 +469,17 @@ class LessonListView(APIView):
                 status=status.HTTP_404_NOT_FOUND
             )
 
+        module_id = request.query_params.get("module_id")
+
+        if not module_id:
+            return Response(
+                {"module_id": "This query parameter is required."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
         payload = request.data.copy() if hasattr(request.data, "copy") else dict(request.data)
-        if payload.get("module_id") and not payload.get("module"):
-            payload["module"] = payload["module_id"]
+        payload["module"] = module_id
+
         serializer = LessonCreateSerializer(
             data=payload,
             context={"request": request},
@@ -480,10 +487,14 @@ class LessonListView(APIView):
 
         if serializer.is_valid():
             lesson = serializer.save()
+
             return Response(
                 {
                     "message": "Lesson created successfully",
-                    "data": LessonSerializer(lesson, context={"request": request}).data,
+                    "data": LessonSerializer(
+                        lesson,
+                        context={"request": request}
+                    ).data,
                 },
                 status=status.HTTP_201_CREATED,
             )
