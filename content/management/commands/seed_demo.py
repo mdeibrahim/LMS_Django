@@ -346,7 +346,6 @@ class Command(BaseCommand):
                     video_url = content_data.get("video_url", "")
                     external_url = video_url if video_url else content_data.get("external_url", "")
                     embed_url = video_url if "youtu" in video_url else content_data.get("embed_url", "")
-                    file_name = content_data.get("file_name", "")
 
                     resource, _ = LessonResource.objects.update_or_create(
                         lesson=lesson,
@@ -359,7 +358,6 @@ class Command(BaseCommand):
                             "text_content": content_data.get("text_content", ""),
                             "external_url": external_url,
                             "embed_url": embed_url,
-                            "metadata": {"file_name": file_name} if file_name else {},
                             "is_published": True,
                         },
                     )

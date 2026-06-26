@@ -341,7 +341,6 @@ class LessonResourceSerializer(serializers.ModelSerializer):
             "youtube_embed_url",
             "external_url",
             "embed_url",
-            "metadata",
             "created_at",
         )
 
@@ -458,7 +457,6 @@ class LessonCreateSerializer(serializers.ModelSerializer):
                 external_url=external_url,
                 embed_url=embed_url,
                 duration_seconds=int(resource_data.get("duration_seconds") or 0),
-                metadata=resource_data.get("metadata") or {},
             )
 
             if uploaded_file:

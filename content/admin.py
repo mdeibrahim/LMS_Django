@@ -102,7 +102,6 @@ class RelatedCourseCategoryFilter(admin.SimpleListFilter):
             "paymentsubmission": "course__subcategory__category_id",
             "coursequiz": "lesson__module__course__subcategory__category_id",
             "quizattempt": "quiz__lesson__module__course__subcategory__category_id",
-            "coursecontent": "module__course__subcategory__category_id",
             "modulepurchase": "course__subcategory__category_id",
         }
         lookup = lookup_map.get(model_admin.model._meta.model_name)
@@ -464,6 +463,7 @@ class LessonResourceInline(TabularInline):
 @admin.register(Lesson)
 class LessonAdmin(ModelAdmin):
     list_display = (
+        "id",
         "title",
         "module",
         "order",
@@ -533,7 +533,7 @@ class LessonAdmin(ModelAdmin):
 
 @admin.register(LessonResource)
 class LessonResourceAdmin(ModelAdmin):
-    list_display = ("title", "lesson", "resource_kind", "order", "is_preview", "is_published", "preview")
+    list_display = ("id", "title", "lesson", "resource_kind", "order", "is_preview", "is_published", "preview")
     list_filter = ("content_type", "is_preview", "is_published", RelatedCourseCategoryFilter)
     search_fields = ("title", "slug", "lesson__title", "lesson__module__title", "lesson__module__course__name")
     autocomplete_fields = ("lesson",)
@@ -543,7 +543,6 @@ class LessonResourceAdmin(ModelAdmin):
         ("Basic", {"fields": ("lesson", "title", "slug", "content_type", "order", "is_preview", "is_published")}),
         ("Text", {"fields": ("text_content",), "classes": ("collapse",)}),
         ("File / URL", {"fields": ("file", "external_url", "embed_url", "duration_seconds"), "classes": ("collapse",)}),
-        ("Metadata", {"fields": ("metadata",), "classes": ("collapse",)}),
         ("Preview", {"fields": ("preview",)}),
         ("Audit", {"fields": ("created_at", "updated_at")}),
     )

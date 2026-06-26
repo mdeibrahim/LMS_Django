@@ -406,7 +406,7 @@ class LessonResourceType(models.TextChoices):
 
 class LessonResource(models.Model):
     lesson = models.ForeignKey("Lesson", on_delete=models.CASCADE, related_name="resources")
-    title = models.CharField(max_length=255)
+    title = models.CharField(max_length=255,null=True, blank=True)
     slug = models.SlugField(blank=True)
     content_type = models.CharField(max_length=30, choices=LessonResourceType.choices, default=LessonResourceType.TEXT)
     order = models.PositiveIntegerField(default=0)
@@ -416,7 +416,6 @@ class LessonResource(models.Model):
     file = models.FileField(upload_to="lesson_resources/", blank=True, null=True)
     external_url = models.URLField(blank=True, default="")
     embed_url = models.URLField(blank=True, default="")
-    metadata = models.JSONField(blank=True, default=dict)
     duration_seconds = models.PositiveIntegerField(default=0, validators=[MinValueValidator(0)])
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -507,91 +506,6 @@ class LessonResource(models.Model):
         if video_id and re.fullmatch(r"[a-zA-Z0-9_-]{11}", video_id):
             return f"https://www.youtube.com/embed/{video_id}"
         return ""
-
-
-CONTENT_TYPE_CHOICES = [
-    ("text", "Text / Rich HTML"),
-    ("image", "Image"),
-    ("audio", "Audio"),
-    ("video", "Video (Upload)"),
-    ("youtube", "YouTube Video"),
-]
-
-
-class CourseContent(models.Model):
-    module = models.ForeignKey("Module", on_delete=models.CASCADE, related_name="course_contents", blank=True, null=True)
-    lesson = models.ForeignKey("Lesson", on_delete=models.SET_NULL, related_name="legacy_contents", blank=True, null=True)
-    title = models.CharField(max_length=255)
-    content_type = models.CharField(max_length=20, choices=CONTENT_TYPE_CHOICES, default="text")
-    is_inline_reference = models.BooleanField(default=False)
-    order = models.PositiveIntegerField(default=0)
-    video_url = models.URLField(blank=True, null=True)
-    duration_seconds = models.PositiveIntegerField(blank=True, null=True, default=0)
-    text_content = models.TextField(blank=True, help_text="Plain text or HTML for text items.")
-    image = models.ImageField(upload_to="interactive/images/", blank=True, null=True)
-    audio = models.FileField(upload_to="interactive/audio/", blank=True, null=True)
-    video = models.FileField(upload_to="interactive/videos/", blank=True, null=True)
-    youtube_url = models.URLField(blank=True, help_text="Full YouTube URL e.g. https://www.youtube.com/watch?v=...")
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    class Meta:
-        ordering = ["order", "created_at"]
-        indexes = [
-            models.Index(fields=["module", "is_inline_reference", "order"]),
-        ]
-
-    def __str__(self):
-        source = self.module.title if self.module_id else "Content"
-        return f"{source} - {self.title}"
-
-    def get_youtube_embed_url(self):
-        from urllib.parse import parse_qs, urlparse
-        import re
-
-        if not self.youtube_url:
-            return ""
-
-        raw_url = self.youtube_url.strip()
-        video_id = None
-
-        try:
-            parsed = urlparse(raw_url)
-            host = (parsed.netloc or "").lower().replace("www.", "")
-
-            if host in ("youtube.com", "m.youtube.com"):
-                if parsed.path == "/watch":
-                    video_id = (parse_qs(parsed.query).get("v") or [None])[0]
-                elif parsed.path.startswith("/shorts/"):
-                    video_id = parsed.path.split("/shorts/", 1)[1].split("/", 1)[0]
-                elif parsed.path.startswith("/live/"):
-                    video_id = parsed.path.split("/live/", 1)[1].split("/", 1)[0]
-                elif parsed.path.startswith("/embed/"):
-                    video_id = parsed.path.split("/embed/", 1)[1].split("/", 1)[0]
-            elif host == "youtu.be":
-                video_id = parsed.path.lstrip("/").split("/", 1)[0]
-        except Exception:
-            video_id = None
-
-        if not video_id:
-            match = re.search(r"(?:v=|youtu\.be/|/embed/|/shorts/|/live/)([a-zA-Z0-9_-]{11})", raw_url)
-            if match:
-                video_id = match.group(1)
-
-        if video_id and re.fullmatch(r"[a-zA-Z0-9_-]{11}", video_id):
-            return f"https://www.youtube.com/embed/{video_id}"
-
-        return ""
-
-    @property
-    def duration(self):
-        secs = int(self.duration_seconds or 0)
-        if secs < 60:
-            return f"0:{secs:02d}"
-        minutes, seconds = divmod(secs, 60)
-        hours, minutes = divmod(minutes, 60)
-        if hours:
-            return f"{hours}:{minutes:02d}:{seconds:02d}"
-        return f"{minutes}:{seconds:02d}"
 
 
 class CourseQuiz(models.Model):
