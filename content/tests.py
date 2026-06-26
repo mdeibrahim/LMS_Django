@@ -116,6 +116,21 @@ class PurchaseAccessTests(TestCase):
 
         self.assertContains(response, 'Choose the best answer:<br>Line two')
 
+    def test_render_stored_content_supports_legacy_media_id_markup(self):
+        item = LessonResource.objects.create(
+            lesson=self.lesson,
+            title='Legacy item',
+            content_type='image',
+            file='lesson_resources/example.png',
+        )
+
+        html = f'<p>Click <span data-media-id="{item.id}">this word</span></p>'
+        rendered = render_stored_content(html)
+
+        self.assertIn('data-media-id', rendered)
+        self.assertIn('highlight-link', rendered)
+        self.assertIn(f'data-media-id="{item.id}"', rendered)
+
 
 class StaffEditorTests(TestCase):
     def setUp(self):

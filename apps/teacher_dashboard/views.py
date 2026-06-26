@@ -4,7 +4,8 @@ from rest_framework import status
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.permissions import IsAuthenticated
 
-from content.models import Course, Module, Lesson
+from content import models
+from content.models import Course, Module, Lesson, LessonResource
 from .models import Category
 from .serializers import (
     CategorySubcategorySerializer,
@@ -404,12 +405,7 @@ class LessonListView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        user = request.user
-        profile = getattr(user, "teacher_profile", None)
-
-        lesson_id = request.query_params.get("lesson_id", None)
-        module_id = request.query_params.get("module_id", None)
-        course_id = request.query_params.get("course_id", None)
+        profile = getattr(request.user, "teacher_profile", None)
 
         if not profile:
             return Response(
@@ -417,31 +413,44 @@ class LessonListView(APIView):
                 status=status.HTTP_404_NOT_FOUND
             )
 
-        try:
-            course = profile.teacher_courses.get(id=course_id)
-        except Course.DoesNotExist:
+        module_id = request.query_params.get("module_id")
+        lesson_id = request.query_params.get("lesson_id")
+
+        if not module_id:
             return Response(
-                {"detail": "Course not found."},
-                status=status.HTTP_404_NOT_FOUND
+                {"module_id": "This query parameter is required."},
+                status=status.HTTP_400_BAD_REQUEST
             )
 
         try:
-            module = course.modules.get(id=module_id)
+            module = Module.objects.select_related("course").get(
+                id=module_id,
+                course__teacher=profile
+            )
         except Module.DoesNotExist:
             return Response(
                 {"detail": "Module not found."},
                 status=status.HTTP_404_NOT_FOUND
             )
 
+        # Get single lesson
         if lesson_id:
             try:
-                lesson = module.lessons.get(id=lesson_id)
+                lesson = Lesson.objects.prefetch_related("resources").get(
+                    id=lesson_id,
+                    module=module
+                )
             except Lesson.DoesNotExist:
                 return Response(
                     {"detail": "Lesson not found."},
                     status=status.HTTP_404_NOT_FOUND
                 )
-            serializer = LessonSerializer(lesson, context={"request": request})
+
+            serializer = LessonSerializer(
+                lesson,
+                context={"request": request}
+            )
+
             return Response(
                 {
                     "message": "Lesson retrieved successfully",
@@ -449,8 +458,19 @@ class LessonListView(APIView):
                 },
                 status=status.HTTP_200_OK
             )
-        lessons = module.lessons.all()
-        serializer = LessonSerializer(lessons, many=True, context={"request": request})
+
+        # Get all lessons
+        lessons = (
+            Lesson.objects.filter(module=module)
+            .prefetch_related("resources")
+            .order_by("order")
+        )
+
+        serializer = LessonSerializer(
+            lessons,
+            many=True,
+            context={"request": request}
+        )
 
         return Response(
             {
@@ -501,3 +521,82 @@ class LessonListView(APIView):
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
+
+    def patch(self, request):
+        profile = getattr(request.user, "teacher_profile", None)
+
+        if not profile:
+            return Response(
+                {"detail": "Teacher profile not found."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        # module_id = request.query_params.get("module_id")
+        lesson_id = request.query_params.get("lesson_id")
+
+        if not lesson_id:
+            return Response(
+                {"lesson_id": "This query parameter is required."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            lesson = Lesson.objects.select_related("module__course").get(
+                id=lesson_id,
+                module__course__teacher=profile
+            )
+        except Lesson.DoesNotExist:
+            return Response(
+                {"detail": "Lesson not found."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        serializer = LessonCreateSerializer(
+            lesson,
+            data=request.data,
+            partial=True,
+            context={"request": request}
+        )
+
+        if serializer.is_valid():
+            serializer.save()
+
+            return Response(
+                {
+                    "message": "Lesson updated successfully",
+                    "data": LessonSerializer(
+                        lesson,
+                        context={"request": request}
+                    ).data,
+                },
+                status=status.HTTP_200_OK,
+            )
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+
+from django.db.models import Max
+
+class NextResourceIdView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        profile = getattr(request.user, "teacher_profile", None)
+
+        if not profile:
+            return Response(
+                {"detail": "Teacher profile not found."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        next_resource_id = (
+            LessonResource.objects.aggregate(max_id=Max("id"))["max_id"] or 0
+        ) + 1
+
+        return Response(
+            {
+                "message": "Next resource ID retrieved successfully",
+                "next_resource_id": next_resource_id,
+            },
+            status=status.HTTP_200_OK,
+        )

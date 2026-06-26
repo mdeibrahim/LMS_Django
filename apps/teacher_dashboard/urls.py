@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import LoginView, RegisterView, TeacherProfileView, CourseListView, SubcategoryCreateView, CategorySubcategoryListView, ModuleListView, LessonListView
+from .views import LoginView, RegisterView, TeacherProfileView, CourseListView, SubcategoryCreateView, CategorySubcategoryListView, ModuleListView, LessonListView, NextResourceIdView
 
 
 urlpatterns = [
@@ -29,4 +29,5 @@ urlpatterns = [
     path('create-lesson/', LessonListView.as_view(), name='teacher_create_lesson'),
     path('update-lesson/', LessonListView.as_view(), name='teacher_update_lesson'),
     path('delete-lesson/', LessonListView.as_view(), name='teacher_delete_lesson'),
+    path('next-resource-id/', NextResourceIdView.as_view(), name='teacher_next_resource_id'),
 ]

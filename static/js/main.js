@@ -186,12 +186,17 @@
     });
 
     // ── Attach click events to interactive elements ──
+    function getInteractiveId(el) {
+        return el.getAttribute('data-content-id') || el.getAttribute('data-media-id');
+    }
+
     function attachInteractiveClicks() {
-        // Toolbar buttons
-        document.querySelectorAll('[data-content-id]').forEach(el => {
+        // Support both the current `data-content-id` markup and older
+        // `data-media-id` markup stored in existing lesson content.
+        document.querySelectorAll('[data-content-id], [data-media-id]').forEach(el => {
             el.addEventListener('click', function (e) {
                 e.preventDefault();
-                const id = this.getAttribute('data-content-id');
+                const id = getInteractiveId(this);
                 if (id) openModal(id);
             });
         });

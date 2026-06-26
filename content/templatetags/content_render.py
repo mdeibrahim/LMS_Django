@@ -9,8 +9,8 @@ from content.models import LessonResource
 
 register = template.Library()
 HTML_TAG_RE = re.compile(r'</?[a-zA-Z][^>]*>')
-CONTENT_ID_RE = re.compile(r'data-content-id=(["\'])(\d+)\1')
-TAG_WITH_CONTENT_ID_RE = re.compile(r'<(?P<tag>[a-zA-Z][^>]*)data-content-id=(?P<quote>["\'])(?P<id>\d+)(?P=quote)(?P<rest>[^>]*)>')
+CONTENT_ID_RE = re.compile(r'data-(?:content|media)-id=(["\'])(\d+)\1')
+TAG_WITH_CONTENT_ID_RE = re.compile(r'<(?P<tag>[a-zA-Z][^>]*)data-(?:content|media)-id=(?P<quote>["\'])(?P<id>\d+)(?P=quote)(?P<rest>[^>]*)>')
 
 
 def _variant_for_content(item):

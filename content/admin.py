@@ -498,7 +498,7 @@ class LessonAdmin(ModelAdmin):
     fieldsets = (
         ("Basic Info", {"fields": ("module", "title", "slug", "order", "frontend_editor_link")}),
         ("Content", {"fields": ("description", "body_content")}),
-        ("Visibility", {"fields": ("is_preview", "is_published", "thumbnail", "duration_seconds")}),
+        ("Visibility", {"fields": ("is_preview", "is_published", )}),
     )
 
     def get_queryset(self, request):

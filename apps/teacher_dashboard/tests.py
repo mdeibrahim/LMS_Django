@@ -179,3 +179,31 @@ class TeacherDashboardTests(TestCase):
         image_resource = LessonResource.objects.get(lesson=lesson, content_type="image")
         self.assertIn("diagram", image_resource.file.name)
         self.assertTrue(image_resource.file.name.endswith(".png"))
+
+    def test_teacher_lesson_list_returns_all_lessons_for_module(self):
+        self.client.force_login(self.teacher_user)
+        first_lesson = Lesson.objects.create(
+            module=self.module,
+            title="Lesson One",
+            slug="lesson-one",
+            order=1,
+        )
+        second_lesson = Lesson.objects.create(
+            module=self.module,
+            title="Lesson Two",
+            slug="lesson-two",
+            order=2,
+        )
+
+        response = self.client.get(
+            reverse("teacher_dashboard:teacher_lesson_list"),
+            data={"module_id": self.module.id},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["message"], "Lesson list retrieved successfully")
+        self.assertEqual(len(response.data["data"]), 2)
+        self.assertEqual(
+            [item["id"] for item in response.data["data"]],
+            [first_lesson.id, second_lesson.id],
+        )
