@@ -573,6 +573,44 @@ class LessonListView(APIView):
             )
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+    def delete(self, request):
+        profile = getattr(request.user, "teacher_profile", None)
+
+        if not profile:
+            return Response(
+                {"detail": "Teacher profile not found."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        lesson_id = request.query_params.get("lesson_id")
+
+        if not lesson_id:
+            return Response(
+                {"lesson_id": "This query parameter is required."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            lesson = Lesson.objects.select_related("module__course").get(
+                id=lesson_id,
+                module__course__teacher=profile
+            )
+        except Lesson.DoesNotExist:
+            return Response(
+                {"detail": "Lesson not found."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        lesson.delete()
+
+        return Response(
+            {
+                "message": "Lesson deleted successfully"
+            },
+            status=status.HTTP_200_OK
+        )
     
 
 from django.db.models import Max
