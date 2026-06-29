@@ -110,6 +110,26 @@ class TeacherProfileView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
 
+class LogoutView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        try:
+            refresh_token = request.data["refresh_token"]
+            token = RefreshToken(refresh_token)
+            token.blacklist()
+
+            return Response(
+                {"message": "Logout successful"},
+                status=status.HTTP_205_RESET_CONTENT
+            )
+        except Exception as e:
+            return Response(
+                {"detail": "Invalid token or token has already been blacklisted."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+    
+
 class CategorySubcategoryListView(APIView):
     permission_classes = [IsAuthenticated]
 
