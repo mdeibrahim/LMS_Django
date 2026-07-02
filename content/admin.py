@@ -181,6 +181,7 @@ except admin.sites.NotRegistered:
 
 @admin.register(User)
 class UserAdmin(DjangoUserAdmin, ModelAdmin):
+    readonly_fields = ("last_login", "date_joined")
     fieldsets = (
         (None, {"fields": ("email", "password")}),
         ("Personal info", {"fields": ("full_name",)}),
@@ -189,6 +190,7 @@ class UserAdmin(DjangoUserAdmin, ModelAdmin):
             {
                 "fields": (
                     "is_active",
+                    "is_verified",
                     "is_staff",
                     "is_superuser",
                     "groups",

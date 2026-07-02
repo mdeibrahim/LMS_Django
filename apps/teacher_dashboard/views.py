@@ -1,11 +1,16 @@
+from datetime import timedelta
+import random
+
+from django.conf import settings
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.permissions import IsAuthenticated
-
+from django.utils import timezone
+from apps.teacher_dashboard.utils import send_verification_email, forgot_password_email
 from content import models
-from content.models import Course, Module, Lesson, LessonResource
+from content.models import Course, Module, Lesson, LessonResource, EmailOTP
 from .models import Category
 from .serializers import (
     CategorySubcategorySerializer,
@@ -18,18 +23,122 @@ from .serializers import (
     TeacherProfileSerializer,
     TeacherRegisterSerializer,
 )
+def generate_otp(user):
+    code = f"{random.randint(100000, 999999)}"
+    expires = timezone.now() + timedelta(minutes=15)
+    is_used = False
+    EmailOTP.objects.create(user=user, code=code, expires_at=expires, is_used=is_used)
+    return code
 
 class RegisterView(APIView):
     def post(self, request):
         serializer = TeacherRegisterSerializer(data=request.data)
 
         if serializer.is_valid():
-            serializer.save()
+            user = serializer.save()
+
+            code = generate_otp(user)
+
+            sent = send_verification_email(user, code)
+            if not sent:
+                return Response(
+                    {"message": "Failed to send verification email."},
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                )
+            
+
             return Response(
-                {"message": "Teacher registered successfully"},
+                {"message": "OTP sent to your email. Please verify to complete registration."},
                 status=status.HTTP_201_CREATED
             )
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+
+class VerifyOTPView(APIView):
+    def post(self, request):
+        email = request.data.get("email")
+        otp = request.data.get("otp")
+
+        if not email or not otp:
+            return Response(
+                {"message": "Email and OTP are required."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            user = models.User.objects.get(email=email)
+        except models.User.DoesNotExist:
+            return Response(
+                {"message": "User with this email does not exist."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        try:
+            otp_record = EmailOTP.objects.get(user=user, code=otp, is_used=False, expires_at__gt=timezone.now())
+        except EmailOTP.DoesNotExist:
+            return Response(
+                {"message": "Invalid OTP."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Mark the user as verified
+        user.is_verified = True
+        user.is_active = True  
+        user.save(update_fields=["is_verified"])
+
+        # Mark the OTP as used
+        otp_record.is_used = True
+        otp_record.save(update_fields=["is_used"])
+
+        return Response(
+            {"message": "OTP verified successfully."},
+            status=status.HTTP_200_OK
+        )
+    
+
+class ResendOTPView(APIView):
+    def post(self, request):
+        email = request.data.get("email")
+        type = request.data.get("type", "register") 
+
+        if not email:
+            return Response(
+                {"message": "Email is required."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            user = models.User.objects.get(email=email)
+        except models.User.DoesNotExist:
+            return Response(
+                {"message": "User with this email does not exist."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        # Generate a new OTP
+        code = generate_otp(user)
+
+        if user.is_verified:
+            return Response(
+                {"message": "User is already verified."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        if type == "register":
+            sent = send_verification_email(user, code)
+        else:
+            sent = forgot_password_email(user, code)
+        
+        if not sent:
+            return Response(
+                {"message": "Failed to send verification email."},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+        return Response(
+            {"message": "A new OTP has been sent to your email."},
+            status=status.HTTP_200_OK
+        )
     
 
 class LoginView(APIView):
@@ -71,7 +180,7 @@ class TeacherProfileView(APIView):
 
         if not profile:
             return Response(
-                {"detail": "Teacher profile not found."},
+                {"message": "Teacher profile not found."},
                 status=status.HTTP_404_NOT_FOUND
             )
         
@@ -91,7 +200,7 @@ class TeacherProfileView(APIView):
 
         if not profile:
             return Response(
-                {"detail": "Teacher profile not found."},
+                {"message": "Teacher profile not found."},
                 status=status.HTTP_404_NOT_FOUND
             )
 
@@ -110,6 +219,42 @@ class TeacherProfileView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
 
+class ChangePasswordView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        user = request.user
+        current_password = request.data.get("current_password")
+        new_password = request.data.get("new_password")
+        confirm_password = request.data.get("confirm_password")
+
+        if not current_password or not new_password or not confirm_password:
+            return Response(
+                {"message": "All password fields are required."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        if new_password != confirm_password:
+            return Response(
+                {"message": "New passwords do not match."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        if not user.check_password(current_password):
+            return Response(
+                {"message": "Current password is incorrect."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        user.set_password(new_password)
+        user.save()
+
+        return Response(
+            {"message": "Password changed successfully."},
+            status=status.HTTP_200_OK
+        )
+    
+
 class LogoutView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -125,7 +270,7 @@ class LogoutView(APIView):
             )
         except Exception as e:
             return Response(
-                {"detail": "Invalid token or token has already been blacklisted."},
+                {"message": "Invalid token or token has already been blacklisted."},
                 status=status.HTTP_400_BAD_REQUEST
             )
     
@@ -165,7 +310,7 @@ class SubcategoryCreateView(APIView):
         if not teacher_profile:
             return Response(
                 {
-                    "detail": "Only teachers can create subcategories."
+                    "message": "Only teachers can create subcategories."
                 },
                 status=status.HTTP_403_FORBIDDEN
             )
@@ -204,7 +349,7 @@ class CourseListView(APIView):
 
         if not profile:
             return Response(
-                {"detail": "Teacher profile not found."},
+                {"message": "Teacher profile not found."},
                 status=status.HTTP_404_NOT_FOUND
             )
 
@@ -225,7 +370,7 @@ class CourseListView(APIView):
 
         if not profile:
             return Response(
-                {"detail": "Teacher profile not found."},
+                {"message": "Teacher profile not found."},
                 status=status.HTTP_404_NOT_FOUND
             )
 
@@ -235,7 +380,7 @@ class CourseListView(APIView):
             course = profile.teacher_courses.get(id=course_id)
         except Course.DoesNotExist:
             return Response(
-                {"detail": "Course not found."},
+                {"message": "Course not found."},
                 status=status.HTTP_404_NOT_FOUND
             )
 
@@ -267,7 +412,7 @@ class ModuleListView(APIView):
 
         if not profile:
             return Response(
-                {"detail": "Teacher profile not found."},
+                {"message": "Teacher profile not found."},
                 status=status.HTTP_404_NOT_FOUND
             )
 
@@ -275,7 +420,7 @@ class ModuleListView(APIView):
             course = profile.teacher_courses.get(id=course_id)
         except Course.DoesNotExist:
             return Response(
-                {"detail": "Course not found."},
+                {"message": "Course not found."},
                 status=status.HTTP_404_NOT_FOUND
             )
 
@@ -284,7 +429,7 @@ class ModuleListView(APIView):
                 module = course.modules.get(id=module_id)
             except Module.DoesNotExist:
                 return Response(
-                    {"detail": "Module not found."},
+                    {"message": "Module not found."},
                     status=status.HTTP_404_NOT_FOUND
                 )
             serializer = ModuleSerializer(module)
@@ -312,7 +457,7 @@ class ModuleListView(APIView):
 
         if not profile:
             return Response(
-                {"detail": "Teacher profile not found."},
+                {"message": "Teacher profile not found."},
                 status=status.HTTP_404_NOT_FOUND
             )
 
@@ -322,7 +467,7 @@ class ModuleListView(APIView):
             course = profile.teacher_courses.get(id=course_id)
         except Course.DoesNotExist:
             return Response(
-                {"detail": "Course not found."},
+                {"message": "Course not found."},
                 status=status.HTTP_404_NOT_FOUND
             )
 
@@ -350,13 +495,13 @@ class ModuleListView(APIView):
 
         if not profile:
             return Response(
-                {"detail": "Teacher profile not found."},
+                {"message": "Teacher profile not found."},
                 status=status.HTTP_404_NOT_FOUND
             )
 
         if not module_id:
             return Response(
-                {"detail": "Module ID is required for updating."},
+                {"message": "Module ID is required for updating."},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
@@ -364,7 +509,7 @@ class ModuleListView(APIView):
             module = Module.objects.get(id=module_id, course__in=profile.teacher_courses.filter(id=course_id))
         except Module.DoesNotExist:
             return Response(
-                {"detail": "Module not found."},
+                {"message": "Module not found."},
                 status=status.HTTP_404_NOT_FOUND
             )
 
@@ -391,13 +536,13 @@ class ModuleListView(APIView):
 
         if not profile:
             return Response(
-                {"detail": "Teacher profile not found."},
+                {"message": "Teacher profile not found."},
                 status=status.HTTP_404_NOT_FOUND
             )
 
         if not module_id:
             return Response(
-                {"detail": "Module ID is required for deletion."},
+                {"message": "Module ID is required for deletion."},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
@@ -405,7 +550,7 @@ class ModuleListView(APIView):
             module = Module.objects.get(id=module_id, course__in=profile.teacher_courses.filter(id=course_id))
         except Module.DoesNotExist:
             return Response(
-                {"detail": "Module not found."},
+                {"message": "Module not found."},
                 status=status.HTTP_404_NOT_FOUND
             )
 
@@ -429,7 +574,7 @@ class LessonListView(APIView):
 
         if not profile:
             return Response(
-                {"detail": "Teacher profile not found."},
+                {"message": "Teacher profile not found."},
                 status=status.HTTP_404_NOT_FOUND
             )
 
@@ -449,7 +594,7 @@ class LessonListView(APIView):
             )
         except Module.DoesNotExist:
             return Response(
-                {"detail": "Module not found."},
+                {"message": "Module not found."},
                 status=status.HTTP_404_NOT_FOUND
             )
 
@@ -462,7 +607,7 @@ class LessonListView(APIView):
                 )
             except Lesson.DoesNotExist:
                 return Response(
-                    {"detail": "Lesson not found."},
+                    {"message": "Lesson not found."},
                     status=status.HTTP_404_NOT_FOUND
                 )
 
@@ -505,7 +650,7 @@ class LessonListView(APIView):
 
         if not profile:
             return Response(
-                {"detail": "Teacher profile not found."},
+                {"message": "Teacher profile not found."},
                 status=status.HTTP_404_NOT_FOUND
             )
 
@@ -547,7 +692,7 @@ class LessonListView(APIView):
 
         if not profile:
             return Response(
-                {"detail": "Teacher profile not found."},
+                {"message": "Teacher profile not found."},
                 status=status.HTTP_404_NOT_FOUND
             )
 
@@ -567,7 +712,7 @@ class LessonListView(APIView):
             )
         except Lesson.DoesNotExist:
             return Response(
-                {"detail": "Lesson not found."},
+                {"message": "Lesson not found."},
                 status=status.HTTP_404_NOT_FOUND
             )
 
@@ -600,7 +745,7 @@ class LessonListView(APIView):
 
         if not profile:
             return Response(
-                {"detail": "Teacher profile not found."},
+                {"message": "Teacher profile not found."},
                 status=status.HTTP_404_NOT_FOUND
             )
 
@@ -619,7 +764,7 @@ class LessonListView(APIView):
             )
         except Lesson.DoesNotExist:
             return Response(
-                {"detail": "Lesson not found."},
+                {"message": "Lesson not found."},
                 status=status.HTTP_404_NOT_FOUND
             )
 
@@ -643,7 +788,7 @@ class NextResourceIdView(APIView):
 
         if not profile:
             return Response(
-                {"detail": "Teacher profile not found."},
+                {"message": "Teacher profile not found."},
                 status=status.HTTP_404_NOT_FOUND
             )
 

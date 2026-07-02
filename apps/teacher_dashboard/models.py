@@ -17,8 +17,12 @@ class TeacherProfile(models.Model):
     profile_picture = models.ImageField(upload_to="profile_pictures/", blank=True, null=True)
     full_name = models.CharField(max_length=160, blank=True, default="")
     phone_number = models.CharField(max_length=20, blank=True, default="")
+    address = models.TextField(blank=True, default="")
+    bio = models.TextField(blank=True, default="")
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
     teacher_institution = models.CharField(max_length=180, blank=True, default="")
     teacher_subject = models.CharField(max_length=120, blank=True, default="")
     teacher_experience_years = models.PositiveSmallIntegerField(blank=True, null=True)

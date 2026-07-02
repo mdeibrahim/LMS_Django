@@ -1,12 +1,16 @@
 from django.urls import path
-from .views import LoginView, RegisterView, TeacherProfileView, CourseListView, SubcategoryCreateView, CategorySubcategoryListView, ModuleListView, LessonListView, NextResourceIdView, LogoutView
+from .views import LoginView, RegisterView, TeacherProfileView, CourseListView, SubcategoryCreateView, CategorySubcategoryListView, ModuleListView, LessonListView, NextResourceIdView, LogoutView, ChangePasswordView, VerifyOTPView, ResendOTPView
 
 
 urlpatterns = [
     # Auth URLs 
     path('auth/register/', RegisterView.as_view(), name='teacher_register'),
+    path('auth/verify-otp/', VerifyOTPView.as_view(), name='teacher_verify_otp'),
+    path('auth/resend-otp/', ResendOTPView.as_view(), name='teacher_resend_otp'),
+
     path('auth/login/', LoginView.as_view(), name='teacher_login'),
     path('profile/', TeacherProfileView.as_view(), name='teacher_profile'),
+    path('change-password/', ChangePasswordView.as_view(), name='teacher_password_change'),
     path('update-profile/', TeacherProfileView.as_view(), name='teacher_update_profile'),
     path('logout/', LogoutView.as_view(), name='teacher_logout'),
 

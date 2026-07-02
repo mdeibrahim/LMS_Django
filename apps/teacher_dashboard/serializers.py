@@ -84,6 +84,8 @@ class TeacherProfileSerializer(serializers.ModelSerializer):
             "full_name",
             "email",
             "phone_number",
+            "address",
+            "bio",
             "profile_picture",
             "teacher_institution",
             "teacher_subject",

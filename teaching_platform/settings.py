@@ -154,6 +154,8 @@ EMAIL_USE_TLS = config('EMAIL_USE_TLS', default=True, cast=_cast_debug)
 EMAIL_USE_SSL = config('EMAIL_USE_SSL', default=False, cast=_cast_debug)
 EMAIL_TIMEOUT = config('EMAIL_TIMEOUT', default=10, cast=int)
 
+SITE_NAME = config('SITE_NAME', default='Teaching Platform')
+
 
 SITE_URL = config('SITE_URL', default='http://localhost:8000')
 OTP_ATTEMPT_WINDOW = config('OTP_ATTEMPT_WINDOW', default=300, cast=int)
