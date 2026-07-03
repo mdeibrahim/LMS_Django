@@ -298,7 +298,9 @@ def quiz_detail(request, course_slug, module_slug, lesson_slug, quiz_id):
         correct = 0
         for question in questions:
             answer = (request.POST.get(f"question_{question.id}") or "").upper()
-            if answer == question.correct_option:
+            question.selected_option = answer
+            question.is_correct = answer == question.correct_option
+            if question.is_correct:
                 correct += 1
 
         score = round((correct / total) * 100) if total else 0
