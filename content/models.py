@@ -91,8 +91,14 @@ class EmailOTP(models.Model):
 
     def __str__(self):
         return f"OTP for {self.user.email} - {self.code}"
+    
 
-
+import uuid
+class PasswordResetSession(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    token = models.UUIDField(default=uuid.uuid4, unique=True)
+    expires_at = models.DateTimeField()
+    is_used = models.BooleanField(default=False)
 
 
 class Category(models.Model):

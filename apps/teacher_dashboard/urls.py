@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import LoginView, RegisterView, TeacherProfileView, CourseListView, SubcategoryCreateView, CategorySubcategoryListView, ModuleListView, LessonListView, NextResourceIdView, LogoutView, ChangePasswordView, VerifyOTPView, ResendOTPView
+from .views import LoginView, RegisterView, TeacherProfileView, CourseListView, SubcategoryCreateView, CategorySubcategoryListView, ModuleListView, LessonListView, NextResourceIdView, LogoutView, ChangePasswordView, VerifyOTPView, ResendOTPView, ForgotPasswordView, ResetPasswordView
 
 
 urlpatterns = [
@@ -13,6 +13,9 @@ urlpatterns = [
     path('change-password/', ChangePasswordView.as_view(), name='teacher_password_change'),
     path('update-profile/', TeacherProfileView.as_view(), name='teacher_update_profile'),
     path('logout/', LogoutView.as_view(), name='teacher_logout'),
+
+    path('auth/forgot-password/', ForgotPasswordView.as_view(), name='teacher_forgot_password'),
+    path('auth/reset-password/', ResetPasswordView.as_view(), name='teacher_reset_password'),
 
     # Course and Subcategory URLs
     path('category-subcategory-list/', CategorySubcategoryListView.as_view(), name='teacher_category_subcategory_list'),

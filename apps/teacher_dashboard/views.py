@@ -10,7 +10,7 @@ from rest_framework.permissions import IsAuthenticated
 from django.utils import timezone
 from apps.teacher_dashboard.utils import send_verification_email, forgot_password_email
 from content import models
-from content.models import Course, Module, Lesson, LessonResource, EmailOTP
+from content.models import Course, Module, Lesson, LessonResource, EmailOTP, PasswordResetSession
 from .models import Category
 from .serializers import (
     CategorySubcategorySerializer,
@@ -58,6 +58,7 @@ class VerifyOTPView(APIView):
     def post(self, request):
         email = request.data.get("email")
         otp = request.data.get("otp")
+        type = request.data.get("type", "register")
 
         if not email or not otp:
             return Response(
@@ -90,8 +91,15 @@ class VerifyOTPView(APIView):
         otp_record.is_used = True
         otp_record.save(update_fields=["is_used"])
 
+        if type != "register":
+            session = PasswordResetSession.objects.create(
+                user=user,
+                expires_at=timezone.now() + timedelta(minutes=15)
+            )
+
         return Response(
-            {"message": "OTP verified successfully."},
+            {"message": "OTP verified successfully.",
+             "reset_token": str(session.token)},
             status=status.HTTP_200_OK
         )
     
@@ -251,6 +259,92 @@ class ChangePasswordView(APIView):
 
         return Response(
             {"message": "Password changed successfully."},
+            status=status.HTTP_200_OK
+        )
+    
+
+class ForgotPasswordView(APIView):
+    def post(self, request):
+        email = request.data.get("email")
+
+        if not email:
+            return Response(
+                {"message": "Email is required."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            user = models.User.objects.get(email=email)
+        except models.User.DoesNotExist:
+            return Response(
+                {"message": "User with this email does not exist."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        # Generate a new OTP for password reset
+        code = generate_otp(user)
+
+        sent = forgot_password_email(user, code)
+        if not sent:
+            return Response(
+                {"message": "Failed to send password reset email."},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+        return Response(
+            {"message": "A password reset OTP has been sent to your email."},
+            status=status.HTTP_200_OK
+        )
+    
+class ResetPasswordView(APIView):
+    def post(self, request):
+        email = request.data.get("email")
+        reset_token = request.data.get("reset_token")
+        new_password = request.data.get("password")
+        confirm_password = request.data.get("confirm_password")
+
+        if not email or not reset_token or not new_password or not confirm_password:
+            print ("All fields are required.")
+            return Response(
+                {"message": "All fields are required."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        if new_password != confirm_password:
+            print ("New passwords do not match.")
+            return Response(
+                {"message": "New passwords do not match."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            user = models.User.objects.get(email=email)
+        except models.User.DoesNotExist:
+            print ("User with this email does not exist.")
+            return Response(
+                {"message": "User with this email does not exist."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        try:
+            session = PasswordResetSession.objects.get(user=user, token=reset_token, is_used=False, expires_at__gt=timezone.now())
+        except PasswordResetSession.DoesNotExist:
+            print ("Invalid reset token.")
+            return Response(
+                {"message": "Invalid reset token."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Reset the user's password
+        user.set_password(new_password)
+        user.save()
+
+        # Mark the reset session as used
+        session.is_used = True
+        session.save(update_fields=["is_used"])
+
+        return Response(
+            {"message": "Password reset successfully."},
             status=status.HTTP_200_OK
         )
     

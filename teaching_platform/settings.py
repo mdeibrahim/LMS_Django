@@ -27,18 +27,27 @@ ALLOWED_HOSTS = [host.strip() for host in config('ALLOWED_HOSTS', default='*').s
 
 def _parse_csv_setting(name, default):
     raw_value = config(name, default=default)
-    return [item.strip() for item in raw_value.split(',') if item.strip()]
+    if raw_value is None:
+        raw_value = default
+
+    raw_value = str(raw_value).strip()
+    # Treat blank environment values as "unset" so defaults still apply.
+    if not raw_value:
+        raw_value = default
+
+    normalized = raw_value.replace(';', ',')
+    return [item.strip() for item in normalized.split(',') if item.strip()]
 
 
 # CORS / CSRF settings for the React frontend.
 CORS_ALLOWED_ORIGINS = _parse_csv_setting(
     'CORS_ALLOWED_ORIGINS',
-    'http://localhost:3000,http://127.0.0.1:3000',
+    'http://localhost:3000,http://127.0.0.1:3000,https://test.lenscafestudio.com',
 )
 CORS_ALLOW_CREDENTIALS = config('CORS_ALLOW_CREDENTIALS', default=True, cast=_cast_debug)
 CSRF_TRUSTED_ORIGINS = _parse_csv_setting(
     'CSRF_TRUSTED_ORIGINS',
-    'http://localhost:3000,http://127.0.0.1:3000',
+    'http://localhost:3000,http://127.0.0.1:3000,https://test.lenscafestudio.com',
 )
 
 

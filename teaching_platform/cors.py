@@ -2,9 +2,15 @@ from django.conf import settings
 from django.http import HttpResponse
 
 
+def _normalize_origin(origin):
+    return str(origin).strip().rstrip('/')
+
+
 def _origin_allowed(origin):
     allowed_origins = getattr(settings, 'CORS_ALLOWED_ORIGINS', [])
-    return origin in allowed_origins
+    normalized_origin = _normalize_origin(origin)
+    normalized_allowed = {_normalize_origin(item) for item in allowed_origins}
+    return normalized_origin in normalized_allowed
 
 
 class SimpleCorsMiddleware:
