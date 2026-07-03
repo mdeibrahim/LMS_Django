@@ -179,7 +179,7 @@
                         {% for course in subcategory.courses.all %}
                         <div class="course-card-wrapper" data-category-id="{{ category.id }}" data-subcategory-id="{{ subcategory.id }}" data-course-id="{{ course.id }}">
                             <a href="{% url 'content:course_detail' course.slug %}" class="group block overflow-hidden rounded-[1.75rem] border border-slate-200 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl">
-                                <div class="course-banner course-banner--card p-5 text-white">
+                                <div class="course-banner course-banner--card p-5 text-white" {% if course.cover_image %}style="background-image: linear-gradient(180deg, rgba(15, 23, 42, 0.18), rgba(15, 23, 42, 0.58)), url('{{ course.cover_image.url }}');"{% else %}style="background-image: linear-gradient(180deg, rgba(15, 23, 42, 0.18), rgba(15, 23, 42, 0.58)), url('https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=1200');"{% endif %}>
                                     <div class="absolute -right-6 -top-8 h-24 w-24 rounded-full bg-white/20"></div>
                                     <div class="absolute right-8 top-6 h-10 w-10 rounded-full border-4 border-white/35"></div>
                                     <div class="course-banner__chip">
