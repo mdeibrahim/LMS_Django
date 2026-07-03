@@ -18,3 +18,19 @@ staticfiles/
 .codex
 .agent
 .agent/
+
+# database
+*.sqlite3
+db.sqlite3
+
+# IDEs and editors
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store   
+
+# AI
+.codex/
+.agent/
