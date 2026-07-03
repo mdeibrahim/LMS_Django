@@ -23,8 +23,12 @@ urlpatterns = [
     
 
     # Course URLs
-    path('create-course/', CourseListView.as_view(), name='teacher_create_course'),
     path('course-list/', CourseListView.as_view(), name='teacher_course_list'),
+    path('course-detail/', CourseListView.as_view(), name='teacher_course_detail'),
+    path('create-course/', CourseListView.as_view(), name='teacher_create_course'),
+    path('update-course/', CourseListView.as_view(), name='teacher_update_course'),
+    path('delete-course/', CourseListView.as_view(), name='teacher_delete_course'),
+    
 
 
     # Module URLs

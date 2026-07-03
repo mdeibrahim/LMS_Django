@@ -284,6 +284,12 @@ class CourseSerializer(serializers.ModelSerializer):
             **validated_data
         )
 
+    def update(self, instance, validated_data):
+        if "name" in validated_data:
+            instance.slug = self._generate_unique_slug(validated_data["name"])
+        return super().update(instance, validated_data)
+    
+    
 
 class ModuleSerializer(serializers.ModelSerializer):
     slug = serializers.SlugField(read_only=True)

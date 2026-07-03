@@ -441,13 +441,19 @@ class CourseListView(APIView):
         user = request.user
         profile = getattr(user, "teacher_profile", None)
 
+        course_id = request.query_params.get("course_id", None)
+
         if not profile:
             return Response(
                 {"message": "Teacher profile not found."},
                 status=status.HTTP_404_NOT_FOUND
             )
-
-        courses = profile.teacher_courses.all()
+        
+        if course_id:
+            courses = profile.teacher_courses.filter(id=course_id)
+        else:
+            courses = profile.teacher_courses.all()
+            
         serializer = CourseSerializer(courses, context={"request": request}, many=True)
 
         return Response(
@@ -470,13 +476,14 @@ class CourseListView(APIView):
 
         course_id = request.query_params.get("course_id", None)
 
-        try:
-            course = profile.teacher_courses.get(id=course_id)
-        except Course.DoesNotExist:
-            return Response(
-                {"message": "Course not found."},
-                status=status.HTTP_404_NOT_FOUND
-            )
+        if course_id:
+            try:
+                course = profile.teacher_courses.get(id=course_id)
+            except Course.DoesNotExist:
+                return Response(
+                    {"message": "Course not found."},
+                    status=status.HTTP_404_NOT_FOUND
+                )
 
         serializer = CourseSerializer(data=request.data, context={"request": request})
 
@@ -488,6 +495,47 @@ class CourseListView(APIView):
                     "data": CourseSerializer(course, context={"request": request}).data
                 },
                 status=status.HTTP_201_CREATED
+            )
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+
+    def patch(self, request):
+        user = request.user
+        profile = getattr(user, "teacher_profile", None)
+
+        if not profile:
+            return Response(
+                {"message": "Teacher profile not found."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        course_id = request.query_params.get("course_id", None)
+
+        if not course_id:
+            return Response(
+                {"message": "Course ID is required for updating."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            course = profile.teacher_courses.get(id=course_id)
+        except Course.DoesNotExist:
+            return Response(
+                {"message": "Course not found."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        serializer = CourseSerializer(course, data=request.data, partial=True, context={"request": request})
+
+        if serializer.is_valid():
+            serializer.save()
+            return Response(
+                {
+                    "message": "Course updated successfully",
+                    "data": serializer.data
+                },
+                status=status.HTTP_200_OK
             )
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
