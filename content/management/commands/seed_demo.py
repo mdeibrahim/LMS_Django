@@ -11,7 +11,7 @@ from content.models import (
     LessonResource,
     LessonResourceType,
     Module,
-    ModuleAccordionSection,
+    # ModuleAccordionSection,
     Subcategory,
 )
 
@@ -368,15 +368,16 @@ class Command(BaseCommand):
                         resource.save(update_fields=["is_preview"])
 
                 for section_data in module_data.get("accordions", []):
-                    ModuleAccordionSection.objects.update_or_create(
-                        module=module,
-                        title=section_data["title"],
-                        defaults={
-                            "content": section_data.get("content", ""),
-                            "order": section_data.get("order", 0),
-                            "is_open_by_default": section_data.get("is_open_by_default", False),
-                        },
-                    )
+                    pass
+                    # ModuleAccordionSection.objects.update_or_create(
+                    #     module=module,
+                    #     title=section_data["title"],
+                    #     defaults={
+                    #         "content": section_data.get("content", ""),
+                    #         "order": section_data.get("order", 0),
+                    #         "is_open_by_default": section_data.get("is_open_by_default", False),
+                    #     },
+                    # )
 
                 for quiz_data in module_data["quizzes"]:
                     quiz, _ = CourseQuiz.objects.update_or_create(

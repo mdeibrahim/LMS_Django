@@ -171,36 +171,21 @@ class SubcategorySerializer(serializers.ModelSerializer):
         return Subcategory.objects.create(**validated_data)
     
         
-class SubcategoryDisplayField(serializers.PrimaryKeyRelatedField):
-    def use_pk_only_optimization(self):
-        return False
-
-    def to_representation(self, value):
-        return value.name
+class CategorySimpleSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Category
+        fields = ("id", "name")
 
 
-class CategoryDisplayField(serializers.PrimaryKeyRelatedField):
-    def use_pk_only_optimization(self):
-        return False
-
-    def get_attribute(self, instance):
-        return instance.subcategory.category
-
-    def to_representation(self, value):
-        return value.name
+class SubcategorySimpleSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Subcategory
+        fields = ("id", "name")
 
 
 class CourseSerializer(serializers.ModelSerializer):
-    category = CategoryDisplayField(
-        queryset=Category.objects.all(),
-        required=False,
-        allow_null=True,
-    )
-    subcategory = SubcategoryDisplayField(
-        queryset=Subcategory.objects.select_related("category").all(),
-        required=False,
-        allow_null=True,
-    )
+    category = serializers.SerializerMethodField()
+    subcategory = SubcategorySimpleSerializer(read_only=True)
     slug = serializers.SlugField(read_only=True)
 
     modules_count = serializers.IntegerField(source="modules.count", read_only=True)
@@ -221,6 +206,12 @@ class CourseSerializer(serializers.ModelSerializer):
             "created_at",
             "modules_count",
         )
+
+    def get_category(self, obj):
+        return {
+            "id": obj.subcategory.category.id,
+            "name": obj.subcategory.category.name,
+        }
 
     def _get_teacher_profile(self):
         request = self.context.get("request")

@@ -51,16 +51,58 @@
                 </div>
             </div>
 
-            <div class="editor-layout" style="display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 24px; align-items: start;">
+            <div class="editor-layout" style="display:  minmax(0, 1fr) 340px; gap: 24px; align-items: start;">
                 <div class="editor-main">
                     <div class="rounded-[1.5rem] border border-slate-200 bg-slate-50 p-4 sm:p-5">
-                        <div class="rte-toolbar" id="rteToolbar">
+                        <div class="rte-toolbar" id="rteToolbar" style="display: flex; flex-wrap: wrap; gap: 4px; padding: 8px; border-bottom: 1px solid #e2e8f0; background: #fff; border-radius: 1.5rem 1.5rem 0 0;">
+                            <button class="rte-btn" data-cmd="undo" title="Undo" type="button"><i class="fa-solid fa-rotate-left"></i></button>
+                            <button class="rte-btn" data-cmd="redo" title="Redo" type="button"><i class="fa-solid fa-rotate-right"></i></button>
+                            <div class="rte-divider"></div>
+                            
+                            <select class="rte-btn" data-cmd="fontSize" title="Font Size" style="padding: 0 8px; outline: none; border: 1px solid transparent; border-radius: 6px; background: transparent; cursor: pointer; color: #475569;">
+                                <option value="3">Normal</option>
+                                <option value="1">Tiny</option>
+                                <option value="2">Small</option>
+                                <option value="4">Medium</option>
+                                <option value="5">Large</option>
+                                <option value="6">Huge</option>
+                                <option value="7">Giant</option>
+                            </select>
+                            
+                            <button class="rte-btn" data-cmd="formatBlock" data-val="H1" title="Heading 1" type="button" style="font-weight: bold;">H1</button>
+                            <button class="rte-btn" data-cmd="formatBlock" data-val="H2" title="Heading 2" type="button" style="font-weight: bold;">H2</button>
+                            <button class="rte-btn" data-cmd="formatBlock" data-val="H3" title="Heading 3" type="button" style="font-weight: bold;">H3</button>
+                            <button class="rte-btn" data-cmd="formatBlock" data-val="P" title="Paragraph" type="button">P</button>
+                            <div class="rte-divider"></div>
+
                             <button class="rte-btn" data-cmd="bold" title="Bold (Ctrl+B)" id="btn-bold" type="button" style="font-weight: bold; font-family: sans-serif; font-size: 1rem;">B</button>
                             <button class="rte-btn" data-cmd="italic" title="Italic (Ctrl+I)" id="btn-italic" type="button" style="font-style: italic; font-family: serif; font-size: 1rem;">I</button>
                             <button class="rte-btn" data-cmd="underline" title="Underline (Ctrl+U)" id="btn-underline" type="button" style="text-decoration: underline; font-family: sans-serif; font-size: 1rem;">U</button>
-                            <button class="rte-btn" data-cmd="highlight" title="Highlight" id="btn-highlight" type="button">
-                                <i class="fa-solid fa-highlighter" style="color: #f59e0b;"></i>
-                            </button>
+                            <button class="rte-btn" data-cmd="strikeThrough" title="Strikethrough" type="button" style="text-decoration: line-through; font-family: sans-serif; font-size: 1rem;">S</button>
+                            <button class="rte-btn" data-cmd="superscript" title="Superscript" type="button"><i class="fa-solid fa-superscript"></i></button>
+                            <button class="rte-btn" data-cmd="subscript" title="Subscript" type="button"><i class="fa-solid fa-subscript"></i></button>
+                            
+                            <input type="color" data-cmd="foreColor" title="Text Color" class="rte-btn" style="padding: 0; width: 32px; height: 32px; border: none; background: transparent; cursor: pointer;">
+                            <input type="color" data-cmd="hiliteColor" title="Background Color" class="rte-btn" style="padding: 0; width: 32px; height: 32px; border: none; background: transparent; cursor: pointer;" value="#fde68a">
+                            <button class="rte-btn" data-cmd="highlight" title="Quick Yellow Highlight" id="btn-highlight" type="button"><i class="fa-solid fa-highlighter" style="color: #f59e0b;"></i></button>
+                            
+                            <button class="rte-btn" data-cmd="removeFormat" title="Clear Formatting" type="button"><i class="fa-solid fa-eraser"></i></button>
+                            <div class="rte-divider"></div>
+
+                            <button class="rte-btn" data-cmd="justifyLeft" title="Align Left" type="button"><i class="fa-solid fa-align-left"></i></button>
+                            <button class="rte-btn" data-cmd="justifyCenter" title="Align Center" type="button"><i class="fa-solid fa-align-center"></i></button>
+                            <button class="rte-btn" data-cmd="justifyRight" title="Align Right" type="button"><i class="fa-solid fa-align-right"></i></button>
+                            <button class="rte-btn" data-cmd="justifyFull" title="Justify" type="button"><i class="fa-solid fa-align-justify"></i></button>
+                            <div class="rte-divider"></div>
+
+                            <button class="rte-btn" data-cmd="insertUnorderedList" title="Bullet List" type="button"><i class="fa-solid fa-list-ul"></i></button>
+                            <button class="rte-btn" data-cmd="insertOrderedList" title="Numbered List" type="button"><i class="fa-solid fa-list-ol"></i></button>
+                            <button class="rte-btn" data-cmd="outdent" title="Decrease Indent" type="button"><i class="fa-solid fa-outdent"></i></button>
+                            <button class="rte-btn" data-cmd="indent" title="Increase Indent" type="button"><i class="fa-solid fa-indent"></i></button>
+                            <div class="rte-divider"></div>
+
+                            <button class="rte-btn" data-cmd="insertHorizontalRule" title="Horizontal Line" type="button"><i class="fa-solid fa-minus"></i></button>
+                            
                             <div class="rte-divider"></div>
                             <button class="rte-btn rte-btn-link" id="btn-insert-link" type="button" title="Add Media">
                                 <i class="fa-solid fa-link" style="color: #2563eb;"></i> <span style="color: #2563eb; font-weight: 600; font-size: 0.85rem;">Add Media</span>
@@ -73,6 +115,7 @@
                     </div>
                 </div>
 
+                {% comment %}
                 <div class="editor-sidebar">
                     <div class="editor-panel" id="panelIC">
                         <div class="editor-panel-header">
@@ -102,39 +145,6 @@
                             {% endfor %}
                         </div>
 
-                        <div class="editor-modal-overlay" id="icInlinePanel" hidden>
-                            <div class="editor-modal-box" role="dialog" aria-modal="true" aria-labelledby="icInlineTitle" style="max-width: 720px; width: min(92vw, 720px);">
-                                <div class="editor-modal-header">
-                                    <h3 id="icInlineTitle"><i class="fa-solid fa-wand-magic-sparkles"></i> Add Media Item</h3>
-                                    <button class="editor-modal-close" id="icInlineClose" type="button" aria-label="Close media modal"><i class="fa-solid fa-xmark"></i></button>
-                                </div>
-                                <div class="editor-modal-body">
-                                    <p class="editor-modal-desc" style="margin: 0 0 16px; color: var(--text-secondary);">Select some text first. After you save this media item, the selected text will be linked to it automatically.</p>
-                                    <form id="icForm" enctype="multipart/form-data">
-                                        {% csrf_token %}
-                                        <input type="hidden" id="icFormId" value="">
-                                        <div class="form-row"><label class="form-label" for="icTitle">Title <span class="required">*</span></label><input type="text" class="form-input" id="icTitle" placeholder="e.g. Demonstration Video" required></div>
-                                        <div class="form-row">
-                                            <label class="form-label" for="icType">Content Type <span class="required">*</span></label>
-                                            <div class="type-selector" id="typeSelector" style="display: flex; flex-wrap: wrap; gap: 10px;">
-                                                <button type="button" class="type-btn type-btn--text active" data-type="text"><i class="fa-solid fa-font"></i> Text</button>
-                                                <button type="button" class="type-btn type-btn--image" data-type="image"><i class="fa-solid fa-image"></i> Image</button>
-                                                <button type="button" class="type-btn type-btn--audio" data-type="audio"><i class="fa-solid fa-headphones"></i> Audio</button>
-                                                <button type="button" class="type-btn type-btn--video" data-type="video"><i class="fa-solid fa-video"></i> Video</button>
-                                                <button type="button" class="type-btn type-btn--youtube" data-type="youtube"><i class="fa-brands fa-youtube"></i> YouTube</button>
-                                            </div>
-                                            <input type="hidden" id="icType" value="text">
-                                        </div>
-                                        <div class="form-section" id="fieldText"><div class="form-row"><label class="form-label" for="icTextContent">Text Content</label><textarea class="form-input" id="icTextContent" rows="4" placeholder="Enter text content..."></textarea></div></div>
-                                        <div class="form-section" id="fieldImage" hidden><div class="form-row"><label class="form-label" for="icImageFile">Upload Image</label><input type="file" id="icImageFile" name="image" accept="image/*" class="form-input file-input"></div></div>
-                                        <div class="form-section" id="fieldAudio" hidden><div class="form-row"><label class="form-label" for="icAudioFile">Upload Audio</label><input type="file" id="icAudioFile" name="audio" accept="audio/*" class="form-input file-input"></div></div>
-                                        <div class="form-section" id="fieldVideo" hidden><div class="form-row"><label class="form-label" for="icVideoFile">Upload Video</label><input type="file" id="icVideoFile" name="video" accept="video/*" class="form-input file-input"></div></div>
-                                        <div class="form-section" id="fieldYoutube" hidden><div class="form-row"><label class="form-label" for="icYoutubeUrl">YouTube URL</label><input type="url" class="form-input" id="icYoutubeUrl" name="youtube_url" placeholder="https://www.youtube.com/watch?v=..." /></div></div>
-                                        <div class="editor-modal-footer" style="margin-top: 20px; display: flex; justify-content: flex-end; gap: 10px;"><button type="button" class="btn" id="icInlineCancel" style="background: #f3f4f6; border: 1px solid #d1d5db;">Cancel</button><button type="submit" class="btn btn-primary" id="icInlineSave"><i class="fa-solid fa-save"></i> Save Content</button></div>
-                                    </form>
-                                </div>
-                            </div>
-                        </div>
                     </div>
 
                     <div class="editor-panel" id="panelAccordion" style="margin-top: 20px;">
@@ -179,6 +189,40 @@
                         </div>
                     </div>
                 </div>
+                {% endcomment %}
+            </div>
+        </div>
+    </div>
+    <div class="editor-modal-overlay" id="icInlinePanel" hidden>
+        <div class="editor-modal-box" role="dialog" aria-modal="true" aria-labelledby="icInlineTitle" style="max-width: 720px; width: min(92vw, 720px);">
+            <div class="editor-modal-header">
+                <h3 id="icInlineTitle"><i class="fa-solid fa-wand-magic-sparkles"></i> Add Media Item</h3>
+                <button class="editor-modal-close" id="icInlineClose" type="button" aria-label="Close media modal"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="editor-modal-body">
+                <p class="editor-modal-desc" style="margin: 0 0 16px; color: var(--text-secondary);">Select some text first. After you save this media item, the selected text will be linked to it automatically.</p>
+                <form id="icForm" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <input type="hidden" id="icFormId" value="">
+                    <div class="form-row"><label class="form-label" for="icTitle">Title </label><input type="text" class="form-input" id="icTitle" placeholder="e.g. Demonstration Video"></div>
+                    <div class="form-row">
+                        <label class="form-label" for="icType">Content Type <span class="required">*</span></label>`
+                        <div class="type-selector" id="typeSelector" style="display: flex; flex-wrap: wrap; gap: 10px;">
+                            <button type="button" class="type-btn type-btn--text active" data-type="text"><i class="fa-solid fa-font"></i> Text</button>
+                            <button type="button" class="type-btn type-btn--image" data-type="image"><i class="fa-solid fa-image"></i> Image</button>
+                            <button type="button" class="type-btn type-btn--audio" data-type="audio"><i class="fa-solid fa-headphones"></i> Audio</button>
+                            <button type="button" class="type-btn type-btn--video" data-type="video"><i class="fa-solid fa-video"></i> Video</button>
+                            <button type="button" class="type-btn type-btn--youtube" data-type="youtube"><i class="fa-brands fa-youtube"></i> YouTube</button>
+                        </div>
+                        <input type="hidden" id="icType" value="text">
+                    </div>
+                    <div class="form-section" id="fieldText"><div class="form-row"><label class="form-label" for="icTextContent">Text Content</label><textarea class="form-input" id="icTextContent" rows="4" placeholder="Enter text content..."></textarea></div></div>
+                    <div class="form-section" id="fieldImage" hidden><div class="form-row"><label class="form-label" for="icImageFile">Upload Image</label><input type="file" id="icImageFile" name="image" accept="image/*" class="form-input file-input"></div></div>
+                    <div class="form-section" id="fieldAudio" hidden><div class="form-row"><label class="form-label" for="icAudioFile">Upload Audio</label><input type="file" id="icAudioFile" name="audio" accept="audio/*" class="form-input file-input"></div></div>
+                    <div class="form-section" id="fieldVideo" hidden><div class="form-row"><label class="form-label" for="icVideoFile">Upload Video</label><input type="file" id="icVideoFile" name="video" accept="video/*" class="form-input file-input"></div></div>
+                    <div class="form-section" id="fieldYoutube" hidden><div class="form-row"><label class="form-label" for="icYoutubeUrl">YouTube URL</label><input type="url" class="form-input" id="icYoutubeUrl" name="youtube_url" placeholder="https://www.youtube.com/watch?v=..." /></div></div>
+                    <div class="editor-modal-footer" style="margin-top: 20px; display: flex; justify-content: flex-end; gap: 10px;"><button type="button" class="btn" id="icInlineCancel" style="background: #f3f4f6; border: 1px solid #d1d5db;">Cancel</button><button type="submit" class="btn btn-primary" id="icInlineSave"><i class="fa-solid fa-save"></i> Save Content</button></div>
+                </form>
             </div>
         </div>
     </div>

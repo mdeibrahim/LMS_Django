@@ -24,6 +24,7 @@ from .serializers import (
     TeacherRegisterSerializer,
 )
 def generate_otp(user):
+    EmailOTP.objects.filter(user=user).delete()
     code = f"{random.randint(100000, 999999)}"
     expires = timezone.now() + timedelta(minutes=15)
     is_used = False
@@ -451,6 +452,7 @@ class CourseListView(APIView):
         
         if course_id:
             courses = profile.teacher_courses.filter(id=course_id)
+
         else:
             courses = profile.teacher_courses.all()
             
@@ -722,24 +724,25 @@ class LessonListView(APIView):
 
         module_id = request.query_params.get("module_id")
         lesson_id = request.query_params.get("lesson_id")
+        course_id = request.query_params.get("course_id")
 
-        if not module_id:
-            return Response(
-                {"module_id": "This query parameter is required."},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+        # if not module_id:
+        #     return Response(
+        #         {"module_id": "This query parameter is required."},
+        #         status=status.HTTP_400_BAD_REQUEST
+        #     )
 
-        try:
-            module = Module.objects.select_related("course").get(
-                id=module_id,
-                course__teacher=profile
-            )
-        except Module.DoesNotExist:
-            return Response(
-                {"message": "Module not found."},
-                status=status.HTTP_404_NOT_FOUND
-            )
-
+        if module_id:
+            try:
+                module = Module.objects.select_related("course").get(
+                    id=module_id,
+                    course__teacher=profile
+                )
+            except Module.DoesNotExist:
+                return Response(
+                    {"message": "Module not found."},
+                    status=status.HTTP_404_NOT_FOUND
+                )
         # Get single lesson
         if lesson_id:
             try:
@@ -766,12 +769,13 @@ class LessonListView(APIView):
                 status=status.HTTP_200_OK
             )
 
-        # Get all lessons
-        lessons = (
-            Lesson.objects.filter(module=module)
-            .prefetch_related("resources")
-            .order_by("order")
-        )
+        # Get all lessons for the teacher, optionally filtered by course or module
+        lessons = Lesson.objects.filter(module__course__teacher=profile)
+        if course_id:
+            lessons = lessons.filter(module__course__id=course_id)
+        if module_id:
+            lessons = lessons.filter(module__id=module_id)
+        lessons = lessons.prefetch_related("resources").order_by("order")
 
         serializer = LessonSerializer(
             lessons,

@@ -27,7 +27,7 @@ from .models import (
     LessonResource,
     LessonResourceType,
     Module,
-    ModuleAccordionSection,
+    # ModuleAccordionSection,
     PaymentInstruction,
     PaymentSubmission,
     PaymentSubmissionStatus,
@@ -70,7 +70,7 @@ def course_detail(request, course_slug):
     modules = list(
         course.modules.prefetch_related(
             Prefetch("lessons", queryset=visible_lessons_qs()),
-            Prefetch("accordion_sections", queryset=ModuleAccordionSection.objects.order_by("order", "created_at")),
+            # Prefetch("accordion_sections", queryset=ModuleAccordionSection.objects.order_by("order", "created_at")),
         ).all()
     )
 
@@ -130,7 +130,7 @@ def module_editor(request, course_slug, module_slug):
     course = get_object_or_404(Course, slug=course_slug)
     module = get_object_or_404(
         Module.objects.prefetch_related(
-            Prefetch("accordion_sections", queryset=ModuleAccordionSection.objects.order_by("order", "created_at")),
+            # Prefetch("accordion_sections", queryset=ModuleAccordionSection.objects.order_by("order", "created_at")),
             Prefetch("lessons", queryset=Lesson.objects.order_by("order", "created_at")),
         ),
         course=course,
@@ -138,7 +138,7 @@ def module_editor(request, course_slug, module_slug):
     )
     lesson = ensure_primary_lesson(module)
     interactive_contents = list(lesson.resources.order_by("order", "created_at").all())
-    accordion_sections = list(module.accordion_sections.all())
+    # accordion_sections = list(module.accordion_sections.all())
     first_content = interactive_contents[0] if interactive_contents else None
     return render(
         request,
@@ -151,9 +151,9 @@ def module_editor(request, course_slug, module_slug):
             "editor_title": module.title,
             "editor_body_content": module.body_content,
             "interactive_contents": interactive_contents,
-            "accordion_sections": accordion_sections,
+            # "accordion_sections": accordion_sections,
             "interactive_contents_payload": [_serialize_resource(resource) for resource in interactive_contents],
-            "accordion_sections_payload": [_serialize_accordion(section) for section in accordion_sections],
+            # "accordion_sections_payload": [_serialize_accordion(section) for section in accordion_sections],
             "preview_url": (
                 reverse("content:lesson_detail", args=[course.slug, module.slug, lesson.slug])
                 if first_content
@@ -161,7 +161,7 @@ def module_editor(request, course_slug, module_slug):
             ),
             "save_url": reverse("content:api_subject_save", args=[module.id]),
             "ic_create_url": reverse("content:api_ic_create", args=[module.id]),
-            "acc_create_url": reverse("content:api_accordion_create", args=[module.id]),
+            # "acc_create_url": reverse("content:api_accordion_create", args=[module.id]),
         },
     )
 
@@ -171,7 +171,7 @@ def lesson_editor(request, course_slug, module_slug, lesson_slug):
     course = get_object_or_404(Course, slug=course_slug)
     module = get_object_or_404(
         Module.objects.prefetch_related(
-            Prefetch("accordion_sections", queryset=ModuleAccordionSection.objects.order_by("order", "created_at")),
+            # Prefetch("accordion_sections", queryset=ModuleAccordionSection.objects.order_by("order", "created_at")),
         ),
         course=course,
         slug=module_slug,
@@ -184,7 +184,7 @@ def lesson_editor(request, course_slug, module_slug, lesson_slug):
         slug=lesson_slug,
     )
     interactive_contents = list(lesson.resources.all())
-    accordion_sections = list(module.accordion_sections.all())
+    # accordion_sections = list(module.accordion_sections.all())
     return render(
         request,
         "content/subject_editor.html",
@@ -196,13 +196,13 @@ def lesson_editor(request, course_slug, module_slug, lesson_slug):
             "editor_title": lesson.title,
             "editor_body_content": lesson.body_content,
             "interactive_contents": interactive_contents,
-            "accordion_sections": accordion_sections,
+            # "accordion_sections": accordion_sections,
             "interactive_contents_payload": [_serialize_resource(resource) for resource in interactive_contents],
-            "accordion_sections_payload": [_serialize_accordion(section) for section in accordion_sections],
+            # "accordion_sections_payload": [_serialize_accordion(section) for section in accordion_sections],
             "preview_url": reverse("content:lesson_detail", args=[course.slug, module.slug, lesson.slug]),
             "save_url": reverse("content:api_lesson_save", args=[lesson.id]),
             "ic_create_url": reverse("content:api_lesson_ic_create", args=[lesson.id]),
-            "acc_create_url": reverse("content:api_accordion_create", args=[module.id]),
+            # "acc_create_url": reverse("content:api_accordion_create", args=[module.id]),
         },
     )
 
@@ -226,7 +226,7 @@ def lesson_detail(request, course_slug, module_slug, lesson_slug):
     course = get_object_or_404(Course, slug=course_slug)
     module = get_object_or_404(
         Module.objects.prefetch_related(
-            Prefetch("accordion_sections", queryset=ModuleAccordionSection.objects.order_by("order", "created_at")),
+            # Prefetch("accordion_sections", queryset=ModuleAccordionSection.objects.order_by("order", "created_at")),
             Prefetch("lessons", queryset=visible_lessons_qs()),
         ),
         course=course,
@@ -264,7 +264,7 @@ def lesson_detail(request, course_slug, module_slug, lesson_slug):
             "module": module,
             "lesson": lesson,
             "interactive_contents": list(lesson.resources.all()),
-            "accordion_sections": list(module.accordion_sections.all()),
+            # "accordion_sections": list(module.accordion_sections.all()),
             "lesson_navigation": lesson_navigation,
             "quizzes": quizzes,
             "has_access": has_access,
@@ -913,50 +913,50 @@ def api_ic_delete(request, ic_id):
     return JsonResponse({"ok": True})
 
 
-@staff_member_required
-@require_http_methods(["POST"])
-def api_accordion_create(request, module_id):
-    module = get_object_or_404(Module, id=module_id)
-    data, _, error = _parse_api_payload(request)
-    if error:
-        return error
-
-    section = ModuleAccordionSection.objects.create(
-        module=module,
-        title=(data.get("title") or "Untitled Section").strip(),
-        content=data.get("content", ""),
-        order=int(data.get("order") or module.accordion_sections.count() + 1),
-        is_open_by_default=bool(data.get("is_open_by_default")),
-    )
-    return JsonResponse({"ok": True, "section": _serialize_accordion(section)}, status=201)
-
-
-@staff_member_required
-@require_http_methods(["POST"])
-def api_accordion_update(request, section_id):
-    section = get_object_or_404(ModuleAccordionSection, id=section_id)
-    data, _, error = _parse_api_payload(request)
-    if error:
-        return error
-
-    if "title" in data:
-        section.title = (data.get("title") or section.title).strip() or section.title
-    if "content" in data:
-        section.content = data.get("content", "")
-    if "order" in data and str(data.get("order")).strip():
-        section.order = int(data.get("order"))
-    if "is_open_by_default" in data:
-        section.is_open_by_default = bool(data.get("is_open_by_default"))
-    section.save()
-    return JsonResponse({"ok": True, "section": _serialize_accordion(section)})
-
-
-@staff_member_required
-@require_http_methods(["POST"])
-def api_accordion_delete(request, section_id):
-    section = get_object_or_404(ModuleAccordionSection, id=section_id)
-    section.delete()
-    return JsonResponse({"ok": True})
+# @staff_member_required
+# @require_http_methods(["POST"])
+# def api_accordion_create(request, module_id):
+#     module = get_object_or_404(Module, id=module_id)
+#     data, _, error = _parse_api_payload(request)
+#     if error:
+#         return error
+# 
+#     section = ModuleAccordionSection.objects.create(
+#         module=module,
+#         title=(data.get("title") or "Untitled Section").strip(),
+#         content=data.get("content", ""),
+#         order=int(data.get("order") or module.accordion_sections.count() + 1),
+#         is_open_by_default=bool(data.get("is_open_by_default")),
+#     )
+#     return JsonResponse({"ok": True, "section": _serialize_accordion(section)}, status=201)
+# 
+# 
+# @staff_member_required
+# @require_http_methods(["POST"])
+# def api_accordion_update(request, section_id):
+#     section = get_object_or_404(ModuleAccordionSection, id=section_id)
+#     data, _, error = _parse_api_payload(request)
+#     if error:
+#         return error
+# 
+#     if "title" in data:
+#         section.title = (data.get("title") or section.title).strip() or section.title
+#     if "content" in data:
+#         section.content = data.get("content", "")
+#     if "order" in data and str(data.get("order")).strip():
+#         section.order = int(data.get("order"))
+#     if "is_open_by_default" in data:
+#         section.is_open_by_default = bool(data.get("is_open_by_default"))
+#     section.save()
+#     return JsonResponse({"ok": True, "section": _serialize_accordion(section)})
+# 
+# 
+# @staff_member_required
+# @require_http_methods(["POST"])
+# def api_accordion_delete(request, section_id):
+#     section = get_object_or_404(ModuleAccordionSection, id=section_id)
+#     section.delete()
+#     return JsonResponse({"ok": True})
 
 
 def _build_resource_slug(title, lesson):

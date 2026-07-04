@@ -23,6 +23,38 @@ UNFOLD = {
                 ],
             },
             {
+                "title": "People",
+                "separator": True,
+                "collapsible": False,
+                "items": [
+                    {
+                        "title": "Users",
+                        "icon": "person",
+                        "link": reverse_lazy("admin:content_user_changelist"),
+                    },
+                    {
+                        "title": "Teachers",
+                        "icon": "school",
+                        "link": reverse_lazy("admin:teacher_dashboard_teacherprofile_changelist"),
+                    },
+                    # {
+                    #     "title": "Groups",
+                    #     "icon": "groups",
+                    #     "link": reverse_lazy("admin:auth_group_changelist"),
+                    # },
+                    {
+                        "title": "Device Sessions",
+                        "icon": "devices",
+                        "link": reverse_lazy("admin:student_dashboard_studentdevicesession_changelist"),
+                    },
+                    {
+                        "title": "Email OTPs",
+                        "icon": "mark_email_read",
+                        "link": reverse_lazy("admin:content_emailotp_changelist"),
+                    },
+                ],
+            },
+            {
                 "title": "Curriculum",
                 "separator": True,
                 "collapsible": False,
@@ -66,38 +98,6 @@ UNFOLD = {
                         "title": "Quiz Attempts",
                         "icon": "fact_check",
                         "link": reverse_lazy("admin:content_quizattempt_changelist"),
-                    },
-                ],
-            },
-            {
-                "title": "People",
-                "separator": True,
-                "collapsible": False,
-                "items": [
-                    {
-                        "title": "Users",
-                        "icon": "person",
-                        "link": reverse_lazy("admin:content_user_changelist"),
-                    },
-                    {
-                        "title": "Teachers",
-                        "icon": "school",
-                        "link": reverse_lazy("admin:teacher_dashboard_teacherprofile_changelist"),
-                    },
-                    {
-                        "title": "Groups",
-                        "icon": "groups",
-                        "link": reverse_lazy("admin:auth_group_changelist"),
-                    },
-                    {
-                        "title": "Device Sessions",
-                        "icon": "devices",
-                        "link": reverse_lazy("admin:student_dashboard_studentdevicesession_changelist"),
-                    },
-                    {
-                        "title": "Email OTPs",
-                        "icon": "mark_email_read",
-                        "link": reverse_lazy("admin:content_emailotp_changelist"),
                     },
                 ],
             },

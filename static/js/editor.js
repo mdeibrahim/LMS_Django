@@ -329,20 +329,29 @@
         renderAccList();
     }
 
-    document.querySelectorAll('[data-cmd]').forEach((button) => {
-        button.addEventListener('mousedown', (event) => {
-            if (event.button !== 0) return;
-            saveSelection();
-        });
-        button.addEventListener('click', () => {
-            if (button.dataset.cmd === 'highlight') {
-                applyHighlight();
-                return;
-            }
-            document.execCommand(button.dataset.cmd, false, null);
-            rteContent.focus();
-            markDirty();
-        });
+    document.querySelectorAll('[data-cmd]').forEach((element) => {
+        if (element.tagName === 'INPUT' || element.tagName === 'SELECT') {
+            element.addEventListener('change', (e) => {
+                restoreSelection();
+                document.execCommand(element.dataset.cmd, false, e.target.value);
+                rteContent.focus();
+                markDirty();
+            });
+        } else {
+            element.addEventListener('mousedown', (event) => {
+                if (event.button !== 0) return;
+                saveSelection();
+            });
+            element.addEventListener('click', () => {
+                if (element.dataset.cmd === 'highlight') {
+                    applyHighlight();
+                    return;
+                }
+                document.execCommand(element.dataset.cmd, false, element.dataset.val || null);
+                rteContent.focus();
+                markDirty();
+            });
+        }
     });
 
     titleInput?.addEventListener('input', markDirty);

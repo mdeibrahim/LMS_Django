@@ -64,8 +64,8 @@ urlpatterns = [
     path('api/lesson/<int:lesson_id>/ic/create/', views.api_lesson_ic_create, name='api_lesson_ic_create'),
     path('api/ic/<int:ic_id>/update/', views.api_ic_update, name='api_ic_update'),
     path('api/ic/<int:ic_id>/delete/', views.api_ic_delete, name='api_ic_delete'),
-    path('api/module/<int:module_id>/accordion/create/', views.api_accordion_create, name='api_accordion_create'),
-    path('api/accordion/<int:section_id>/update/', views.api_accordion_update, name='api_accordion_update'),
-    path('api/accordion/<int:section_id>/delete/', views.api_accordion_delete, name='api_accordion_delete'),
+    # path('api/module/<int:module_id>/accordion/create/', views.api_accordion_create, name='api_accordion_create'),
+    # path('api/accordion/<int:section_id>/update/', views.api_accordion_update, name='api_accordion_update'),
+    # path('api/accordion/<int:section_id>/delete/', views.api_accordion_delete, name='api_accordion_delete'),
 
 ]

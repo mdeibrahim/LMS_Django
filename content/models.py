@@ -103,7 +103,7 @@ class PasswordResetSession(models.Model):
 
 class Category(models.Model):
     name = models.CharField(max_length=255)
-    slug = models.SlugField(unique=True)
+    slug = models.SlugField(unique=True, blank=True, allow_unicode=True)
     description = models.TextField(default="", blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -124,6 +124,14 @@ class Category(models.Model):
         )[0]
 
     def save(self, *args, **kwargs):
+        if not self.slug:
+            base_slug = slugify(self.name, allow_unicode=True) or "category"
+            slug = base_slug
+            counter = 2
+            while Category.objects.filter(slug=slug).exclude(pk=self.pk).exists():
+                slug = f"{base_slug}-{counter}"
+                counter += 1
+            self.slug = slug
         super().save(*args, **kwargs)
         self.ensure_default_subcategory()
 
@@ -135,7 +143,7 @@ class Subcategory(models.Model):
         related_name="subcategories"
     )
     name = models.CharField(max_length=255)
-    slug = models.SlugField(max_length=255)
+    slug = models.SlugField(max_length=255, blank=True, allow_unicode=True)
     description = models.TextField(default="", blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -144,7 +152,14 @@ class Subcategory(models.Model):
         unique_together = ("category", "name")
 
     def save(self, *args, **kwargs):
-        self.slug = slugify(self.name)
+        if not self.slug:
+            base_slug = slugify(self.name, allow_unicode=True) or "subcategory"
+            slug = base_slug
+            counter = 2
+            while Subcategory.objects.filter(category=self.category, slug=slug).exclude(pk=self.pk).exists():
+                slug = f"{base_slug}-{counter}"
+                counter += 1
+            self.slug = slug
         super().save(*args, **kwargs)
 
     def __str__(self):
@@ -160,11 +175,11 @@ class Course(models.Model):
         limit_choices_to={"user__role": UserRole.TEACHER},
     )
     name = models.CharField(max_length=255)
-    slug = models.SlugField(unique=True)
+    slug = models.SlugField(unique=True, blank=True, allow_unicode=True)
     description = models.TextField(blank=True)
     cover_image = models.ImageField(upload_to="course_covers/", blank=True, null=True)
     price = models.DecimalField(max_digits=10, decimal_places=2, default=0)
-    enrollment_count = models.PositiveIntegerField(default=0)
+    enrollment_count = models.PositiveIntegerField(default=0, blank=True, null=True)
     is_published = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -174,6 +189,17 @@ class Course(models.Model):
     def __str__(self):
         return self.name
 
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            base_slug = slugify(self.name, allow_unicode=True) or "course"
+            slug = base_slug
+            counter = 2
+            while Course.objects.filter(slug=slug).exclude(pk=self.pk).exists():
+                slug = f"{base_slug}-{counter}"
+                counter += 1
+            self.slug = slug
+        super().save(*args, **kwargs)
+
     @property
     def is_free(self):
         return (self.price or 0) == 0
@@ -182,7 +208,7 @@ class Course(models.Model):
 class Module(models.Model):
     course = models.ForeignKey("Course", on_delete=models.CASCADE, related_name="modules")
     title = models.CharField(max_length=255)
-    slug = models.SlugField(unique=True)
+    slug = models.SlugField(unique=True, blank=True, allow_unicode=True)
     body_content = models.TextField(
         blank=True,
         default="",
@@ -211,13 +237,16 @@ class Module(models.Model):
 
     def save(self, *args, **kwargs):
         if not self.slug:
-            base_slug = slugify(self.title) or "module"
+            base_slug = slugify(self.title, allow_unicode=True) or "module"
             slug = base_slug
             counter = 2
             while Module.objects.filter(course=self.course, slug=slug).exclude(pk=self.pk).exists():
                 slug = f"{base_slug}-{counter}"
                 counter += 1
             self.slug = slug
+        if not self.pk and self.order == 0:
+            max_order = Module.objects.filter(course=self.course).aggregate(models.Max('order'))['order__max']
+            self.order = (max_order or 0) + 1
         super().save(*args, **kwargs)
 
     @property
@@ -228,7 +257,7 @@ class Module(models.Model):
 class Lesson(models.Model):
     module = models.ForeignKey("Module", on_delete=models.CASCADE, related_name="lessons")
     title = models.CharField(max_length=255)
-    slug = models.SlugField()
+    slug = models.SlugField(blank=True, allow_unicode=True)
     description = models.TextField(blank=True, default="")
     body_content = models.TextField(
         blank=True,
@@ -260,13 +289,16 @@ class Lesson(models.Model):
 
     def save(self, *args, **kwargs):
         if not self.slug:
-            base_slug = slugify(self.title) or "lesson"
+            base_slug = slugify(self.title, allow_unicode=True) or "lesson"
             slug = base_slug
             counter = 2
             while Lesson.objects.filter(module=self.module, slug=slug).exclude(pk=self.pk).exists():
                 slug = f"{base_slug}-{counter}"
                 counter += 1
             self.slug = slug
+        if not self.pk and self.order == 0:
+            max_order = Lesson.objects.filter(module=self.module).aggregate(models.Max('order'))['order__max']
+            self.order = (max_order or 0) + 1
         super().save(*args, **kwargs)
 
     @property
@@ -285,28 +317,33 @@ class Lesson(models.Model):
         return self.resources.order_by("order", "created_at").first()
 
 
-class ModuleAccordionSection(models.Model):
-    module = models.ForeignKey("Module", on_delete=models.CASCADE, related_name="accordion_sections")
-    title = models.CharField(max_length=255)
-    content = models.TextField(blank=True)
-    order = models.PositiveIntegerField(default=0)
-    is_open_by_default = models.BooleanField(default=False)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+# class ModuleAccordionSection(models.Model):
+#     module = models.ForeignKey("Module", on_delete=models.CASCADE, related_name="accordion_sections")
+#     title = models.CharField(max_length=255)
+#     content = models.TextField(blank=True)
+#     order = models.PositiveIntegerField(default=0)
+#     is_open_by_default = models.BooleanField(default=False)
+#     created_at = models.DateTimeField(auto_now_add=True)
+#     updated_at = models.DateTimeField(auto_now=True)
 
-    class Meta:
-        ordering = ["order", "created_at"]
+#     class Meta:
+#         ordering = ["order", "created_at"]
 
-    def __str__(self):
-        return f"{self.module.title} - {self.title}"
+#     def save(self, *args, **kwargs):
+#         if not self.pk and self.order == 0:
+#             max_order = ModuleAccordionSection.objects.filter(module=self.module).aggregate(models.Max('order'))['order__max']
+#             self.order = (max_order or 0) + 1
+#         super().save(*args, **kwargs)
+
+#     def __str__(self):
+#         return f"{self.module.title} - {self.title}"
 
 
 PAYMENT_METHOD_CHOICES = [
     ("bkash", "Bkash"),
     ("nagad", "Nagad"),
     ("rocket", "Rocket"),
-    ("card", "Credit/Debit Card"),
-    ("other", "Other"),
+    ("bank_transfer", "Bank Transfer"),
 ]
 
 
@@ -414,7 +451,7 @@ class LessonResourceType(models.TextChoices):
 class LessonResource(models.Model):
     lesson = models.ForeignKey("Lesson", on_delete=models.CASCADE, related_name="resources")
     title = models.CharField(max_length=255,null=True, blank=True)
-    slug = models.SlugField(blank=True)
+    slug = models.SlugField(blank=True, allow_unicode=True)
     content_type = models.CharField(max_length=30, choices=LessonResourceType.choices, default=LessonResourceType.TEXT)
     order = models.PositiveIntegerField(default=0)
     is_preview = models.BooleanField(default=False)
@@ -451,13 +488,16 @@ class LessonResource(models.Model):
 
     def save(self, *args, **kwargs):
         if not self.slug:
-            base_slug = slugify(self.title) or "resource"
+            base_slug = slugify(self.title, allow_unicode=True) or "resource"
             slug = base_slug
             counter = 2
             while LessonResource.objects.filter(lesson=self.lesson, slug=slug).exclude(pk=self.pk).exists():
                 slug = f"{base_slug}-{counter}"
                 counter += 1
             self.slug = slug
+        if not self.pk and self.order == 0:
+            max_order = LessonResource.objects.filter(lesson=self.lesson).aggregate(models.Max('order'))['order__max']
+            self.order = (max_order or 0) + 1
         super().save(*args, **kwargs)
 
     @property
@@ -554,6 +594,12 @@ class CourseQuizQuestion(models.Model):
 
     class Meta:
         ordering = ["order", "id"]
+
+    def save(self, *args, **kwargs):
+        if not self.pk and self.order == 0:
+            max_order = CourseQuizQuestion.objects.filter(quiz=self.quiz).aggregate(models.Max('order'))['order__max']
+            self.order = (max_order or 0) + 1
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return f"{self.quiz.title} Q{self.id}"

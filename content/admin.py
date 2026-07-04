@@ -22,7 +22,7 @@ from .models import (
     LessonResource,
     LessonResourceType,
     Module,
-    ModuleAccordionSection,
+    # ModuleAccordionSection,
     PaymentInstruction,
     PaymentSubmission,
     PaymentSubmissionStatus,
@@ -252,7 +252,7 @@ class UserAdmin(DjangoUserAdmin, ModelAdmin):
 class CategoryAdmin(ModelAdmin):
     list_display = ("id","name", "subcategory_total", "course_total", "created_at")
     search_fields = ("name", "slug", "description")
-    prepopulated_fields = {"slug": ("name",)}
+    readonly_fields = ("slug",)
 
     def get_queryset(self, request):
         return super().get_queryset(request).annotate(
@@ -275,7 +275,7 @@ class SubcategoryAdmin(ModelAdmin):
     list_filter = ("category",)
     search_fields = ("name", "slug", "category__name", "description")
     autocomplete_fields = ("category",)
-    prepopulated_fields = {"slug": ("name",)}
+    readonly_fields = ("slug",)
 
     def get_queryset(self, request):
         return super().get_queryset(request).select_related("category").annotate(course_total=Count("courses"))
@@ -301,8 +301,9 @@ class CourseAdmin(ModelAdmin):
     list_filter = (CourseCategoryFilter, "subcategory", "created_at")
     search_fields = ("name", "slug", "description", "subcategory__name", "subcategory__category__name")
     autocomplete_fields = ("subcategory", "teacher")
-    prepopulated_fields = {"slug": ("name",)}
+    readonly_fields = ("slug", "module_total", "lesson_total", "resource_total", "enrollment_count")
     date_hierarchy = "created_at"
+
 
     def get_queryset(self, request):
         return (
@@ -350,14 +351,14 @@ class LessonInline(TabularInline):
     extra = 0
     show_change_link = True
     fields = ("title", "slug", "order", "is_preview", "is_published")
-    prepopulated_fields = {"slug": ("title",)}
+    readonly_fields = ("slug",)
 
 
-class ModuleAccordionSectionInline(TabularInline):
-    model = ModuleAccordionSection
-    extra = 0
-    show_change_link = True
-    fields = ("title", "order", "is_open_by_default")
+# class ModuleAccordionSectionInline(TabularInline):
+#     model = ModuleAccordionSection
+#     extra = 0
+#     show_change_link = True
+#     fields = ("title", "order", "is_open_by_default")
 
 
 @admin.register(Module)
@@ -376,8 +377,8 @@ class ModuleAdmin(ModelAdmin):
     search_fields = ("title", "slug", "course__name", "description")
     autocomplete_fields = ("course",)
     list_filter = (ModuleCompletenessFilter, RelatedCourseCategoryFilter, "updated_at")
-    inlines = [LessonInline, ModuleAccordionSectionInline]
-    readonly_fields = ("frontend_editor_link", "module_shortcuts", "created_at", "updated_at")
+    inlines = [LessonInline]
+    readonly_fields = ("frontend_editor_link", "module_shortcuts", "created_at", "updated_at", "slug")
 
     class ModuleForm(forms.ModelForm):
         class Meta:
@@ -476,9 +477,8 @@ class LessonAdmin(ModelAdmin):
     list_filter = ("is_preview", "is_published", RelatedCourseCategoryFilter)
     search_fields = ("title", "slug", "module__title", "module__course__name")
     autocomplete_fields = ("module",)
-    prepopulated_fields = {"slug": ("title",)}
     inlines = [LessonResourceInline]
-    readonly_fields = ("frontend_editor_link",)
+    readonly_fields = ("frontend_editor_link", "slug")
 
     class LessonForm(forms.ModelForm):
         class Meta:
@@ -537,7 +537,7 @@ class LessonResourceAdmin(ModelAdmin):
     list_filter = ("content_type", "is_preview", "is_published", RelatedCourseCategoryFilter)
     search_fields = ("title", "slug", "lesson__title", "lesson__module__title", "lesson__module__course__name")
     autocomplete_fields = ("lesson",)
-    readonly_fields = ("preview", "created_at", "updated_at")
+    readonly_fields = ("preview", "created_at", "updated_at", "slug")
 
     fieldsets = (
         ("Basic", {"fields": ("lesson", "title", "slug", "content_type", "order", "is_preview", "is_published")}),

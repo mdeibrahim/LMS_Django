@@ -16,6 +16,7 @@ from content.models import (
     UserRole,
 )
 from apps.student_dashboard.models import StudentProfile
+from apps.teacher_dashboard.models import TeacherProfile
 
 
 User = get_user_model()
@@ -33,6 +34,7 @@ def admin_dashboard(request):
     pending_purchase_count = PaymentSubmission.objects.filter(status=PaymentSubmissionStatus.PENDING).count()
     total_users = User.objects.count()
     student_profiles_count = StudentProfile.objects.count()
+    teacher_profiles_count = TeacherProfile.objects.count()
     confirmed_revenue = (
         CourseEnrollment.objects.filter(status="active").aggregate(total=Sum("course__price")).get("total")
         or Decimal("0")
@@ -58,9 +60,9 @@ def admin_dashboard(request):
             "tone": "violet",
         },
         {
-            "label": "Pending Payments",
-            "value": pending_purchase_count,
-            "note": "Needs review",
+            "label": "Teachers",
+            "value": teacher_profiles_count+1,
+            "note": f"{total_users} total users",
             "tone": "amber",
         },
     ]
