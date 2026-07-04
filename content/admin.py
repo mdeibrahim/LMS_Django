@@ -193,8 +193,6 @@ class UserAdmin(DjangoUserAdmin, ModelAdmin):
                     "is_verified",
                     "is_staff",
                     "is_superuser",
-                    "groups",
-                    "user_permissions",
                 ),
             },
         ),
@@ -210,16 +208,16 @@ class UserAdmin(DjangoUserAdmin, ModelAdmin):
         ),
     )
     list_display = (
+        "id",
         "email",
         "full_name",
         "profile_role",
         "is_staff",
         "is_active",
-        "active_enrollments",
         "last_login",
         "date_joined",
     )
-    list_filter = ("is_staff", "is_superuser", "is_active", "groups", "date_joined")
+    list_filter = ("is_staff", "is_superuser", "is_active", "date_joined")
     search_fields = ("email", "full_name")
     ordering = ("-date_joined",)
     date_hierarchy = "date_joined"

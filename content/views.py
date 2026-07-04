@@ -567,6 +567,18 @@ def _role_login(request, template_name):
     return render(request, template_name, {"form": form})
 
 
+def generate_otp(user):
+    from .models import EmailOTP
+
+    # delete previous all otp then generate
+    EmailOTP.objects.filter(user=user).delete()
+
+    code = f"{random.randint(100000, 999999)}"
+    expires = timezone.now() + timedelta(minutes=15)
+    EmailOTP.objects.create(user=user, code=code, expires_at=expires)
+    return code
+
+    
 def _role_signup(request, template_name):
     if request.user.is_authenticated:
         return redirect("content:home")
@@ -576,11 +588,7 @@ def _role_signup(request, template_name):
         user = form.save()
         form.save_profile(user=user, role=UserRole.STUDENT)
 
-        from .models import EmailOTP
-
-        code = f"{random.randint(100000, 999999)}"
-        expires = timezone.now() + timedelta(minutes=15)
-        EmailOTP.objects.create(user=user, code=code, expires_at=expires)
+        code = generate_otp(user)
 
         sent = send_verification_email(user, code)
         if not sent:
@@ -619,6 +627,9 @@ def otp_verify(request):
             cache.delete(f"otp:attempt:{user.id}")
             login(request, user)
             request.session.pop("pending_otp_user", None)
+            user.is_verified = True
+            user.is_active = True
+            user.save(update_fields=["is_verified", "is_active"])
             messages.success(request, "Your account is verified and you are now logged in.")
             return redirect("content:student_dashboard" if profile.role == UserRole.STUDENT else "content:home")
 
@@ -646,16 +657,13 @@ def otp_verify(request):
 
 
 def otp_resend(request):
-    from .models import EmailOTP
-
     user_id = request.session.get("pending_otp_user")
     if not user_id:
-        messages.error(request, "No pending verification found.")
+        messages.error(request, "No pending verification found. Please sign up first.")
         return redirect("content:signup")
-
+        
     user = get_object_or_404(User, id=user_id)
-    code = f"{random.randint(100000, 999999)}"
-    expires = timezone.now() + timedelta(minutes=15)
+
     resend_key = f"otp:resend:{user.id}"
     try:
         cnt = cache.get(resend_key) or 0
@@ -670,7 +678,7 @@ def otp_resend(request):
     except Exception:
         pass
 
-    EmailOTP.objects.create(user=user, code=code, expires_at=expires)
+    code = generate_otp(user)
     sent = send_verification_email(user, code)
     if sent:
         messages.success(request, "A verification code has been sent to your email.")
