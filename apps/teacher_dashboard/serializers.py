@@ -1,9 +1,12 @@
 from django.contrib.auth import authenticate, get_user_model
 from django.db import transaction
 from django.utils.text import slugify
-from rest_framework import serializers
+from rest_framework import serializers, status
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated
 from apps.teacher_dashboard.models import TeacherProfile
-from content.models import Category, Course, Lesson, LessonResource, LessonResourceType, Module, Subcategory, UserRole
+from content.models import Category, Course, Lesson, LessonResource, LessonResourceType, Module, Subcategory, UserRole, CourseQuiz, CourseQuizQuestion
 
 
 User = get_user_model()
@@ -469,3 +472,65 @@ class LessonCreateSerializer(serializers.ModelSerializer):
         if mutable_data.get("module_id") and not mutable_data.get("module"):
             mutable_data["module"] = mutable_data["module_id"]
         return super().to_internal_value(mutable_data)
+
+
+class CourseQuizListSerializer(serializers.ModelSerializer):
+    order = serializers.IntegerField(source="order", read_only=True)
+    lesson_id = serializers.IntegerField(source="lesson.id", read_only=True)
+
+    class Meta:
+        model = CourseQuiz
+        fields = (
+            "id",
+            "lesson_id",
+            "title",
+            "description",
+            "order",
+            "is_published",
+            "created_at",
+        )
+        read_only_fields = fields
+
+class CourseQuizCreateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CourseQuiz
+        fields = (
+            "module",
+            "lesson",
+            "title",
+            "pass_score",
+            "is_active",
+        )
+        extra_kwargs = {
+            "module": {"required": False, "allow_null": True},
+            "lesson": {"required": False, "allow_null": True},
+        }
+
+class CourseQuizQuestionCreateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CourseQuizQuestion
+        fields = (
+            "question",
+            "option_a",
+            "option_b",
+            "option_c",
+            "option_d",
+            "correct_option",
+            "order",
+        )
+        extra_kwargs = {
+            "order": {"required": False},
+        }
+
+class QuizListView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        profile = getattr(request.user, "teacher_profile", None)
+        if not profile:
+            return Response({"message": "Teacher profile not found."}, status=status.HTTP_404_NOT_FOUND)
+        quizzes = CourseQuiz.objects.filter(lesson__module__course__teacher=profile).order_by("order")
+        serializer = CourseQuizListSerializer(quizzes, many=True, context={"request": request})
+        return Response({"message": "Quiz list retrieved successfully", "data": serializer.data}, status=status.HTTP_200_OK)
+
+# QuizCreateView removed from serializers (moved to views)

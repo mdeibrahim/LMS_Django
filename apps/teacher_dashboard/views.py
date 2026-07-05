@@ -10,7 +10,7 @@ from rest_framework.permissions import IsAuthenticated
 from django.utils import timezone
 from apps.teacher_dashboard.utils import send_verification_email, forgot_password_email
 from content import models
-from content.models import Course, Module, Lesson, LessonResource, EmailOTP, PasswordResetSession
+from content.models import Course, Module, Lesson, LessonResource, EmailOTP, PasswordResetSession, CourseQuiz
 from .models import Category
 from .serializers import (
     CategorySubcategorySerializer,
@@ -22,7 +22,11 @@ from .serializers import (
     TeacherLoginSerializer,
     TeacherProfileSerializer,
     TeacherRegisterSerializer,
+    CourseQuizListSerializer,
+    CourseQuizCreateSerializer,
+    CourseQuizQuestionCreateSerializer,
 )
+
 def generate_otp(user):
     EmailOTP.objects.filter(user=user).delete()
     code = f"{random.randint(100000, 999999)}"
@@ -932,15 +936,27 @@ class NextResourceIdView(APIView):
     def get(self, request):
         profile = getattr(request.user, "teacher_profile", None)
 
+        category = request.query_params.get("category")
+        subcategory = request.query_params.get("subcategory")
+        course = request.query_params.get("course")
+
         if not profile:
             return Response(
                 {"message": "Teacher profile not found."},
                 status=status.HTTP_404_NOT_FOUND
             )
 
-        next_resource_id = (
-            LessonResource.objects.aggregate(max_id=Max("id"))["max_id"] or 0
-        ) + 1
+        # Build base queryset
+        queryset = LessonResource.objects.all()
+        # Apply optional filters
+        if category:
+            queryset = queryset.filter(lesson__module__course__subcategory__category_id=category)
+        if subcategory:
+            queryset = queryset.filter(lesson__module__course__subcategory_id=subcategory)
+        if course:
+            queryset = queryset.filter(lesson__module__course_id=course)
+
+        next_resource_id = (queryset.aggregate(max_id=Max("id"))["max_id"] or 0) + 1
 
         return Response(
             {
@@ -949,3 +965,41 @@ class NextResourceIdView(APIView):
             },
             status=status.HTTP_200_OK,
         )
+
+
+class QuizListView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        profile = getattr(request.user, "teacher_profile", None)
+        if not profile:
+            return Response({"message": "Teacher profile not found."}, status=status.HTTP_404_NOT_FOUND)
+        quizzes = CourseQuiz.objects.filter(lesson__module__course__teacher=profile).order_by("order")
+        serializer = CourseQuizListSerializer(quizzes, many=True, context={"request": request})
+        return Response({"message": "Quiz list retrieved successfully", "data": serializer.data}, status=status.HTTP_200_OK)
+
+
+class QuizCreateView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        profile = getattr(request.user, "teacher_profile", None)
+        if not profile:
+            return Response({"message": "Teacher profile not found."}, status=status.HTTP_404_NOT_FOUND)
+        serializer = CourseQuizCreateSerializer(data=request.data)
+        if serializer.is_valid():
+            quiz = serializer.save()
+            # Handle nested questions if provided
+            questions_data = request.data.get('questions', [])
+            for q_data in questions_data:
+                # Ensure the quiz foreign key is set
+                q_data['quiz'] = quiz.id
+                q_serializer = CourseQuizQuestionCreateSerializer(data=q_data)
+                if q_serializer.is_valid():
+                    q_serializer.save()
+                else:
+                    # Roll back the quiz if any question is invalid
+                    quiz.delete()
+                    return Response({"message": "Invalid question data", "errors": q_serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"message": "Quiz created successfully", "data": CourseQuizListSerializer(quiz, context={"request": request}).data}, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

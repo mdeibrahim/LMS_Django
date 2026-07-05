@@ -563,11 +563,13 @@ class CourseQuiz(models.Model):
         default=50,
         validators=[MinValueValidator(0), MaxValueValidator(100)],
     )
+    order = models.PositiveIntegerField(default=0)
+
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        ordering = ["-created_at"]
+        ordering = ["order", "-created_at"]
         indexes = [
             models.Index(fields=["lesson", "is_active"]),
             models.Index(fields=["module", "is_active"]),

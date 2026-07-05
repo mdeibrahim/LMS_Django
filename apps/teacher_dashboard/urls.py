@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import LoginView, RegisterView, TeacherProfileView, CourseListView, SubcategoryCreateView, CategorySubcategoryListView, ModuleListView, LessonListView, NextResourceIdView, LogoutView, ChangePasswordView, VerifyOTPView, ResendOTPView, ForgotPasswordView, ResetPasswordView
+from .views import LoginView, RegisterView, TeacherProfileView, CourseListView, SubcategoryCreateView, CategorySubcategoryListView, ModuleListView, LessonListView, NextResourceIdView, LogoutView, ChangePasswordView, VerifyOTPView, ResendOTPView, ForgotPasswordView, ResetPasswordView, QuizListView, QuizCreateView
 
 
 urlpatterns = [
@@ -46,4 +46,12 @@ urlpatterns = [
     path('update-lesson/', LessonListView.as_view(), name='teacher_update_lesson'),
     path('delete-lesson/', LessonListView.as_view(), name='teacher_delete_lesson'),
     path('next-resource-id/', NextResourceIdView.as_view(), name='teacher_next_resource_id'),
+
+
+    # Quiz URLs
+    path('quiz-list/', QuizListView.as_view(), name='teacher_quiz_list'),
+    path('quiz-detail/', QuizListView.as_view(), name='teacher_quiz_detail'),
+    path('create-quiz/', QuizListView.as_view(), name='teacher_create_quiz'),
+    path('update-quiz/', QuizListView.as_view(), name='teacher_update_quiz'),
+    path('delete-quiz/', QuizListView.as_view(), name='teacher_delete_quiz'),
 ]
