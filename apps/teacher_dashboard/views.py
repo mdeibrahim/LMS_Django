@@ -82,6 +82,7 @@ class VerifyOTPView(APIView):
         try:
             otp_record = EmailOTP.objects.get(user=user, code=otp, is_used=False, expires_at__gt=timezone.now())
         except EmailOTP.DoesNotExist:
+            print(f"otp_record: {otp_record}")
             return Response(
                 {"message": "Invalid OTP."},
                 status=status.HTTP_400_BAD_REQUEST
@@ -90,21 +91,28 @@ class VerifyOTPView(APIView):
         # Mark the user as verified
         user.is_verified = True
         user.is_active = True  
-        user.save(update_fields=["is_verified"])
+        user.save(update_fields=["is_verified", "is_active"])
 
         # Mark the OTP as used
         otp_record.is_used = True
         otp_record.save(update_fields=["is_used"])
 
+        session = None
         if type != "register":
             session = PasswordResetSession.objects.create(
                 user=user,
                 expires_at=timezone.now() + timedelta(minutes=15)
             )
+            reset_token = str(session.token)
+        else:
+            reset_token = None
+
+        response_data = {"message": "OTP verified successfully."}
+        if reset_token:
+            response_data["reset_token"] = reset_token
 
         return Response(
-            {"message": "OTP verified successfully.",
-             "reset_token": str(session.token)},
+            response_data,
             status=status.HTTP_200_OK
         )
     
