@@ -1,5 +1,12 @@
 from django.urls import path
-from .views import LoginView, RegisterView, TeacherProfileView, CourseListView, SubcategoryCreateView, CategorySubcategoryListView, ModuleListView, LessonListView, NextResourceIdView, LogoutView, ChangePasswordView, VerifyOTPView, ResendOTPView, ForgotPasswordView, ResetPasswordView, QuizListView, QuizCreateView
+from .views import (
+    LoginView, RegisterView, TeacherProfileView, CourseListView,
+    SubcategoryCreateView, SubcategoryDetailUpdateDeleteView,
+    CategorySubcategoryListView, ModuleListView, LessonListView,
+    NextResourceIdView, LogoutView, ChangePasswordView, VerifyOTPView,
+    ResendOTPView, ForgotPasswordView, ResetPasswordView,
+    QuizListView, QuizCreateView
+)
 
 
 urlpatterns = [
@@ -19,7 +26,8 @@ urlpatterns = [
 
     # Course and Subcategory URLs
     path('category-subcategory-list/', CategorySubcategoryListView.as_view(), name='teacher_category_subcategory_list'),
-    path('create-subcategory/', SubcategoryCreateView.as_view(), name='teacher_create_subcategory'),
+path('create-subcategory/', SubcategoryCreateView.as_view(), name='teacher_create_subcategory'),
+path('subcategories/<int:pk>/', SubcategoryDetailUpdateDeleteView.as_view(), name='subcategory-detail-update-delete'),
     
 
     # Course URLs

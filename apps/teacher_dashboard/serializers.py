@@ -113,19 +113,18 @@ class TeacherProfileSerializer(serializers.ModelSerializer):
 
 class CategorySubcategorySerializer(serializers.ModelSerializer):
     subcategories = serializers.SerializerMethodField()
-
+ 
     class Meta:
         model = Category
         fields = ("id", "name", "subcategories")
-
+ 
     def get_subcategories(self, obj):
         subcategories = obj.subcategories.all()
         return SubcategorySerializer(subcategories, many=True).data
-
-
-
+ 
+ 
 class SubcategorySerializer(serializers.ModelSerializer):
-
+ 
     class Meta:
         model = Subcategory
         fields = (
@@ -136,55 +135,70 @@ class SubcategorySerializer(serializers.ModelSerializer):
             "created_at",
         )
         read_only_fields = ("created_at",)
-
+ 
     def get_unique_together_validators(self):
         return []
-
+ 
     def validate_category(self, value):
         request = self.context.get("request")
-
+ 
         teacher_profile = getattr(
             getattr(request, "user", None),
             "teacher_profile",
             None
         )
-
+ 
         if teacher_profile and not teacher_profile.assigned_categories.filter(
             pk=value.pk
         ).exists():
             raise serializers.ValidationError(
                 "Selected category is not assigned to this teacher."
             )
-
+ 
         return value
-
+ 
     def validate(self, attrs):
-        category = attrs["category"]
-        name = attrs["name"]
-
-        if Subcategory.objects.filter(
+        # PATCH/partial update এ category বা name না পাঠালে instance থেকে ফলব্যাক করা
+        category = attrs.get(
+            "category",
+            getattr(self.instance, "category", None)
+        )
+        name = attrs.get(
+            "name",
+            getattr(self.instance, "name", None)
+        )
+ 
+        duplicate_qs = Subcategory.objects.filter(
             category=category,
             name__iexact=name
-        ).exists():
-            raise serializers.ValidationError("subcategory already exist in this category")
-
+        )
+ 
+        # Update এর ক্ষেত্রে নিজেকে বাদ দিয়ে চেক করা, নাহলে নিজের নাম দিয়েই
+        # "already exists" এরর দেখাবে
+        if self.instance is not None:
+            duplicate_qs = duplicate_qs.exclude(pk=self.instance.pk)
+ 
+        if duplicate_qs.exists():
+            raise serializers.ValidationError(
+                "subcategory already exist in this category"
+            )
+ 
         return attrs
-
+ 
     def create(self, validated_data):
         return Subcategory.objects.create(**validated_data)
-    
-        
+ 
+ 
 class CategorySimpleSerializer(serializers.ModelSerializer):
     class Meta:
         model = Category
         fields = ("id", "name")
-
-
+ 
+ 
 class SubcategorySimpleSerializer(serializers.ModelSerializer):
     class Meta:
         model = Subcategory
         fields = ("id", "name")
-
 
 class CourseSerializer(serializers.ModelSerializer):
     category = serializers.SerializerMethodField()

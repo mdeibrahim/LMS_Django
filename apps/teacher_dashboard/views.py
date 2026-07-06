@@ -11,7 +11,7 @@ from django.utils import timezone
 from apps.teacher_dashboard.utils import send_verification_email, forgot_password_email
 from content import models
 from content.models import Course, Module, Lesson, LessonResource, EmailOTP, PasswordResetSession, CourseQuiz
-from .models import Category
+from .models import Category, Subcategory
 from .serializers import (
     CategorySubcategorySerializer,
     CourseSerializer,
@@ -26,6 +26,9 @@ from .serializers import (
     CourseQuizCreateSerializer,
     CourseQuizQuestionCreateSerializer,
 )
+from django.shortcuts import get_object_or_404
+
+
 
 def generate_otp(user):
     EmailOTP.objects.filter(user=user).delete()
@@ -380,13 +383,13 @@ class LogoutView(APIView):
                 {"message": "Invalid token or token has already been blacklisted."},
                 status=status.HTTP_400_BAD_REQUEST
             )
-    
+
 
 class CategorySubcategoryListView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        
+
         teacher_profile = getattr(
             request.user,
             "teacher_profile",
@@ -402,18 +405,17 @@ class CategorySubcategoryListView(APIView):
             },
             status=status.HTTP_200_OK
         )
-
 class SubcategoryCreateView(APIView):
     permission_classes = [IsAuthenticated]
-
+ 
     def post(self, request):
-
+ 
         teacher_profile = getattr(
             request.user,
             "teacher_profile",
             None
         )
-
+ 
         if not teacher_profile:
             return Response(
                 {
@@ -421,15 +423,15 @@ class SubcategoryCreateView(APIView):
                 },
                 status=status.HTTP_403_FORBIDDEN
             )
-
+ 
         serializer = SubcategorySerializer(
             data=request.data,
             context={"request": request}
         )
-
+ 
         if serializer.is_valid():
             subcategory = serializer.save()
-
+ 
             return Response(
                 {
                     "message": "Subcategory created successfully",
@@ -440,12 +442,137 @@ class SubcategoryCreateView(APIView):
                 },
                 status=status.HTTP_201_CREATED
             )
-
+ 
         return Response(
             serializer.errors,
             status=status.HTTP_400_BAD_REQUEST
         )
-    
+ 
+ 
+class SubcategoryDetailUpdateDeleteView(APIView):
+    """
+    GET    -> একটি নির্দিষ্ট subcategory এর ডিটেইলস (Edit ফর্ম প্রিফিল করার জন্য)
+    PATCH  -> subcategory আপডেট/এডিট করা
+    DELETE -> subcategory ডিলিট করা
+    """
+    permission_classes = [IsAuthenticated]
+ 
+    def get_object(self, pk, request):
+        teacher_profile = getattr(
+            request.user,
+            "teacher_profile",
+            None
+        )
+ 
+        subcategory = get_object_or_404(Subcategory, pk=pk)
+ 
+        # শুধু নিজের assigned category এর subcategory এডিট/ডিলিট করতে পারবে
+        if teacher_profile and not teacher_profile.assigned_categories.filter(
+            pk=subcategory.category_id
+        ).exists():
+            return None
+ 
+        return subcategory
+ 
+    def get(self, request, pk):
+        subcategory = self.get_object(pk, request)
+ 
+        if subcategory is None:
+            return Response(
+                {"message": "You do not have permission to view this subcategory."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+ 
+        serializer = SubcategorySerializer(
+            subcategory,
+            context={"request": request}
+        )
+ 
+        return Response(
+            {
+                "message": "Subcategory retrieved successfully",
+                "data": serializer.data
+            },
+            status=status.HTTP_200_OK
+        )
+ 
+    def patch(self, request, pk):
+        teacher_profile = getattr(
+            request.user,
+            "teacher_profile",
+            None
+        )
+ 
+        if not teacher_profile:
+            return Response(
+                {"message": "Only teachers can update subcategories."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+ 
+        subcategory = self.get_object(pk, request)
+ 
+        if subcategory is None:
+            return Response(
+                {"message": "You do not have permission to edit this subcategory."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+ 
+        serializer = SubcategorySerializer(
+            subcategory,
+            data=request.data,
+            partial=True,
+            context={"request": request}
+        )
+ 
+        if serializer.is_valid():
+            updated = serializer.save()
+ 
+            return Response(
+                {
+                    "message": "Subcategory updated successfully",
+                    "data": SubcategorySerializer(
+                        updated,
+                        context={"request": request}
+                    ).data
+                },
+                status=status.HTTP_200_OK
+            )
+ 
+        return Response(
+            serializer.errors,
+            status=status.HTTP_400_BAD_REQUEST
+        )
+ 
+    def delete(self, request, pk):
+        teacher_profile = getattr(
+            request.user,
+            "teacher_profile",
+            None
+        )
+ 
+        if not teacher_profile:
+            return Response(
+                {"message": "Only teachers can delete subcategories."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+ 
+        subcategory = self.get_object(pk, request)
+ 
+        if subcategory is None:
+            return Response(
+                {"message": "You do not have permission to delete this subcategory."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+ 
+        name = subcategory.name
+        subcategory.delete()
+ 
+        return Response(
+            {
+                "message": f'"{name}" deleted successfully'
+            },
+            status=status.HTTP_200_OK
+        )
 
 class CourseListView(APIView):
     permission_classes = [IsAuthenticated]
