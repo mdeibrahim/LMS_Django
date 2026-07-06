@@ -27,8 +27,7 @@ from .serializers import (
     CourseQuizQuestionCreateSerializer,
 )
 from django.shortcuts import get_object_or_404
-
-
+from django.db.models import Max
 
 def generate_otp(user):
     EmailOTP.objects.filter(user=user).delete()
@@ -891,7 +890,7 @@ class LessonListView(APIView):
             try:
                 lesson = Lesson.objects.prefetch_related("resources").get(
                     id=lesson_id,
-                    module=module
+                    module__course__teacher=profile
                 )
             except Lesson.DoesNotExist:
                 return Response(
