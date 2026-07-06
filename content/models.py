@@ -316,126 +316,6 @@ class Lesson(models.Model):
     def primary_resource(self):
         return self.resources.order_by("order", "created_at").first()
 
-
-# class ModuleAccordionSection(models.Model):
-#     module = models.ForeignKey("Module", on_delete=models.CASCADE, related_name="accordion_sections")
-#     title = models.CharField(max_length=255)
-#     content = models.TextField(blank=True)
-#     order = models.PositiveIntegerField(default=0)
-#     is_open_by_default = models.BooleanField(default=False)
-#     created_at = models.DateTimeField(auto_now_add=True)
-#     updated_at = models.DateTimeField(auto_now=True)
-
-#     class Meta:
-#         ordering = ["order", "created_at"]
-
-#     def save(self, *args, **kwargs):
-#         if not self.pk and self.order == 0:
-#             max_order = ModuleAccordionSection.objects.filter(module=self.module).aggregate(models.Max('order'))['order__max']
-#             self.order = (max_order or 0) + 1
-#         super().save(*args, **kwargs)
-
-#     def __str__(self):
-#         return f"{self.module.title} - {self.title}"
-
-
-PAYMENT_METHOD_CHOICES = [
-    ("bkash", "Bkash"),
-    ("nagad", "Nagad"),
-    ("rocket", "Rocket"),
-    ("bank_transfer", "Bank Transfer"),
-]
-
-
-class EnrollmentStatus(models.TextChoices):
-    ACTIVE = "active", "Active"
-    REVOKED = "revoked", "Revoked"
-
-
-class PaymentSubmissionStatus(models.TextChoices):
-    PENDING = "pending", "Pending review"
-    APPROVED = "approved", "Approved"
-    REJECTED = "rejected", "Rejected"
-
-
-class CourseEnrollment(models.Model):
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="course_enrollments")
-    course = models.ForeignKey("Course", on_delete=models.CASCADE, related_name="enrollments")
-    status = models.CharField(max_length=20, choices=EnrollmentStatus.choices, default=EnrollmentStatus.ACTIVE)
-    granted_by = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.SET_NULL,
-        blank=True,
-        null=True,
-        related_name="granted_course_enrollments",
-    )
-    granted_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        ordering = ["-granted_at"]
-        constraints = [
-            models.UniqueConstraint(fields=["user", "course"], name="uniq_enrollment_per_user_course"),
-        ]
-        indexes = [
-            models.Index(fields=["user", "status"]),
-            models.Index(fields=["course", "status"]),
-        ]
-
-    def __str__(self):
-        return f"{self.user} enrolled in {self.course.name}"
-
-
-class PaymentSubmission(models.Model):
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="payment_submissions")
-    course = models.ForeignKey("Course", on_delete=models.CASCADE, related_name="payment_submissions")
-    payment_method = models.CharField(max_length=20, choices=PAYMENT_METHOD_CHOICES, default="other")
-    transaction_id = models.CharField(max_length=255)
-    note = models.TextField(blank=True, default="")
-    status = models.CharField(max_length=20, choices=PaymentSubmissionStatus.choices, default=PaymentSubmissionStatus.PENDING)
-    reviewed_by = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.SET_NULL,
-        blank=True,
-        null=True,
-        related_name="reviewed_payment_submissions",
-    )
-    reviewed_at = models.DateTimeField(blank=True, null=True)
-    rejection_reason = models.TextField(blank=True, default="")
-    submitted_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        ordering = ["-submitted_at"]
-        indexes = [
-            models.Index(fields=["course", "status", "submitted_at"]),
-            models.Index(fields=["user", "status", "submitted_at"]),
-            models.Index(fields=["transaction_id"]),
-        ]
-
-    def __str__(self):
-        return f"{self.user} payment for {self.course.name} ({self.status})"
-
-
-class ModulePurchase(models.Model):
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="module_purchases")
-    course = models.ForeignKey("Course", on_delete=models.CASCADE, related_name="legacy_purchases")
-    payment_method = models.CharField(max_length=20, choices=PAYMENT_METHOD_CHOICES, default="other", blank=True, null=True)
-    transaction_id = models.CharField(max_length=255, blank=True, null=True)
-    is_purchased = models.BooleanField(default=False)
-    purchased_at = models.DateTimeField(auto_now_add=True)
-
-    class Meta:
-        ordering = ["-purchased_at"]
-        unique_together = [("user", "course")]
-        indexes = [
-            models.Index(fields=["user", "is_purchased"]),
-        ]
-
-    def __str__(self):
-        return f"{self.user} purchased {self.course.name}"
-
-
 class LessonResourceType(models.TextChoices):
     TEXT = "text", "Text / Rich HTML"
     VIDEO = "video", "Video"
@@ -446,7 +326,6 @@ class LessonResourceType(models.TextChoices):
     EXTERNAL_LINK = "external_link", "External Link"
     EMBED = "embed", "Embedded Content"
     IMAGE = "image", "Image"
-
 
 class LessonResource(models.Model):
     lesson = models.ForeignKey("Lesson", on_delete=models.CASCADE, related_name="resources")
@@ -555,6 +434,107 @@ class LessonResource(models.Model):
         return ""
 
 
+
+# class ModuleAccordionSection(models.Model):
+#     module = models.ForeignKey("Module", on_delete=models.CASCADE, related_name="accordion_sections")
+#     title = models.CharField(max_length=255)
+#     content = models.TextField(blank=True)
+#     order = models.PositiveIntegerField(default=0)
+#     is_open_by_default = models.BooleanField(default=False)
+#     created_at = models.DateTimeField(auto_now_add=True)
+#     updated_at = models.DateTimeField(auto_now=True)
+
+#     class Meta:
+#         ordering = ["order", "created_at"]
+
+#     def save(self, *args, **kwargs):
+#         if not self.pk and self.order == 0:
+#             max_order = ModuleAccordionSection.objects.filter(module=self.module).aggregate(models.Max('order'))['order__max']
+#             self.order = (max_order or 0) + 1
+#         super().save(*args, **kwargs)
+
+#     def __str__(self):
+#         return f"{self.module.title} - {self.title}"
+
+
+PAYMENT_METHOD_CHOICES = [
+    ("bkash", "Bkash"),
+    ("nagad", "Nagad"),
+    ("rocket", "Rocket"),
+    ("bank_transfer", "Bank Transfer"),
+]
+
+
+class EnrollmentStatus(models.TextChoices):
+    ACTIVE = "active", "Active"
+    PENDING = "pending", "Pending"
+    REVOKED = "revoked", "Revoked"
+
+class PaymentSubmissionStatus(models.TextChoices):
+    PENDING = "pending", "Pending review"
+    APPROVED = "approved", "Approved"
+    REJECTED = "rejected", "Rejected"
+
+class CourseEnrollment(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="course_enrollments")
+    course = models.ForeignKey("Course", on_delete=models.CASCADE, related_name="enrollments")
+    status = models.CharField(max_length=20, choices=EnrollmentStatus.choices, default=EnrollmentStatus.ACTIVE)
+    granted_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
+        related_name="granted_course_enrollments",
+    )
+    granted_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-granted_at"]
+        constraints = [
+            models.UniqueConstraint(fields=["user", "course"], name="uniq_enrollment_per_user_course"),
+        ]
+        indexes = [
+            models.Index(fields=["user", "status"]),
+            models.Index(fields=["course", "status"]),
+        ]
+
+    def __str__(self):
+        return f"{self.user} enrolled in {self.course.name}"
+
+
+class PaymentSubmission(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="payment_submissions")
+    course = models.ForeignKey("Course", on_delete=models.CASCADE, related_name="payment_submissions")
+    payment_method = models.CharField(max_length=20, choices=PAYMENT_METHOD_CHOICES, default="other")
+    transaction_id = models.CharField(max_length=255)
+    note = models.TextField(blank=True, default="")
+    status = models.CharField(max_length=20, choices=PaymentSubmissionStatus.choices, default=PaymentSubmissionStatus.PENDING)
+    reviewed_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
+        related_name="reviewed_payment_submissions",
+    )
+    reviewed_at = models.DateTimeField(blank=True, null=True)
+    rejection_reason = models.TextField(blank=True, default="")
+    submitted_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-submitted_at"]
+        indexes = [
+            models.Index(fields=["course", "status", "submitted_at"]),
+            models.Index(fields=["user", "status", "submitted_at"]),
+            models.Index(fields=["transaction_id"]),
+        ]
+
+    def __str__(self):
+        return f"{self.user} payment for {self.course.name} ({self.status})"
+
+
+
 class CourseQuiz(models.Model):
     module = models.ForeignKey("Module", on_delete=models.CASCADE, related_name="course_quizzes", blank=True, null=True)
     lesson = models.ForeignKey("Lesson", on_delete=models.SET_NULL, related_name="quizzes", blank=True, null=True)
@@ -582,7 +562,6 @@ class CourseQuiz(models.Model):
         elif self.module_id:
             source = self.module.title
         return f"{source or 'Quiz'} - {self.title}"
-
 
 class CourseQuizQuestion(models.Model):
     quiz = models.ForeignKey(CourseQuiz, on_delete=models.CASCADE, related_name="questions")
@@ -613,7 +592,6 @@ class CourseQuizQuestion(models.Model):
             ("C", self.option_c),
             ("D", self.option_d),
         ]
-
 
 class QuizAttempt(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="quiz_attempts")

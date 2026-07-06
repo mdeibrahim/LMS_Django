@@ -110,7 +110,7 @@ class TeacherProfileSerializer(serializers.ModelSerializer):
         return super().update(instance, validated_data)
     
 
-
+# Category Subcategory Serializer
 class CategorySubcategorySerializer(serializers.ModelSerializer):
     subcategories = serializers.SerializerMethodField()
  
@@ -121,7 +121,6 @@ class CategorySubcategorySerializer(serializers.ModelSerializer):
     def get_subcategories(self, obj):
         subcategories = obj.subcategories.all()
         return SubcategorySerializer(subcategories, many=True).data
- 
  
 class SubcategorySerializer(serializers.ModelSerializer):
  
@@ -188,18 +187,18 @@ class SubcategorySerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         return Subcategory.objects.create(**validated_data)
  
- 
 class CategorySimpleSerializer(serializers.ModelSerializer):
     class Meta:
         model = Category
         fields = ("id", "name")
- 
  
 class SubcategorySimpleSerializer(serializers.ModelSerializer):
     class Meta:
         model = Subcategory
         fields = ("id", "name")
 
+
+# Course Serializer
 class CourseSerializer(serializers.ModelSerializer):
     category = serializers.SerializerMethodField()
     subcategory = SubcategorySimpleSerializer(read_only=True)
@@ -297,8 +296,8 @@ class CourseSerializer(serializers.ModelSerializer):
             instance.slug = self._generate_unique_slug(validated_data["name"])
         return super().update(instance, validated_data)
     
-    
 
+# Module Serializer
 class ModuleSerializer(serializers.ModelSerializer):
     slug = serializers.SlugField(read_only=True)
     lesson_count = serializers.IntegerField(source="lessons.count", read_only=True)
@@ -336,6 +335,7 @@ class ModuleSerializer(serializers.ModelSerializer):
         return super().update(instance, validated_data)
     
 
+# Lesson Serializer
 class LessonResourceSerializer(serializers.ModelSerializer):
     file_url = serializers.SerializerMethodField()
     youtube_embed_url = serializers.SerializerMethodField()
@@ -372,10 +372,10 @@ class LessonResourceSerializer(serializers.ModelSerializer):
     def get_youtube_embed_url(self, obj):
         return obj.get_youtube_embed_url()
 
-
 class LessonSerializer(serializers.ModelSerializer):
     resources = LessonResourceSerializer(many=True, read_only=True)
     module_title = serializers.CharField(source="module.title", read_only=True)
+    course_id = serializers.IntegerField(source="module.course.id", read_only=True)
     course_title = serializers.CharField(source="module.course.name", read_only=True)
     course_slug = serializers.CharField(source="module.course.slug", read_only=True)
 
@@ -385,6 +385,7 @@ class LessonSerializer(serializers.ModelSerializer):
             "id",
             "module",
             "module_title",
+            "course_id",
             "course_title",
             "course_slug",
             "title",
@@ -399,7 +400,6 @@ class LessonSerializer(serializers.ModelSerializer):
             "resources",
         )
         read_only_fields = ("id", "slug", "created_at", "updated_at", "resources")
-
 
 class LessonCreateSerializer(serializers.ModelSerializer):
     resources = serializers.JSONField(required=False, write_only=True, default=list)
@@ -488,6 +488,7 @@ class LessonCreateSerializer(serializers.ModelSerializer):
         return super().to_internal_value(mutable_data)
 
 
+# Quiz Serializer
 class CourseQuizListSerializer(serializers.ModelSerializer):
     order = serializers.IntegerField(source="order", read_only=True)
     lesson_id = serializers.IntegerField(source="lesson.id", read_only=True)
@@ -547,4 +548,4 @@ class QuizListView(APIView):
         serializer = CourseQuizListSerializer(quizzes, many=True, context={"request": request})
         return Response({"message": "Quiz list retrieved successfully", "data": serializer.data}, status=status.HTTP_200_OK)
 
-# QuizCreateView removed from serializers (moved to views)
+

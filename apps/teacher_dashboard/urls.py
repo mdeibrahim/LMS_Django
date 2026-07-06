@@ -26,8 +26,8 @@ urlpatterns = [
 
     # Course and Subcategory URLs
     path('category-subcategory-list/', CategorySubcategoryListView.as_view(), name='teacher_category_subcategory_list'),
-path('create-subcategory/', SubcategoryCreateView.as_view(), name='teacher_create_subcategory'),
-path('subcategories/<int:pk>/', SubcategoryDetailUpdateDeleteView.as_view(), name='subcategory-detail-update-delete'),
+    path('create-subcategory/', SubcategoryCreateView.as_view(), name='teacher_create_subcategory'),
+    path('subcategories/<int:pk>/', SubcategoryDetailUpdateDeleteView.as_view(), name='subcategory-detail-update-delete'),
     
 
     # Course URLs

@@ -385,6 +385,7 @@ class LogoutView(APIView):
             )
 
 
+# -------------------------------- Category Subcategory Views--------------------------------
 class CategorySubcategoryListView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -405,6 +406,7 @@ class CategorySubcategoryListView(APIView):
             },
             status=status.HTTP_200_OK
         )
+
 class SubcategoryCreateView(APIView):
     permission_classes = [IsAuthenticated]
  
@@ -447,7 +449,6 @@ class SubcategoryCreateView(APIView):
             serializer.errors,
             status=status.HTTP_400_BAD_REQUEST
         )
- 
  
 class SubcategoryDetailUpdateDeleteView(APIView):
     """
@@ -574,6 +575,9 @@ class SubcategoryDetailUpdateDeleteView(APIView):
             status=status.HTTP_200_OK
         )
 
+
+
+# -------------------------------- Course Views--------------------------------
 class CourseListView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -683,6 +687,7 @@ class CourseListView(APIView):
 
 
 
+# -------------------------------- Module Views--------------------------------
 class ModuleListView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -848,7 +853,6 @@ class ModuleListView(APIView):
     
 
 # ------------------------------- Lesson Views -------------------------------
-
 class LessonListView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -1063,8 +1067,7 @@ class LessonListView(APIView):
         )
     
 
-from django.db.models import Max
-
+# ------------------------------- Next Resource ID View -------------------------------
 class NextResourceIdView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -1102,6 +1105,7 @@ class NextResourceIdView(APIView):
         )
 
 
+# ------------------------------- Quiz Views -------------------------------
 class QuizListView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -1112,7 +1116,6 @@ class QuizListView(APIView):
         quizzes = CourseQuiz.objects.filter(lesson__module__course__teacher=profile).order_by("order")
         serializer = CourseQuizListSerializer(quizzes, many=True, context={"request": request})
         return Response({"message": "Quiz list retrieved successfully", "data": serializer.data}, status=status.HTTP_200_OK)
-
 
 class QuizCreateView(APIView):
     permission_classes = [IsAuthenticated]
