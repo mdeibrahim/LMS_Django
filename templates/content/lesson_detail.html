@@ -3,7 +3,7 @@
 {% load content_render %}
 
 {% block title %}{{ lesson.title }} — {{ course.name }}{% endblock %}
-{% block meta_description %}{{ lesson.description|default:module.description|default:"Interactive text lesson with linked media explanations." }}{% endblock %}
+{% block meta_description %}{{ lesson.description|default:module.description|default:" text lesson with linked media explanations." }}{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -188,9 +188,9 @@
     </div>
 </section>
 
-<script id="interactiveData" type="application/json">
+<script id="resourceData" type="application/json">
 {
-    "apiUrl": "{% url 'content:get_interactive_content' 0 %}"
+    "apiUrl": "{% url 'content:get_lesson_resource' 0 %}"
 }
 </script>
 {% endblock %}

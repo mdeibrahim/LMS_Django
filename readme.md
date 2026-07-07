@@ -1,11 +1,11 @@
-# Interactive Teaching Platform
+#  Teaching Platform
 
-A Django-based interactive learning platform where a lesson page can include clickable highlighted text that opens multimedia content (text, image, audio, video, YouTube) in a modal.
+A Django-based  learning platform where a lesson page can include clickable highlighted text that opens multimedia content (text, image, audio, video, YouTube) in a modal.
 
 ## Features
 
 - Category -> SubCategory -> Subject content hierarchy
-- Interactive lesson body with clickable highlight links
+-  lesson body with clickable highlight links
 - Multimedia content types: text, image, audio, video, YouTube
 - Accordion-based sidebar sections per subject
 - Frontend subject editor for:
@@ -83,19 +83,19 @@ Open:
 
 ## API Endpoints (AJAX)
 
-- `GET /api/content/<content_id>/` -> interactive content payload
+- `GET /api/content/<content_id>/` ->  content payload
 - `GET /api/subject/<subject_id>/` -> full subject JSON
 - `POST /api/subject/<subject_id>/save/` -> save subject title/body
-- `POST /api/subject/<subject_id>/ic/create/` -> create interactive content
-- `POST /api/ic/<ic_id>/update/` -> update interactive content
-- `POST|DELETE /api/ic/<ic_id>/delete/` -> delete interactive content
+- `POST /api/subject/<subject_id>/ic/create/` -> create  content
+- `POST /api/ic/<ic_id>/update/` -> update content
+- `POST|DELETE /api/ic/<ic_id>/delete/` -> delete content
 - `POST /api/subject/<subject_id>/accordion/create/` -> create accordion section
 - `POST /api/accordion/<section_id>/update/` -> update accordion section
 - `POST|DELETE /api/accordion/<section_id>/delete/` -> delete accordion section
 
 ## Content Authoring Note
 
-`Subject.body_content` stores HTML. Interactive links are embedded like:
+`Subject.body_content` stores HTML. links are embedded like:
 
 ```html
 <span class="highlight-link" data-content-id="12">Click this term</span>
@@ -119,7 +119,7 @@ Run:
 python manage.py seed_demo
 ```
 
-This creates a sample journalism category tree, one subject, interactive media entries, and accordion sections.
+This creates a sample journalism category tree, one subject, media entries, and accordion sections.
 
 ## Media & Static
 

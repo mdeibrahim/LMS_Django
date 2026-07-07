@@ -751,6 +751,6 @@ class PaymentInstructionAdmin(ModelAdmin):
     def has_image(self, obj):
         return tone_badge("Uploaded", "emerald") if obj.image else tone_badge("Missing", "amber")
 
-admin.site.site_header = "Interactive Teaching Platform"
+admin.site.site_header = "Teaching Platform"
 admin.site.site_title = "Teaching Platform Admin"
 admin.site.index_title = "Operations Dashboard"

@@ -3,11 +3,11 @@
     if (!dataEl) return;
 
     const editorData = JSON.parse(dataEl.textContent);
-    const initialIc = JSON.parse(document.getElementById('initialInteractiveContents')?.textContent || '[]');
+    const initialResources = JSON.parse(document.getElementById('initialResources')?.textContent || '[]');
     const initialAcc = JSON.parse(document.getElementById('initialAccordionSections')?.textContent || '[]');
 
     const state = {
-        interactiveContents: initialIc,
+        resources: initialResources,
         accordionSections: initialAcc,
         savedRange: null,
         pendingAutoLink: false,
@@ -49,12 +49,12 @@
     function renderIcList() {
         if (!icList) return;
         icList.innerHTML = '';
-        if (!state.interactiveContents.length) {
+        if (!state.resources.length) {
             icList.innerHTML = '<div class="panel-empty"><i class="fa-solid fa-puzzle-piece"></i><p>No media items yet.<br>Click <strong>+</strong> to add Text, Image, Audio, Video or YouTube.</p></div>';
             return;
         }
 
-        state.interactiveContents.filter(Boolean).forEach((item) => {
+        state.resources.filter(Boolean).forEach((item) => {
             const card = document.createElement('div');
             card.className = `ic-item ic-item--${item.content_type}`;
             card.dataset.icId = item.id;
@@ -256,9 +256,9 @@
         }
 
         if (isEdit) {
-            state.interactiveContents = state.interactiveContents.map((item) => item.id === resource.id ? resource : item);
+            state.resources = state.resources.map((item) => item.id === resource.id ? resource : item);
         } else {
-            state.interactiveContents.push(resource);
+            state.resources.push(resource);
         }
         renderIcList();
         const shouldAutoLink = state.pendingAutoLink && state.savedRange && state.savedRange.toString().trim();
@@ -313,7 +313,7 @@
         });
         const data = await response.json();
         if (!response.ok || !data.ok) throw new Error(data.error || 'Delete failed.');
-        state.interactiveContents = state.interactiveContents.filter((item) => item.id !== id);
+        state.resources = state.resources.filter((item) => item.id !== id);
         renderIcList();
     }
 
@@ -386,7 +386,7 @@
         const editBtn = event.target.closest('.ic-edit-btn');
         const deleteBtn = event.target.closest('.ic-delete-btn');
         if (editBtn) {
-            const item = state.interactiveContents.find((entry) => entry.id === Number(editBtn.dataset.icId));
+            const item = state.resources.find((entry) => entry.id === Number(editBtn.dataset.icId));
             openIcPanel(item || null, { autoLink: false });
             return;
         }

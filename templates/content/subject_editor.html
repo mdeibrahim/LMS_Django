@@ -123,7 +123,7 @@
                             <button class="btn-panel-add" id="btn-add-ic" title="Add new media item" type="button"><i class="fa-solid fa-plus"></i></button>
                         </div>
                         <div class="editor-panel-body" id="icList">
-                            {% for ic in interactive_contents %}
+                            {% for ic in resources %}
                             <div class="ic-item ic-item--{{ ic.content_type }}" data-ic-id="{{ ic.id }}" id="ic-card-{{ ic.id }}">
                                 <div class="ic-item-icon">
                                     {% if ic.content_type == 'text' %}<i class="fa-solid fa-font"></i>{% elif ic.content_type == 'image' %}<i class="fa-solid fa-image"></i>{% elif ic.content_type == 'audio' %}<i class="fa-solid fa-headphones"></i>{% elif ic.content_type == 'video' %}<i class="fa-solid fa-video"></i>{% elif ic.content_type == 'youtube' %}<i class="fa-brands fa-youtube"></i>{% endif %}
@@ -228,7 +228,7 @@
     </div>
 </section>
 
-{{ interactive_contents_payload|json_script:"initialInteractiveContents" }}
+{{ resources_payload|json_script:"initialResources" }}
 {{ accordion_sections_payload|json_script:"initialAccordionSections" }}
 <script id="editorData" type="application/json">
 {

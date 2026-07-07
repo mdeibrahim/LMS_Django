@@ -1,5 +1,5 @@
 (function () {
-    const dataEl = document.getElementById('interactiveData');
+    const dataEl = document.getElementById('resourceData');
     if (dataEl) {
         try {
             JSON.parse(dataEl.textContent);

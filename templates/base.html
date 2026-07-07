@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Interactive Teaching Platform{% endblock %}</title>
-    <meta name="description" content="{% block meta_description %}An interactive multimedia teaching platform with rich content exploration.{% endblock %}">
+    <title>{% block title %} Teaching Platform{% endblock %}</title>
+    <meta name="description" content="{% block meta_description %}An multimedia teaching platform with rich content exploration.{% endblock %}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
@@ -454,7 +454,7 @@
                                 </span>
                                 <span>
                                     <span class="block font-display text-xl font-bold">TeachPlatform</span>
-                                    <span class="block text-xs font-bold uppercase tracking-[0.22em] text-sky-700">Interactive Learning Hub</span>
+                                    <span class="block text-xs font-bold uppercase tracking-[0.22em] text-sky-700"> Learning Hub</span>
                                 </span>
                             </a>
                             <p class="mt-4 max-w-md text-sm leading-7 text-slate-600">Structured courses, multimedia lessons, quizzes, certificates, and student progress tools in one polished learning experience.</p>
@@ -533,7 +533,7 @@
                 </div>
 
                 <div class="flex flex-col gap-3 px-2 pt-6 text-sm text-slate-500 sm:flex-row sm:items-center sm:justify-between">
-                    <p>Interactive Teaching Platform &copy; {% now "Y" %}. Built for modern course delivery.</p>
+                    <p>Teaching Platform &copy; {% now "Y" %}. Built for modern course delivery.</p>
                     <div class="flex flex-wrap items-center gap-4">
                         <a href="{% url 'content:home' %}" class="transition hover:text-slate-800">Home</a>
                         <a href="{% url 'content:my_courses' %}" class="transition hover:text-slate-800">Courses</a>

@@ -950,8 +950,14 @@ class LessonListView(APIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        payload = request.data.copy() if hasattr(request.data, "copy") else dict(request.data)
-        payload["module"] = module_id
+        if hasattr(request.data, '_mutable'):
+            request.data._mutable = True
+            request.data["module"] = module_id
+            request.data._mutable = False
+            payload = request.data
+        else:
+            payload = dict(request.data)
+            payload["module"] = module_id
 
         serializer = LessonCreateSerializer(
             data=payload,

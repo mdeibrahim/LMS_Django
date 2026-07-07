@@ -1,6 +1,6 @@
 /**
  * Main JavaScript — Modal + General UI
- * Interactive Teaching Platform
+ * Teaching Platform
  */
 
 (function () {
@@ -17,7 +17,7 @@
     // ── Open Modal ──
     function openModal(contentId) {
         // Get API URL from data script tag if available, else build manually
-        const dataEl = document.getElementById('interactiveData');
+        const dataEl = document.getElementById('resourceData');
         let apiUrl;
 
         if (dataEl) {
@@ -185,18 +185,18 @@
         if (e.key === 'Escape' && !modal.classList.contains('hidden')) closeModal();
     });
 
-    // ── Attach click events to interactive elements ──
-    function getInteractiveId(el) {
+    // ── Attach click events to  elements ──
+    function getResourceId(el) {
         return el.getAttribute('data-content-id') || el.getAttribute('data-media-id');
     }
 
-    function attachInteractiveClicks() {
+    function attachResourceClicks() {
         // Support both the current `data-content-id` markup and older
         // `data-media-id` markup stored in existing lesson content.
         document.querySelectorAll('[data-content-id], [data-media-id]').forEach(el => {
             el.addEventListener('click', function (e) {
                 e.preventDefault();
-                const id = getInteractiveId(this);
+                const id = getResourceId(this);
                 if (id) openModal(id);
             });
         });
@@ -204,13 +204,13 @@
 
     // Run on DOM ready
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', attachInteractiveClicks);
+        document.addEventListener('DOMContentLoaded', attachResourceClicks);
     } else {
-        attachInteractiveClicks();
+        attachResourceClicks();
     }
 
     // Expose for dynamic content
-    window.openInteractiveModal = openModal;
+    window.openResourceModal = openModal;
 
 })();
 

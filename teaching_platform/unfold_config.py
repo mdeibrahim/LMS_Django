@@ -2,7 +2,7 @@ from django.urls import reverse_lazy
 
 UNFOLD = {
     "SITE_TITLE": "Teaching Platform Admin",
-    "SITE_HEADER": "Interactive Teaching Platform",
+    "SITE_HEADER": "Teaching Platform",
     "SITE_SYMBOL": "auto_stories",
     "SHOW_HISTORY": True,
     "SHOW_VIEW_ON_SITE": True,

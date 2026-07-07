@@ -462,18 +462,24 @@ class LessonCreateSerializer(serializers.ModelSerializer):
             if content_type == LessonResourceType.VIDEO and not embed_url:
                 embed_url = external_url
 
-            resource = LessonResource.objects.create(
-                lesson=lesson,
-                title=(resource_data.get("title") or "Untitled").strip() or "Untitled",
-                content_type=content_type,
-                order=int(resource_data.get("order") or index),
-                is_preview=bool(resource_data.get("is_preview", lesson.is_preview)),
-                is_published=bool(resource_data.get("is_published", True)),
-                text_content=text_content,
-                external_url=external_url,
-                embed_url=embed_url,
-                duration_seconds=int(resource_data.get("duration_seconds") or 0),
-            )
+            r_id = resource_data.get("id")
+            
+            kwargs = {
+                "lesson": lesson,
+                "title": (resource_data.get("title") or "Untitled").strip() or "Untitled",
+                "content_type": content_type,
+                "order": int(resource_data.get("order") or index),
+                "is_preview": bool(resource_data.get("is_preview", lesson.is_preview)),
+                "is_published": bool(resource_data.get("is_published", True)),
+                "text_content": text_content,
+                "external_url": external_url,
+                "embed_url": embed_url,
+                "duration_seconds": int(resource_data.get("duration_seconds") or 0),
+            }
+            if r_id:
+                kwargs["id"] = int(r_id)
+
+            resource = LessonResource.objects.create(**kwargs)
 
             if uploaded_file:
                 resource.file = uploaded_file
@@ -481,10 +487,91 @@ class LessonCreateSerializer(serializers.ModelSerializer):
 
         return lesson
 
+    @transaction.atomic
+    def update(self, instance, validated_data):
+        resources_data = validated_data.pop("resources", None)
+
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+
+        if resources_data is not None:
+            request = self.context.get("request")
+            files = getattr(request, "FILES", {})
+            
+            existing_resources = {r.id: r for r in instance.resources.all()}
+            incoming_ids = [r.get("id") for r in resources_data if r.get("id")]
+            
+            for r_id, r in existing_resources.items():
+                if r_id not in incoming_ids:
+                    r.delete()
+
+            for index, resource_data in enumerate(resources_data, start=1):
+                r_id = resource_data.get("id")
+                file_key = (resource_data.get("file_key") or "").strip()
+                uploaded_file = files.get(file_key) if file_key else None
+                
+                content_type = str(resource_data.get("content_type") or LessonResourceType.TEXT).strip().lower()
+                if content_type == "youtube":
+                    content_type = LessonResourceType.VIDEO
+                text_content = resource_data.get("text_content", "")
+                external_url = resource_data.get("external_url", "") or resource_data.get("youtube_url", "") or resource_data.get("video_url", "")
+                embed_url = resource_data.get("embed_url", "")
+
+                if content_type == LessonResourceType.VIDEO and not embed_url:
+                    embed_url = external_url
+
+                if r_id and r_id in existing_resources:
+                    resource = existing_resources[r_id]
+                    resource.title = (resource_data.get("title") or "Untitled").strip() or "Untitled"
+                    resource.content_type = content_type
+                    resource.order = int(resource_data.get("order") or index)
+                    resource.is_preview = bool(resource_data.get("is_preview", instance.is_preview))
+                    resource.is_published = bool(resource_data.get("is_published", True))
+                    resource.text_content = text_content
+                    resource.external_url = external_url
+                    resource.embed_url = embed_url
+                    resource.duration_seconds = int(resource_data.get("duration_seconds") or 0)
+                    
+                    if uploaded_file:
+                        resource.file = uploaded_file
+                    resource.save()
+                else:
+                    kwargs = {
+                        "lesson": instance,
+                        "title": (resource_data.get("title") or "Untitled").strip() or "Untitled",
+                        "content_type": content_type,
+                        "order": int(resource_data.get("order") or index),
+                        "is_preview": bool(resource_data.get("is_preview", instance.is_preview)),
+                        "is_published": bool(resource_data.get("is_published", True)),
+                        "text_content": text_content,
+                        "external_url": external_url,
+                        "embed_url": embed_url,
+                        "duration_seconds": int(resource_data.get("duration_seconds") or 0),
+                    }
+                    if r_id:
+                        kwargs["id"] = int(r_id)
+
+                    resource = LessonResource.objects.create(**kwargs)
+
+                    if uploaded_file:
+                        resource.file = uploaded_file
+                        resource.save(update_fields=["file"])
+
+        return instance
+
     def to_internal_value(self, data):
-        mutable_data = data.copy() if hasattr(data, "copy") else dict(data)
-        if mutable_data.get("module_id") and not mutable_data.get("module"):
-            mutable_data["module"] = mutable_data["module_id"]
+        if hasattr(data, '_mutable'):
+            was_mutable = data._mutable
+            data._mutable = True
+            if data.get("module_id") and not data.get("module"):
+                data["module"] = data.get("module_id")
+            data._mutable = was_mutable
+            mutable_data = data
+        else:
+            mutable_data = dict(data)
+            if mutable_data.get("module_id") and not mutable_data.get("module"):
+                mutable_data["module"] = mutable_data.get("module_id")
         return super().to_internal_value(mutable_data)
 
 

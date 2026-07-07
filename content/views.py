@@ -137,9 +137,9 @@ def module_editor(request, course_slug, module_slug):
         slug=module_slug,
     )
     lesson = ensure_primary_lesson(module)
-    interactive_contents = list(lesson.resources.order_by("order", "created_at").all())
+    resources = list(lesson.resources.order_by("order", "created_at").all())
     # accordion_sections = list(module.accordion_sections.all())
-    first_content = interactive_contents[0] if interactive_contents else None
+    first_content = resources[0] if resources else None
     return render(
         request,
         "content/subject_editor.html",
@@ -150,9 +150,9 @@ def module_editor(request, course_slug, module_slug):
             "editor_label": "Module",
             "editor_title": module.title,
             "editor_body_content": module.body_content,
-            "interactive_contents": interactive_contents,
+            "resources": resources,
             # "accordion_sections": accordion_sections,
-            "interactive_contents_payload": [_serialize_resource(resource) for resource in interactive_contents],
+            "resources_payload": [_serialize_resource(resource) for resource in resources],
             # "accordion_sections_payload": [_serialize_accordion(section) for section in accordion_sections],
             "preview_url": (
                 reverse("content:lesson_detail", args=[course.slug, module.slug, lesson.slug])
@@ -183,7 +183,7 @@ def lesson_editor(request, course_slug, module_slug, lesson_slug):
         module=module,
         slug=lesson_slug,
     )
-    interactive_contents = list(lesson.resources.all())
+    resources = list(lesson.resources.all())
     # accordion_sections = list(module.accordion_sections.all())
     return render(
         request,
@@ -195,9 +195,9 @@ def lesson_editor(request, course_slug, module_slug, lesson_slug):
             "editor_label": "Lesson",
             "editor_title": lesson.title,
             "editor_body_content": lesson.body_content,
-            "interactive_contents": interactive_contents,
+            "resources": resources,
             # "accordion_sections": accordion_sections,
-            "interactive_contents_payload": [_serialize_resource(resource) for resource in interactive_contents],
+            "resources_payload": [_serialize_resource(resource) for resource in resources],
             # "accordion_sections_payload": [_serialize_accordion(section) for section in accordion_sections],
             "preview_url": reverse("content:lesson_detail", args=[course.slug, module.slug, lesson.slug]),
             "save_url": reverse("content:api_lesson_save", args=[lesson.id]),
@@ -263,7 +263,7 @@ def lesson_detail(request, course_slug, module_slug, lesson_slug):
             "course": course,
             "module": module,
             "lesson": lesson,
-            "interactive_contents": list(lesson.resources.all()),
+            "resources": list(lesson.resources.all()),
             # "accordion_sections": list(module.accordion_sections.all()),
             "lesson_navigation": lesson_navigation,
             "quizzes": quizzes,
@@ -700,7 +700,7 @@ def get_course_content(request, content_id):
     return JsonResponse(_serialize_resource(content))
 
 
-def get_interactive_content(request, content_id):
+def get_lesson_resource(request, content_id):
     return get_course_content(request, content_id)
 
 

@@ -68,14 +68,14 @@ document.addEventListener('DOMContentLoaded', function () {
         return 'link';
     }
 
-    function placeInteractiveHighlight(editor, ic, fallbackText) {
+    function placeResourceHighlight(editor, ic, fallbackText) {
         const selection = window.getSelection();
         const range = restoreSelection(editor);
         const span = document.createElement('span');
         const variant = inferVariant(ic.content_type, ic);
         span.className = `highlight-link highlight-link--${variant}`;
         span.dataset.contentId = String(ic.id);
-        span.textContent = fallbackText || ic.title || 'Interactive content';
+        span.textContent = fallbackText || ic.title || 'content';
 
         if (!range || !editor.contains(range.commonAncestorContainer)) {
             editor.appendChild(span);
@@ -126,7 +126,7 @@ document.addEventListener('DOMContentLoaded', function () {
         return data.ic;
     }
 
-    async function createInteractiveContent(payload, moduleId) {
+    async function createResource(payload, moduleId) {
         if (!moduleId) moduleId = getModuleIdFromAdminUrl();
         if (!moduleId) throw new Error('Please select/save the module first.');
 
@@ -203,7 +203,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const moduleId = getModuleIdFromForm(editor);
         const selectedText = getSelectedText(editor) || file.name;
         uploadFileToApi(file, mediaType, moduleId).then(function (ic) {
-            placeInteractiveHighlight(editor, ic, selectedText);
+            placeResourceHighlight(editor, ic, selectedText);
         }).catch(function (err) {
             alert('Upload error: ' + (err.message || err));
         });
@@ -244,8 +244,8 @@ document.addEventListener('DOMContentLoaded', function () {
                     if (!url) return;
                     const moduleId = getModuleIdFromForm(editor);
                     const selectedText = getSelectedText(editor) || url;
-                    createInteractiveContent(buildUrlPayload(url, selectedText), moduleId).then(function (ic) {
-                        placeInteractiveHighlight(editor, ic, selectedText);
+                    createResource(buildUrlPayload(url, selectedText), moduleId).then(function (ic) {
+                        placeResourceHighlight(editor, ic, selectedText);
                     }).catch(function (err) {
                         alert('Link add error: ' + (err.message || err));
                     });
@@ -266,8 +266,8 @@ document.addEventListener('DOMContentLoaded', function () {
                     if (!url) return;
                     const selectedText = getSelectedText(editor) || url;
                     const moduleId = getModuleIdFromForm(editor);
-                    createInteractiveContent(buildUrlPayload(url, selectedText), moduleId).then(function (ic) {
-                        placeInteractiveHighlight(editor, ic, selectedText);
+                    createResource(buildUrlPayload(url, selectedText), moduleId).then(function (ic) {
+                        placeResourceHighlight(editor, ic, selectedText);
                     }).catch(function (err) {
                         alert('Media add error: ' + (err.message || err));
                     });
