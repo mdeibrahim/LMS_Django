@@ -575,43 +575,14 @@ class LessonCreateSerializer(serializers.ModelSerializer):
         return super().to_internal_value(mutable_data)
 
 
-# Quiz Serializer
-class CourseQuizListSerializer(serializers.ModelSerializer):
-    order = serializers.IntegerField(source="order", read_only=True)
-    lesson_id = serializers.IntegerField(source="lesson.id", read_only=True)
+# ----------------------------- Quiz Serializer -----------------------------
+class CourseQuizQuestionSerializer(serializers.ModelSerializer):
+    """Read-only representation of a question, used when returning quiz detail."""
 
-    class Meta:
-        model = CourseQuiz
-        fields = (
-            "id",
-            "lesson_id",
-            "title",
-            "description",
-            "order",
-            "is_published",
-            "created_at",
-        )
-        read_only_fields = fields
-
-class CourseQuizCreateSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = CourseQuiz
-        fields = (
-            "module",
-            "lesson",
-            "title",
-            "pass_score",
-            "is_active",
-        )
-        extra_kwargs = {
-            "module": {"required": False, "allow_null": True},
-            "lesson": {"required": False, "allow_null": True},
-        }
-
-class CourseQuizQuestionCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = CourseQuizQuestion
         fields = (
+            "id",
             "question",
             "option_a",
             "option_b",
@@ -620,19 +591,197 @@ class CourseQuizQuestionCreateSerializer(serializers.ModelSerializer):
             "correct_option",
             "order",
         )
-        extra_kwargs = {
-            "order": {"required": False},
-        }
-
-class QuizListView(APIView):
-    permission_classes = [IsAuthenticated]
-
-    def get(self, request):
-        profile = getattr(request.user, "teacher_profile", None)
-        if not profile:
-            return Response({"message": "Teacher profile not found."}, status=status.HTTP_404_NOT_FOUND)
-        quizzes = CourseQuiz.objects.filter(lesson__module__course__teacher=profile).order_by("order")
-        serializer = CourseQuizListSerializer(quizzes, many=True, context={"request": request})
-        return Response({"message": "Quiz list retrieved successfully", "data": serializer.data}, status=status.HTTP_200_OK)
 
 
+class CourseQuizQuestionCreateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CourseQuizQuestion
+        fields = (
+            "id",
+            "quiz",
+            "question",
+            "option_a",
+            "option_b",
+            "option_c",
+            "option_d",
+            "correct_option",
+            "order",
+        )
+        read_only_fields = ("id",)
+
+
+class CourseQuizListSerializer(serializers.ModelSerializer):
+    """Read serializer — used for list, detail, and as the response after create/update."""
+
+    questions = CourseQuizQuestionSerializer(many=True, read_only=True)
+    lesson_title = serializers.CharField(
+        source="lesson.title", read_only=True, default=None
+    )
+    module_title = serializers.CharField(
+        source="module.title", read_only=True, default=None
+    )
+    course_title = serializers.SerializerMethodField()
+    question_count = serializers.SerializerMethodField()
+    attempts_count = serializers.SerializerMethodField()
+
+    class Meta:
+        model = CourseQuiz
+        fields = (
+            "id",
+            "module",
+            "module_title",
+            "lesson",
+            "lesson_title",
+            "course_title",
+            "title",
+            "pass_score",
+            "order",
+            "is_active",
+            "created_at",
+            "question_count",
+            "attempts_count",
+            "questions",
+        )
+
+    def get_course_title(self, obj):
+        if obj.lesson_id and obj.lesson.module_id:
+            return obj.lesson.module.course.name
+        if obj.module_id:
+            return obj.module.course.name
+        return None
+
+    def get_question_count(self, obj):
+        # obj.questions is prefetched in the view, so this doesn't re-hit the DB
+        return len(obj.questions.all())
+
+    def get_attempts_count(self, obj):
+        return obj.attempts.count()
+
+
+class CourseQuizCreateSerializer(serializers.ModelSerializer):
+    """Write serializer for create/update, accepts nested questions as JSON."""
+
+    questions = serializers.JSONField(required=False, default=list)
+
+    class Meta:
+        model = CourseQuiz
+        fields = (
+            "id",
+            "module",
+            "lesson",
+            "title",
+            "pass_score",
+            "order",
+            "is_active",
+            "questions",
+        )
+        read_only_fields = ("id",)
+
+    # ---- ownership checks ----
+
+    def _teacher_profile(self):
+        request = self.context.get("request")
+        return getattr(getattr(request, "user", None), "teacher_profile", None)
+
+    def validate_module(self, value):
+        teacher_profile = self._teacher_profile()
+        if teacher_profile and value and value.course.teacher_id != teacher_profile.id:
+            raise serializers.ValidationError(
+                "You can only attach quizzes to your own modules."
+            )
+        return value
+
+    def validate_lesson(self, value):
+        teacher_profile = self._teacher_profile()
+        if (
+            teacher_profile
+            and value
+            and value.module.course.teacher_id != teacher_profile.id
+        ):
+            raise serializers.ValidationError(
+                "You can only attach quizzes to your own lessons."
+            )
+        return value
+
+    def validate_questions(self, value):
+        if value in (None, ""):
+            return []
+
+        if not isinstance(value, list):
+            raise serializers.ValidationError("questions must be a list of question objects.")
+
+        required_fields = (
+            "question",
+            "option_a",
+            "option_b",
+            "option_c",
+            "option_d",
+            "correct_option",
+        )
+
+        for index, item in enumerate(value, start=1):
+            if not isinstance(item, dict):
+                raise serializers.ValidationError(f"Question #{index} must be an object.")
+
+            missing = [field for field in required_fields if not str(item.get(field, "")).strip()]
+            if missing:
+                raise serializers.ValidationError(
+                    f"Question #{index} is missing: {', '.join(missing)}."
+                )
+
+            correct_option = str(item.get("correct_option")).strip().upper()
+            if correct_option not in {"A", "B", "C", "D"}:
+                raise serializers.ValidationError(
+                    f"Question #{index} has an invalid correct_option; must be A, B, C, or D."
+                )
+
+        return value
+
+    def validate(self, attrs):
+        module = attrs.get("module", getattr(self.instance, "module", None))
+        lesson = attrs.get("lesson", getattr(self.instance, "lesson", None))
+
+        if not module and not lesson:
+            raise serializers.ValidationError(
+                "A quiz must be linked to either a module or a lesson."
+            )
+
+        return attrs
+
+    # ---- persistence ----
+
+    def _save_questions(self, quiz, questions):
+        for index, item in enumerate(questions, start=1):
+            CourseQuizQuestion.objects.create(
+                quiz=quiz,
+                question=item.get("question", "").strip(),
+                option_a=item.get("option_a", "").strip(),
+                option_b=item.get("option_b", "").strip(),
+                option_c=item.get("option_c", "").strip(),
+                option_d=item.get("option_d", "").strip(),
+                correct_option=str(item.get("correct_option")).strip().upper(),
+                order=int(item.get("order") or index),
+            )
+
+    @transaction.atomic
+    def create(self, validated_data):
+        questions = validated_data.pop("questions", [])
+        quiz = CourseQuiz.objects.create(**validated_data)
+        self._save_questions(quiz, questions)
+        return quiz
+
+    @transaction.atomic
+    def update(self, instance, validated_data):
+        # questions is popped separately so "not provided at all" (PATCH without
+        # touching questions) is distinguishable from "provided as an empty list"
+        questions = validated_data.pop("questions", None)
+
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+
+        if questions is not None:
+            instance.questions.all().delete()
+            self._save_questions(instance, questions)
+
+        return instance

@@ -1112,37 +1112,183 @@ class NextResourceIdView(APIView):
 
 # ------------------------------- Quiz Views -------------------------------
 class QuizListView(APIView):
+    """
+    Single view backing quiz-list / quiz-detail / create-quiz / update-quiz / delete-quiz.
+
+    GET    -> list (optionally filtered by course_id/module_id/lesson_id), or a single
+              quiz when quiz_id is given
+    POST   -> create a quiz (module_id/lesson_id may come from query params or the body)
+    PATCH  -> quiz_id query param required, partial update
+    DELETE -> quiz_id query param required
+    """
+
     permission_classes = [IsAuthenticated]
+
+    def _base_queryset(self, profile):
+        return (
+            CourseQuiz.objects.filter(
+                Q(lesson__module__course__teacher=profile)
+                | Q(module__course__teacher=profile)
+            )
+            .select_related(
+                "lesson", "lesson__module", "lesson__module__course",
+                "module", "module__course",
+            )
+            .prefetch_related(
+                Prefetch("questions", queryset=CourseQuizQuestion.objects.order_by("order", "id"))
+            )
+            .distinct()
+        )
 
     def get(self, request):
         profile = getattr(request.user, "teacher_profile", None)
         if not profile:
-            return Response({"message": "Teacher profile not found."}, status=status.HTTP_404_NOT_FOUND)
-        quizzes = CourseQuiz.objects.filter(lesson__module__course__teacher=profile).order_by("order")
-        serializer = CourseQuizListSerializer(quizzes, many=True, context={"request": request})
-        return Response({"message": "Quiz list retrieved successfully", "data": serializer.data}, status=status.HTTP_200_OK)
+            return Response(
+                {"message": "Teacher profile not found."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
 
-class QuizCreateView(APIView):
-    permission_classes = [IsAuthenticated]
+        course_id = request.query_params.get("course_id")
+        module_id = request.query_params.get("module_id")
+        lesson_id = request.query_params.get("lesson_id")
+        quiz_id = request.query_params.get("quiz_id")
+
+        queryset = self._base_queryset(profile)
+
+        if quiz_id:
+            try:
+                quiz = queryset.get(id=quiz_id)
+            except CourseQuiz.DoesNotExist:
+                return Response(
+                    {"message": "Quiz not found."},
+                    status=status.HTTP_404_NOT_FOUND,
+                )
+
+            serializer = CourseQuizListSerializer(quiz, context={"request": request})
+            return Response(
+                {"message": "Quiz retrieved successfully", "data": serializer.data},
+                status=status.HTTP_200_OK,
+            )
+
+        if course_id:
+            queryset = queryset.filter(
+                Q(lesson__module__course_id=course_id) | Q(module__course_id=course_id)
+            )
+        if module_id:
+            queryset = queryset.filter(
+                Q(lesson__module_id=module_id) | Q(module_id=module_id)
+            )
+        if lesson_id:
+            queryset = queryset.filter(lesson_id=lesson_id)
+
+        serializer = CourseQuizListSerializer(
+            queryset.order_by("order", "-created_at"), many=True, context={"request": request}
+        )
+
+        return Response(
+            {"message": "Quiz list retrieved successfully", "data": serializer.data},
+            status=status.HTTP_200_OK,
+        )
 
     def post(self, request):
         profile = getattr(request.user, "teacher_profile", None)
         if not profile:
-            return Response({"message": "Teacher profile not found."}, status=status.HTTP_404_NOT_FOUND)
-        serializer = CourseQuizCreateSerializer(data=request.data)
+            return Response(
+                {"message": "Teacher profile not found."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        payload = request.data.copy() if hasattr(request.data, "copy") else dict(request.data)
+
+        # Allow module_id/lesson_id to be supplied as query params too,
+        # mirroring the lesson-creation flow (?module_id=...).
+        module_id = request.query_params.get("module_id")
+        lesson_id = request.query_params.get("lesson_id")
+        if module_id and not payload.get("module"):
+            payload["module"] = module_id
+        if lesson_id and not payload.get("lesson"):
+            payload["lesson"] = lesson_id
+
+        serializer = CourseQuizCreateSerializer(data=payload, context={"request": request})
+
         if serializer.is_valid():
             quiz = serializer.save()
-            # Handle nested questions if provided
-            questions_data = request.data.get('questions', [])
-            for q_data in questions_data:
-                # Ensure the quiz foreign key is set
-                q_data['quiz'] = quiz.id
-                q_serializer = CourseQuizQuestionCreateSerializer(data=q_data)
-                if q_serializer.is_valid():
-                    q_serializer.save()
-                else:
-                    # Roll back the quiz if any question is invalid
-                    quiz.delete()
-                    return Response({"message": "Invalid question data", "errors": q_serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
-            return Response({"message": "Quiz created successfully", "data": CourseQuizListSerializer(quiz, context={"request": request}).data}, status=status.HTTP_201_CREATED)
+            return Response(
+                {
+                    "message": "Quiz created successfully",
+                    "data": CourseQuizListSerializer(quiz, context={"request": request}).data,
+                },
+                status=status.HTTP_201_CREATED,
+            )
+
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def patch(self, request):
+        profile = getattr(request.user, "teacher_profile", None)
+        if not profile:
+            return Response(
+                {"message": "Teacher profile not found."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        quiz_id = request.query_params.get("quiz_id")
+        if not quiz_id:
+            return Response(
+                {"quiz_id": "This query parameter is required."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            quiz = self._base_queryset(profile).get(id=quiz_id)
+        except CourseQuiz.DoesNotExist:
+            return Response(
+                {"message": "Quiz not found."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        serializer = CourseQuizCreateSerializer(
+            quiz, data=request.data, partial=True, context={"request": request}
+        )
+
+        if serializer.is_valid():
+            updated = serializer.save()
+            return Response(
+                {
+                    "message": "Quiz updated successfully",
+                    "data": CourseQuizListSerializer(updated, context={"request": request}).data,
+                },
+                status=status.HTTP_200_OK,
+            )
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request):
+        profile = getattr(request.user, "teacher_profile", None)
+        if not profile:
+            return Response(
+                {"message": "Teacher profile not found."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        quiz_id = request.query_params.get("quiz_id")
+        if not quiz_id:
+            return Response(
+                {"quiz_id": "This query parameter is required."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            quiz = self._base_queryset(profile).get(id=quiz_id)
+        except CourseQuiz.DoesNotExist:
+            return Response(
+                {"message": "Quiz not found."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        title = quiz.title
+        quiz.delete()
+
+        return Response(
+            {"message": f'"{title}" deleted successfully'},
+            status=status.HTTP_200_OK,
+        )

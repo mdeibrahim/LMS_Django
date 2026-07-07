@@ -158,11 +158,21 @@
                                             {% for item in module.quiz_items %}
                                             <div class="rounded-2xl border border-slate-200 bg-white px-4 py-4">
                                                 <div class="font-semibold text-slate-900">{{ item.quiz.title }}</div>
-                                                <p class="mt-1 text-sm text-slate-500">From lesson: {{ item.lesson.title }}</p>
+                                                <p class="mt-1 text-sm text-slate-500">
+                                                    {% if item.lesson %}
+                                                        From lesson: {{ item.lesson.title }}
+                                                    {% else %}
+                                                        Module Quiz
+                                                    {% endif %}
+                                                </p>
                                                 <p class="mt-1 text-sm text-slate-500">Pass score: {{ item.quiz.pass_score }}%</p>
                                                 <div class="mt-4">
                                                     {% if item.is_accessible %}
-                                                    <a href="{% url 'content:quiz_detail' course.slug module.slug item.lesson.slug item.quiz.id %}" class="btn w-full sm:w-auto">Take MCQ</a>
+                                                        {% if item.lesson %}
+                                                            <a href="{% url 'content:quiz_detail' course.slug module.slug item.lesson.slug item.quiz.id %}" class="btn w-full sm:w-auto">Take MCQ</a>
+                                                        {% else %}
+                                                            <a href="{% url 'content:module_quiz_detail' course.slug module.slug item.quiz.id %}" class="btn w-full sm:w-auto">Take MCQ</a>
+                                                        {% endif %}
                                                     {% else %}
                                                     <span class="inline-flex items-center gap-2 rounded-xl bg-rose-100 px-4 py-2 text-sm font-semibold text-rose-700"><i class="fa-solid fa-lock"></i> Locked</span>
                                                     {% endif %}

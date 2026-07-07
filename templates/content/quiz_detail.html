@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% load content_render %}
 
-{% block title %}{{ quiz.title }} — {{ lesson.title }}{% endblock %}
+{% block title %}{{ quiz.title }} — {% if lesson %}{{ lesson.title }}{% else %}{{ module.title }}{% endif %}{% endblock %}
 
 {% block breadcrumb %}
 <nav class="border-y border-slate-200/80 bg-white/70 backdrop-blur">
@@ -11,8 +11,10 @@
             <li>/</li>
             <li><a href="{% url 'content:course_detail' course.slug %}" class="transition hover:text-slate-900">{{ course.name }}</a></li>
             <li>/</li>
+            {% if lesson %}
             <li><a href="{% url 'content:lesson_detail' course.slug module.slug lesson.slug %}" class="transition hover:text-slate-900">{{ lesson.title }}</a></li>
             <li>/</li>
+            {% endif %}
             <li class="font-semibold text-slate-800">{{ quiz.title }}</li>
         </ol>
     </div>
@@ -32,7 +34,11 @@
                     <h1 class="mt-4 font-display text-3xl font-bold tracking-tight text-slate-900">{{ quiz.title }}</h1>
                     <p class="mt-2 text-sm text-slate-600">Answer all questions, then submit to see your result.</p>
                 </div>
+                {% if lesson %}
                 <a href="{% url 'content:lesson_detail' course.slug module.slug lesson.slug %}" class="btn">Back to Lesson</a>
+                {% else %}
+                <a href="{% url 'content:course_detail' course.slug %}" class="btn">Back to Module</a>
+                {% endif %}
             </div>
 
             {% if submission %}
@@ -105,7 +111,11 @@
                     {% if not submission %}
                     <button type="submit" class="btn btn-primary">Submit Answers</button>
                     {% endif %}
+                    {% if lesson %}
                     <a href="{% url 'content:quiz_detail' course.slug module.slug lesson.slug quiz.id %}" class="btn">{% if submission %}Try Again{% else %}Reset{% endif %}</a>
+                    {% else %}
+                    <a href="{% url 'content:module_quiz_detail' course.slug module.slug quiz.id %}" class="btn">{% if submission %}Try Again{% else %}Reset{% endif %}</a>
+                    {% endif %}
                 </div>
                 {% endif %}
             </form>

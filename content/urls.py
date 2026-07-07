@@ -49,6 +49,7 @@ urlpatterns = [
     path('courses/<str:course_slug>/modules/<str:module_slug>/lessons/<str:lesson_slug>/', views.lesson_detail, name='lesson_detail'),
     path('courses/<str:course_slug>/modules/<str:module_slug>/lessons/<str:lesson_slug>/editor/', views.lesson_editor, name='lesson_editor'),
     path('courses/<str:course_slug>/modules/<str:module_slug>/lessons/<str:lesson_slug>/quizzes/<int:quiz_id>/', views.quiz_detail, name='quiz_detail'),
+    path('courses/<str:course_slug>/modules/<str:module_slug>/quizzes/<int:quiz_id>/', views.quiz_detail, name='module_quiz_detail'),
     path('courses/<str:course_slug>/modules/<str:module_slug>/resources/<int:video_id>/', views.play_video, name='play_video'),
     path('courses/<str:course_slug>/buy/', views.buy_module, name='buy_module'),
     path('courses/<str:course_slug>/start-purchase/', views.start_purchase, name='start_purchase'),
@@ -64,8 +65,5 @@ urlpatterns = [
     path('api/lesson/<int:lesson_id>/ic/create/', views.api_lesson_ic_create, name='api_lesson_ic_create'),
     path('api/ic/<int:ic_id>/update/', views.api_ic_update, name='api_ic_update'),
     path('api/ic/<int:ic_id>/delete/', views.api_ic_delete, name='api_ic_delete'),
-    # path('api/module/<int:module_id>/accordion/create/', views.api_accordion_create, name='api_accordion_create'),
-    # path('api/accordion/<int:section_id>/update/', views.api_accordion_update, name='api_accordion_update'),
-    # path('api/accordion/<int:section_id>/delete/', views.api_accordion_delete, name='api_accordion_delete'),
 
 ]

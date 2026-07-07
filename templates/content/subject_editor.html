@@ -204,9 +204,9 @@
                 <form id="icForm" enctype="multipart/form-data">
                     {% csrf_token %}
                     <input type="hidden" id="icFormId" value="">
-                    <div class="form-row"><label class="form-label" for="icTitle">Title </label><input type="text" class="form-input" id="icTitle" placeholder="e.g. Demonstration Video"></div>
+                    <div class="form-row"><label class="form-label" for="icTitle">Title (optional)</label><input type="text" class="form-input" id="icTitle" placeholder="e.g. Demonstration Video"></div>
                     <div class="form-row">
-                        <label class="form-label" for="icType">Content Type <span class="required">*</span></label>`
+                        <label class="form-label" for="icType">Content Type <span class="required">*</span></label>
                         <div class="type-selector" id="typeSelector" style="display: flex; flex-wrap: wrap; gap: 10px;">
                             <button type="button" class="type-btn type-btn--text active" data-type="text"><i class="fa-solid fa-font"></i> Text</button>
                             <button type="button" class="type-btn type-btn--image" data-type="image"><i class="fa-solid fa-image"></i> Image</button>

@@ -435,28 +435,6 @@ class LessonResource(models.Model):
 
 
 
-# class ModuleAccordionSection(models.Model):
-#     module = models.ForeignKey("Module", on_delete=models.CASCADE, related_name="accordion_sections")
-#     title = models.CharField(max_length=255)
-#     content = models.TextField(blank=True)
-#     order = models.PositiveIntegerField(default=0)
-#     is_open_by_default = models.BooleanField(default=False)
-#     created_at = models.DateTimeField(auto_now_add=True)
-#     updated_at = models.DateTimeField(auto_now=True)
-
-#     class Meta:
-#         ordering = ["order", "created_at"]
-
-#     def save(self, *args, **kwargs):
-#         if not self.pk and self.order == 0:
-#             max_order = ModuleAccordionSection.objects.filter(module=self.module).aggregate(models.Max('order'))['order__max']
-#             self.order = (max_order or 0) + 1
-#         super().save(*args, **kwargs)
-
-#     def __str__(self):
-#         return f"{self.module.title} - {self.title}"
-
-
 PAYMENT_METHOD_CHOICES = [
     ("bkash", "Bkash"),
     ("nagad", "Nagad"),
@@ -534,7 +512,7 @@ class PaymentSubmission(models.Model):
         return f"{self.user} payment for {self.course.name} ({self.status})"
 
 
-
+# ------------------------------- Quiz Model -------------------------------
 class CourseQuiz(models.Model):
     module = models.ForeignKey("Module", on_delete=models.CASCADE, related_name="course_quizzes", blank=True, null=True)
     lesson = models.ForeignKey("Lesson", on_delete=models.SET_NULL, related_name="quizzes", blank=True, null=True)

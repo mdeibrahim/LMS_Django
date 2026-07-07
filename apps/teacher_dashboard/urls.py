@@ -5,7 +5,7 @@ from .views import (
     CategorySubcategoryListView, ModuleListView, LessonListView,
     NextResourceIdView, LogoutView, ChangePasswordView, VerifyOTPView,
     ResendOTPView, ForgotPasswordView, ResetPasswordView,
-    QuizListView, QuizCreateView
+    QuizListView
 )
 
 
