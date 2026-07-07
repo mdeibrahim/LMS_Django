@@ -367,7 +367,7 @@ def profile_page(request):
 def student_dashboard(request):
     enrollments = CourseEnrollment.objects.filter(
         user=request.user,
-        status="active",
+        # status="active",
     ).select_related("course")
     purchased_course_ids = set(enrollments.values_list("course_id", flat=True))
     available_courses = Course.objects.exclude(id__in=purchased_course_ids)
@@ -383,6 +383,8 @@ def student_dashboard(request):
             "is_completed": False,
             "has_access": has_course_access(request.user, enrollment.course),
             "certificate": certificate_map.get(enrollment.course_id),
+            "status": enrollment.status,
+            "course_cover_image": enrollment.course.cover_image,
         }
         for enrollment in enrollments
     ]
@@ -536,7 +538,7 @@ def submit_payment_details(request, course_slug):
             "Payment details were saved for review, but notification email could not be sent automatically.",
         )
 
-    return redirect("content:course_purchase", course_slug=course.slug)
+    return redirect("content:student_dashboard")
 
 
 def _generate_certificate_code():

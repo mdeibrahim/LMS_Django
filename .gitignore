@@ -20,8 +20,8 @@ staticfiles/
 .agent/
 
 # database
-*.sqlite3
-db.sqlite3
+# *.sqlite3
+# db.sqlite3
 
 # IDEs and editors
 .idea/

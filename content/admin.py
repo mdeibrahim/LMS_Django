@@ -686,6 +686,20 @@ class PaymentSubmissionAdmin(ModelAdmin):
         }.get(obj.status, "slate")
         return tone_badge(obj.get_status_display(), tone)
 
+    def save_model(self, request, obj, form, change):
+        """Admin panel এ status approved করলে enrollment ও automatically active হয়ে যাবে।"""
+        old_status = None
+        if change and obj.pk:
+            try:
+                old_status = PaymentSubmission.objects.values_list("status", flat=True).get(pk=obj.pk)
+            except PaymentSubmission.DoesNotExist:
+                pass
+
+        super().save_model(request, obj, form, change)
+
+        if obj.status == PaymentSubmissionStatus.APPROVED and old_status != PaymentSubmissionStatus.APPROVED:
+            approve_payment_submission(obj, reviewed_by=request.user)
+
 
 @admin.register(CourseCertificate)
 class CourseCertificateAdmin(ModelAdmin):

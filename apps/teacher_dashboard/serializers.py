@@ -200,10 +200,20 @@ class SubcategorySimpleSerializer(serializers.ModelSerializer):
 
 # Course Serializer
 class CourseSerializer(serializers.ModelSerializer):
-    category = serializers.SerializerMethodField()
-    subcategory = SubcategorySimpleSerializer(read_only=True)
-    slug = serializers.SlugField(read_only=True)
+    # --- write fields (accept IDs on POST/PATCH) ---
+    category = serializers.PrimaryKeyRelatedField(
+        queryset=Category.objects.all(),
+        write_only=True,
+        required=False,
+        allow_null=True,
+    )
+    subcategory = serializers.PrimaryKeyRelatedField(
+        queryset=Subcategory.objects.all(),
+        required=False,
+        allow_null=True,
+    )
 
+    slug = serializers.SlugField(read_only=True)
     modules_count = serializers.IntegerField(source="modules.count", read_only=True)
 
     class Meta:
@@ -223,11 +233,21 @@ class CourseSerializer(serializers.ModelSerializer):
             "modules_count",
         )
 
-    def get_category(self, obj):
-        return {
-            "id": obj.subcategory.category.id,
-            "name": obj.subcategory.category.name,
-        }
+    def to_representation(self, instance):
+        """Return nested objects on read instead of plain IDs."""
+        data = super().to_representation(instance)
+        # subcategory → nested object
+        if instance.subcategory:
+            data["subcategory"] = SubcategorySimpleSerializer(instance.subcategory).data
+        else:
+            data["subcategory"] = None
+        # category → derived from subcategory
+        if instance.subcategory and instance.subcategory.category_id:
+            cat = instance.subcategory.category
+            data["category"] = {"id": cat.id, "name": cat.name}
+        else:
+            data["category"] = None
+        return data
 
     def _get_teacher_profile(self):
         request = self.context.get("request")
@@ -270,7 +290,6 @@ class CourseSerializer(serializers.ModelSerializer):
 
         return attrs
 
-
     def _generate_unique_slug(self, name):
         base_slug = slugify(name) or "course"
         slug = base_slug
@@ -292,6 +311,7 @@ class CourseSerializer(serializers.ModelSerializer):
         )
 
     def update(self, instance, validated_data):
+        validated_data.pop("category", None)  # category is derived from subcategory
         if "name" in validated_data:
             instance.slug = self._generate_unique_slug(validated_data["name"])
         return super().update(instance, validated_data)
