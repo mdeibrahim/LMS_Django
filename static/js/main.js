@@ -211,6 +211,45 @@
 
     // Expose for dynamic content
     window.openResourceModal = openModal;
+    
+    // Direct modal for YouTube URLs (e.g. for quiz explanations)
+    window.openYouTubeModal = function(rawUrl) {
+        modalTitle.textContent = 'Video Explanation';
+        
+        let embedUrl = rawUrl;
+        const match = rawUrl.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([^&?]+)/);
+        if (match && match[1]) {
+            embedUrl = 'https://www.youtube.com/embed/' + match[1];
+        }
+
+        try {
+            const youtubeUrl = new URL(embedUrl);
+            youtubeUrl.searchParams.set('autoplay', '1');
+            youtubeUrl.searchParams.set('playsinline', '1');
+            youtubeUrl.searchParams.set('rel', '0');
+            youtubeUrl.searchParams.set('origin', window.location.origin);
+            youtubeUrl.searchParams.set('widget_referrer', window.location.href);
+
+            modalBody.innerHTML = `
+                <div class="aspect-video overflow-hidden rounded-xl border border-slate-200 bg-black">
+                    <iframe
+                        src="${youtubeUrl.toString()}"
+                        title="Video Explanation"
+                        class="h-full w-full"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        referrerpolicy="strict-origin-when-cross-origin"
+                        allowfullscreen>
+                    </iframe>
+                </div>`;
+        } catch (e) {
+            modalBody.innerHTML = `<div class="p-4 text-red-600">Invalid Video URL</div>`;
+        }
+        
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        document.body.style.overflow = 'hidden';
+        modalClose.focus();
+    };
 
 })();
 

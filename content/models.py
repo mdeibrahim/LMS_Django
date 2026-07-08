@@ -550,6 +550,11 @@ class CourseQuizQuestion(models.Model):
     option_d = models.CharField(max_length=255)
     correct_option = models.CharField(max_length=1, choices=[("A", "A"), ("B", "B"), ("C", "C"), ("D", "D")])
     order = models.PositiveIntegerField(default=0)
+    image = models.ImageField(upload_to="quiz_questions/", blank=True, null=True)
+    explanation = models.TextField(blank=True, default="")
+    explanation_image = models.ImageField(upload_to="quiz_explanations/", blank=True, null=True)
+    explanation_note = models.TextField(blank=True, default="")
+    explanation_video_url = models.URLField(blank=True, default="")
 
     class Meta:
         ordering = ["order", "id"]

@@ -10,8 +10,9 @@ from rest_framework.permissions import IsAuthenticated
 from django.utils import timezone
 from apps.teacher_dashboard.utils import send_verification_email, forgot_password_email
 from content import models
-from content.models import Course, Module, Lesson, LessonResource, EmailOTP, PasswordResetSession, CourseQuiz
+from content.models import Course, Module, Lesson, LessonResource, EmailOTP, PasswordResetSession, CourseQuiz, CourseQuizQuestion
 from .models import Category, Subcategory
+from django.db.models import Q, Prefetch
 from .serializers import (
     CategorySubcategorySerializer,
     CourseSerializer,

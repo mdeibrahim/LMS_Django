@@ -598,6 +598,8 @@ class LessonCreateSerializer(serializers.ModelSerializer):
 # ----------------------------- Quiz Serializer -----------------------------
 class CourseQuizQuestionSerializer(serializers.ModelSerializer):
     """Read-only representation of a question, used when returning quiz detail."""
+    image = serializers.SerializerMethodField()
+    explanation_image = serializers.SerializerMethodField()
 
     class Meta:
         model = CourseQuizQuestion
@@ -610,7 +612,30 @@ class CourseQuizQuestionSerializer(serializers.ModelSerializer):
             "option_d",
             "correct_option",
             "order",
+            "image",
+            "explanation",
+            "explanation_image",
+            "explanation_note",
+            "explanation_video_url",
         )
+
+    def get_image(self, obj):
+        if not obj.image:
+            return ""
+        request = self.context.get("request")
+        url = obj.image.url
+        if request is not None:
+            return request.build_absolute_uri(url)
+        return url
+
+    def get_explanation_image(self, obj):
+        if not obj.explanation_image:
+            return ""
+        request = self.context.get("request")
+        url = obj.explanation_image.url
+        if request is not None:
+            return request.build_absolute_uri(url)
+        return url
 
 
 class CourseQuizQuestionCreateSerializer(serializers.ModelSerializer):
@@ -626,6 +651,11 @@ class CourseQuizQuestionCreateSerializer(serializers.ModelSerializer):
             "option_d",
             "correct_option",
             "order",
+            "image",
+            "explanation",
+            "explanation_image",
+            "explanation_note",
+            "explanation_video_url",
         )
         read_only_fields = ("id",)
 
@@ -664,11 +694,17 @@ class CourseQuizListSerializer(serializers.ModelSerializer):
         )
 
     def get_course_title(self, obj):
+        course = None
         if obj.lesson_id and obj.lesson.module_id:
-            return obj.lesson.module.course.name
-        if obj.module_id:
-            return obj.module.course.name
-        return None
+            course = obj.lesson.module.course
+        elif obj.module_id:
+            course = obj.module.course
+
+        if course is None:
+            return None
+
+        # tolerate either `.name` or `.title` depending on your Course model
+        return getattr(course, "name", None) or getattr(course, "title", None)
 
     def get_question_count(self, obj):
         # obj.questions is prefetched in the view, so this doesn't re-hit the DB
@@ -771,8 +807,30 @@ class CourseQuizCreateSerializer(serializers.ModelSerializer):
     # ---- persistence ----
 
     def _save_questions(self, quiz, questions):
+        from django.conf import settings
+        request = self.context.get("request")
+        files = getattr(request, "FILES", {}) if request else {}
+
+        def clean_media_path(url):
+            if not url:
+                return None
+            media_url = getattr(settings, "MEDIA_URL", "/media/")
+            if "://" in url:
+                url = url.split("://", 1)[1]
+                if "/" in url:
+                    url = "/" + url.split("/", 1)[1]
+            if url.startswith(media_url):
+                return url[len(media_url):]
+            return url
+
         for index, item in enumerate(questions, start=1):
-            CourseQuizQuestion.objects.create(
+            image_key = item.get("image_key")
+            explanation_image_key = item.get("explanation_image_key")
+
+            uploaded_image = files.get(image_key) if image_key else None
+            uploaded_explanation_image = files.get(explanation_image_key) if explanation_image_key else None
+
+            question_obj = CourseQuizQuestion.objects.create(
                 quiz=quiz,
                 question=item.get("question", "").strip(),
                 option_a=item.get("option_a", "").strip(),
@@ -781,7 +839,22 @@ class CourseQuizCreateSerializer(serializers.ModelSerializer):
                 option_d=item.get("option_d", "").strip(),
                 correct_option=str(item.get("correct_option")).strip().upper(),
                 order=int(item.get("order") or index),
+                explanation=item.get("explanation", "").strip(),
+                explanation_note=item.get("explanation_note", "").strip(),
+                explanation_video_url=item.get("explanation_video_url", "").strip(),
             )
+
+            if uploaded_image:
+                question_obj.image = uploaded_image
+            elif item.get("image"):
+                question_obj.image = clean_media_path(item.get("image"))
+
+            if uploaded_explanation_image:
+                question_obj.explanation_image = uploaded_explanation_image
+            elif item.get("explanation_image"):
+                question_obj.explanation_image = clean_media_path(item.get("explanation_image"))
+
+            question_obj.save()
 
     @transaction.atomic
     def create(self, validated_data):
