@@ -634,10 +634,14 @@ class CourseListView(APIView):
 
         if serializer.is_valid():
             course = serializer.save()
+            data = CourseSerializer(course, context={"request": request}).data
+            if course.subcategory_id:
+                data["subcategory"] = course.subcategory.slug
+                data["category"] = course.subcategory.category.name if course.subcategory.category_id else None
             return Response(
                 {
                     "message": "Course created successfully",
-                    "data": CourseSerializer(course, context={"request": request}).data
+                    "data": data
                 },
                 status=status.HTTP_201_CREATED
             )
@@ -865,7 +869,7 @@ class LessonListView(APIView):
                 status=status.HTTP_404_NOT_FOUND
             )
 
-        module_id = request.query_params.get("module_id")
+        module_id = request.query_params.get("module_id") or request.data.get("module_id")
         lesson_id = request.query_params.get("lesson_id")
         course_id = request.query_params.get("course_id")
 
@@ -943,7 +947,7 @@ class LessonListView(APIView):
                 status=status.HTTP_404_NOT_FOUND
             )
 
-        module_id = request.query_params.get("module_id")
+        module_id = request.query_params.get("module_id") or request.data.get("module_id")
 
         if not module_id:
             return Response(

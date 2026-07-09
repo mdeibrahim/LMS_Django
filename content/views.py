@@ -42,6 +42,7 @@ from .services import (
     has_course_access,
     visible_lessons_qs,
 )
+from .firebase import verify_id_token
 from .utils import send_payment_submission_email, send_verification_email
 
 
@@ -501,6 +502,7 @@ def course_purchase(request, course_slug):
 def submit_payment_details(request, course_slug):
     course = get_object_or_404(Course, slug=course_slug)
     transaction_id = (request.POST.get("transaction_id") or "").strip()
+    bkash_phone_number = (request.POST.get("bkash_phone_number") or "").strip()
     note = (request.POST.get("note") or "").strip()
     payment_method = (request.POST.get("payment_method") or request.POST.get("payment_method_display") or "").strip()
 
@@ -513,11 +515,16 @@ def submit_payment_details(request, course_slug):
         messages.error(request, "Please provide a transaction ID.")
         return redirect("content:course_purchase", course_slug=course.slug)
 
+    if not bkash_phone_number:
+        messages.error(request, "Please provide your Bkash Number")
+        return redirect("content:course_purchase", course_slug=course.slug)
+
     submission = create_or_update_payment_submission(
         user=request.user,
         course=course,
         payment_method=payment_method or "other",
         transaction_id=transaction_id,
+        bkash_phone_number = bkash_phone_number,
         note=note,
     )
 
@@ -526,6 +533,7 @@ def submit_payment_details(request, course_slug):
         course=course,
         amount=getattr(course, "price", 0),
         payment_method=payment_method,
+        bkash_phone_number = bkash_phone_number,
         transaction_id=transaction_id,
         note=note,
     )
@@ -581,7 +589,14 @@ def _role_login(request, template_name):
             return redirect(next_url)
         return redirect("content:student_dashboard" if profile.role == UserRole.STUDENT else "content:home")
 
-    return render(request, template_name, {"form": form})
+    return render(
+        request,
+        template_name,
+        {
+            "form": form,
+            "firebase_config": _firebase_web_config(),
+        },
+    )
 
 
 def generate_otp(user):
@@ -614,7 +629,14 @@ def _role_signup(request, template_name):
         request.session["pending_otp_user"] = user.id
         return redirect("content:otp_verify")
 
-    return render(request, template_name, {"form": form})
+    return render(
+        request,
+        template_name,
+        {
+            "form": form,
+            "firebase_config": _firebase_web_config(),
+        },
+    )
 
 
 def otp_verify(request):
@@ -702,6 +724,120 @@ def otp_resend(request):
     else:
         messages.info(request, f"OTP for verification: {code}")
     return redirect("content:otp_verify")
+
+
+def _firebase_web_config():
+    return {
+        "apiKey": getattr(settings, "FIREBASE_WEB_API_KEY", ""),
+        "authDomain": getattr(settings, "FIREBASE_AUTH_DOMAIN", ""),
+        "projectId": getattr(settings, "FIREBASE_PROJECT_ID", ""),
+        "appId": getattr(settings, "FIREBASE_APP_ID", ""),
+    }
+
+
+@require_POST
+def firebase_phone_auth(request):
+    try:
+        payload = json.loads(request.body or "{}")
+    except Exception:
+        return JsonResponse({"ok": False, "error": "Invalid JSON payload."}, status=400)
+
+    id_token = (payload.get("id_token") or "").strip()
+    if not id_token:
+        return JsonResponse({"ok": False, "error": "id_token is required."}, status=400)
+
+    try:
+        decoded_token = verify_id_token(id_token)
+    except Exception as exc:
+        return JsonResponse({"ok": False, "error": "Invalid Firebase token.", "detail": str(exc)}, status=400)
+
+    phone_number = (decoded_token.get("phone_number") or "").strip()
+    if not phone_number:
+        return JsonResponse({"ok": False, "error": "Phone number not found in Firebase token."}, status=400)
+
+    full_name = (payload.get("full_name") or decoded_token.get("name") or "").strip()
+    password = (payload.get("password") or "").strip()
+
+    user = User.objects.filter(phone_number=phone_number).first()
+    created = False
+
+    if user is None:
+        user = User.objects.create_user(
+            phone_number=phone_number,
+            password=password or None,
+            full_name=full_name,
+            role=UserRole.STUDENT,
+            is_active=True,
+            is_verified=True,
+        )
+        if not password:
+            user.set_unusable_password()
+            user.save(update_fields=["password"])
+        created = True
+    else:
+        if password and user.has_usable_password() and not user.check_password(password):
+            return JsonResponse({"ok": False, "error": "Invalid password for this phone number."}, status=400)
+        if password and not user.has_usable_password():
+            user.set_password(password)
+        if full_name and not user.full_name:
+            user.full_name = full_name
+        if not user.is_active:
+            user.is_active = True
+        if not user.is_verified:
+            user.is_verified = True
+        update_fields = ["full_name", "is_active", "is_verified"]
+        if password:
+            update_fields.append("password")
+        user.save(update_fields=update_fields)
+
+    profile = ensure_profile(user)
+    login(request, user)
+    return JsonResponse(
+        {
+            "ok": True,
+            "is_new_user": created,
+            "user": {
+                "id": user.id,
+                "email": user.email,
+                "phone_number": user.phone_number,
+                "full_name": user.full_name,
+                "role": user.role,
+            },
+            "profile_role": profile.role,
+        }
+    )
+
+
+@login_required
+@require_POST
+def firebase_link_phone(request):
+    try:
+        payload = json.loads(request.body or "{}")
+    except Exception:
+        return JsonResponse({"ok": False, "error": "Invalid JSON payload."}, status=400)
+
+    id_token = (payload.get("id_token") or "").strip()
+    if not id_token:
+        return JsonResponse({"ok": False, "error": "id_token is required."}, status=400)
+
+    try:
+        decoded_token = verify_id_token(id_token)
+    except Exception as exc:
+        return JsonResponse({"ok": False, "error": "Invalid Firebase token.", "detail": str(exc)}, status=400)
+
+    phone_number = (decoded_token.get("phone_number") or "").strip()
+    if not phone_number:
+        return JsonResponse({"ok": False, "error": "Phone number not found in Firebase token."}, status=400)
+
+    if User.objects.filter(phone_number=phone_number).exclude(pk=request.user.pk).exists():
+        return JsonResponse({"ok": False, "error": "This phone number is already linked to another account."}, status=400)
+
+    request.user.phone_number = phone_number
+    request.user.is_active = True
+    request.user.is_verified = True
+    request.user.save(update_fields=["phone_number", "is_active", "is_verified"])
+
+    return JsonResponse({"ok": True, "phone_number": phone_number})
 
 
 def get_course_content(request, content_id):

@@ -119,12 +119,13 @@ DATABASES = {
 }
 
 
-AUTH_PASSWORD_VALIDATORS = [
-    {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
-    {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},
-    {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator'},
-    {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
-]
+# AUTH_PASSWORD_VALIDATORS = [
+#     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
+#     {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},
+#     {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator'},
+#     {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
+# ]
+AUTH_PASSWORD_VALIDATORS = []
 
 
 LANGUAGE_CODE = 'en-us'
@@ -145,6 +146,10 @@ MEDIA_ROOT = BASE_DIR / 'media'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 AUTH_USER_MODEL = 'content.User'
+AUTHENTICATION_BACKENDS = [
+    'content.auth_backends.EmailOrPhoneBackend',
+    'django.contrib.auth.backends.ModelBackend',
+]
 
 
 LOGIN_URL = 'content:login'
@@ -166,7 +171,17 @@ EMAIL_TIMEOUT = config('EMAIL_TIMEOUT', default=10, cast=int)
 SITE_NAME = config('SITE_NAME', default='Teaching Platform')
 
 
-SITE_URL = config('SITE_URL', default='http://localhost:8000')
+SITE_URL = config('SITE_URL', default='http://localhost:3000')
+FIREBASE_SERVICE_ACCOUNT_FILE = config(
+    'FIREBASE_SERVICE_ACCOUNT_FILE',
+    default=str(BASE_DIR / 'firebase-service-account.json'),
+)
+FIREBASE_PROJECT_ID = config('FIREBASE_PROJECT_ID', default='')
+FIREBASE_WEB_API_KEY = config('FIREBASE_WEB_API_KEY', default='')
+FIREBASE_AUTH_DOMAIN = config('FIREBASE_AUTH_DOMAIN', default='')
+FIREBASE_APP_ID = config('FIREBASE_APP_ID', default='')
+
+
 OTP_ATTEMPT_WINDOW = config('OTP_ATTEMPT_WINDOW', default=300, cast=int)
 OTP_ATTEMPT_LIMIT = config('OTP_ATTEMPT_LIMIT', default=5, cast=int)
 OTP_LOCKOUT_SECONDS = config('OTP_LOCKOUT_SECONDS', default=600, cast=int)

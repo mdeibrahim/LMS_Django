@@ -664,15 +664,15 @@ def reject_submissions(modeladmin, request, queryset):
 
 @admin.register(PaymentSubmission)
 class PaymentSubmissionAdmin(ModelAdmin):
-    list_display = ("user", "course", "payment_method", "transaction_id", "status_badge", "submitted_at", "reviewed_at")
+    list_display = ("user", "course", "payment_method", "bkash_phone_number", "transaction_id", "status_badge", "submitted_at", "reviewed_at")
     list_filter = ("status", "payment_method", RelatedCourseCategoryFilter, "submitted_at")
-    search_fields = ("user__email", "course__name", "transaction_id", "note")
+    search_fields = ("user__email", "course__name", "transaction_id", "bkash_phone_number", "note")
     autocomplete_fields = ("user", "course", "reviewed_by")
     readonly_fields = ("submitted_at", "updated_at", "reviewed_at")
     actions = (approve_submissions, reject_submissions)
 
     fieldsets = (
-        ("Payment", {"fields": ("user", "course", "payment_method", "transaction_id", "note")}),
+        ("Payment", {"fields": ("user", "course", "payment_method", "bkash_phone_number", "transaction_id", "note")}),
         ("Review", {"fields": ("status", "reviewed_by", "reviewed_at", "rejection_reason")}),
         ("Audit", {"fields": ("submitted_at", "updated_at")}),
     )

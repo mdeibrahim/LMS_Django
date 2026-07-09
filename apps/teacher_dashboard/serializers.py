@@ -1,4 +1,5 @@
 from django.contrib.auth import authenticate, get_user_model
+import json
 from django.db import transaction
 from django.utils.text import slugify
 from rest_framework import serializers, status
@@ -448,6 +449,11 @@ class LessonCreateSerializer(serializers.ModelSerializer):
     def validate_resources(self, resources):
         if resources in (None, ""):
             return []
+        if isinstance(resources, str):
+            try:
+                resources = json.loads(resources)
+            except Exception:
+                raise serializers.ValidationError("resources must be valid JSON.")
         if not isinstance(resources, list):
             raise serializers.ValidationError("resources must be a list of media items.")
         allowed_types = {choice[0] for choice in LessonResourceType.choices}

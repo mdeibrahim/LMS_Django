@@ -1,18 +1,22 @@
 {% extends 'base.html' %}
 {% load content_render %}
 
-{% block title %}{{ quiz.title }} — {% if lesson %}{{ lesson.title }}{% else %}{{ module.title }}{% endif %}{% endblock %}
+{% block title %}{{ quiz.title }} — {% if lesson %}{{ lesson.title }}{% else %}{{ module.title }}{% endif %}{% endblock
+%}
 
 {% block breadcrumb %}
 <nav class="border-y border-slate-200/80 bg-white/70 backdrop-blur">
     <div class="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
         <ol class="flex flex-wrap items-center gap-3 py-3 text-sm text-slate-600">
-            <li><a href="{% url 'content:home' %}" class="transition hover:text-slate-900"><i class="fa-solid fa-house"></i></a></li>
+            <li><a href="{% url 'content:home' %}" class="transition hover:text-slate-900"><i
+                        class="fa-solid fa-house"></i></a></li>
             <li>/</li>
-            <li><a href="{% url 'content:course_detail' course.slug %}" class="transition hover:text-slate-900">{{ course.name }}</a></li>
+            <li><a href="{% url 'content:course_detail' course.slug %}" class="transition hover:text-slate-900">{{
+                    course.name }}</a></li>
             <li>/</li>
             {% if lesson %}
-            <li><a href="{% url 'content:lesson_detail' course.slug module.slug lesson.slug %}" class="transition hover:text-slate-900">{{ lesson.title }}</a></li>
+            <li><a href="{% url 'content:lesson_detail' course.slug module.slug lesson.slug %}"
+                    class="transition hover:text-slate-900">{{ lesson.title }}</a></li>
             <li>/</li>
             {% endif %}
             <li class="font-semibold text-slate-800">{{ quiz.title }}</li>
@@ -27,26 +31,32 @@
         <div class="rounded-[1.75rem] border border-slate-200 bg-white/92 p-6 shadow-sm sm:p-8">
             <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
                 <div>
-                    <div class="flex flex-wrap items-center gap-2 text-xs font-bold uppercase tracking-[0.16em] text-slate-500">
+                    <div
+                        class="flex flex-wrap items-center gap-2 text-xs font-bold uppercase tracking-[0.16em] text-slate-500">
                         <span class="rounded-full bg-blue-100 px-3 py-1 text-blue-700">{{ module.title }}</span>
-                        <span class="rounded-full bg-amber-100 px-3 py-1 text-amber-700">Pass {{ quiz.pass_score }}%</span>
+                        <span class="rounded-full bg-amber-100 px-3 py-1 text-amber-700">Pass {{ quiz.pass_score
+                            }}%</span>
                     </div>
                     <h1 class="mt-4 font-display text-3xl font-bold tracking-tight text-slate-900">{{ quiz.title }}</h1>
                     <p class="mt-2 text-sm text-slate-600">Answer all questions, then submit to see your result.</p>
                 </div>
                 {% if lesson %}
-                <a href="{% url 'content:lesson_detail' course.slug module.slug lesson.slug %}" class="btn">Back to Lesson</a>
+                <a href="{% url 'content:lesson_detail' course.slug module.slug lesson.slug %}" class="btn">Back to
+                    Lesson</a>
                 {% else %}
                 <a href="{% url 'content:course_detail' course.slug %}" class="btn">Back to Module</a>
                 {% endif %}
             </div>
 
             {% if submission %}
-            <div class="mt-6 rounded-2xl {% if submission.passed %}border border-emerald-200 bg-emerald-50{% else %}border border-rose-200 bg-rose-50{% endif %} p-5">
-                <div class="text-lg font-bold {% if submission.passed %}text-emerald-700{% else %}text-rose-700{% endif %}">
+            <div
+                class="mt-6 rounded-2xl {% if submission.passed %}border border-emerald-200 bg-emerald-50{% else %}border border-rose-200 bg-rose-50{% endif %} p-5">
+                <div
+                    class="text-lg font-bold {% if submission.passed %}text-emerald-700{% else %}text-rose-700{% endif %}">
                     {% if submission.passed %}Passed{% else %}Not Passed{% endif %}
                 </div>
-                <p class="mt-2 text-sm text-slate-700">Score: {{ submission.score }}% ({{ submission.correct }}/{{ submission.total }} correct)</p>
+                <p class="mt-2 text-sm text-slate-700">Score: {{ submission.score }}% ({{ submission.correct }}/{{
+                    submission.total }} correct)</p>
             </div>
             {% endif %}
 
@@ -54,9 +64,11 @@
                 {% csrf_token %}
                 {% for question in questions %}
                 <div class="rounded-2xl border border-slate-200 bg-slate-50 p-5">
-                    <h2 class="text-base font-semibold text-slate-900">{{ forloop.counter }}. {{ question.question|render_stored_content }}</h2>
+                    <h2 class="text-base font-semibold text-slate-900">{{ forloop.counter }}. {{
+                        question.question|render_stored_content }}</h2>
                     {% if question.image %}
-                        <img src="{{ question.image.url }}" alt="Question Image" class="mt-3 max-h-64 rounded-lg object-contain" />
+                    <img src="{{ question.image.url }}" alt="Question Image"
+                        class="mt-3 max-h-64 rounded-lg object-contain" />
                     {% endif %}
                     <div class="mt-4 space-y-3">
                         {% for opt_val, opt_text in question.get_options %}
@@ -73,9 +85,9 @@
                                 border-slate-200 bg-white hover:border-blue-300 cursor-pointer
                             {% endif %}
                         ">
-                            <input type="radio" name="question_{{ question.id }}" value="{{ opt_val }}" class="mt-1"
-                                {% if question.selected_option == opt_val %}checked{% endif %}
-                                {% if submission %}disabled{% endif %}>
+                            <input type="radio" name="question_{{ question.id }}" value="{{ opt_val }}" class="mt-1" {%
+                                if question.selected_option==opt_val %}checked{% endif %} {% if submission %}disabled{%
+                                endif %}>
                             <span class="text-sm flex-1
                                 {% if submission %}
                                     {% if question.selected_option == opt_val %}
@@ -91,54 +103,71 @@
                             ">{{ opt_text }}</span>
 
                             {% if submission %}
-                                {% if question.selected_option == opt_val and question.is_correct %}
-                                    <i class="fa-solid fa-circle-check text-emerald-500 mt-0.5 text-lg"></i>
-                                {% elif question.selected_option == opt_val and not question.is_correct %}
-                                    <i class="fa-solid fa-circle-xmark text-rose-500 mt-0.5 text-lg"></i>
-                                {% elif question.correct_option == opt_val %}
-                                    <i class="fa-solid fa-circle-check text-emerald-500 mt-0.5 text-lg"></i>
-                                {% endif %}
+                            {% if question.selected_option == opt_val and question.is_correct %}
+                            <i class="fa-solid fa-circle-check text-emerald-500 mt-0.5 text-lg"></i>
+                            {% elif question.selected_option == opt_val and not question.is_correct %}
+                            <i class="fa-solid fa-circle-xmark text-rose-500 mt-0.5 text-lg"></i>
+                            {% elif question.correct_option == opt_val %}
+                            <i class="fa-solid fa-circle-check text-emerald-500 mt-0.5 text-lg"></i>
+                            {% endif %}
                             {% endif %}
                         </label>
                         {% endfor %}
                     </div>
 
+                    {% if question.explanation or question.explanation_image or question.explanation_note or
+                    question.explanation_video_url %}
+                    <div class="mt-4">
+                        <button type="button" {% if submission %}
+                            onclick="document.getElementById('expl_{{ question.id }}').classList.toggle('hidden')" {%
+                            else %} disabled {% endif %} class="inline-flex items-center gap-2 rounded-lg border px-4 py-2 text-sm font-medium shadow-sm transition
+                            {% if submission %}
+                                border-slate-200 bg-white text-slate-700 hover:bg-slate-50 hover:text-blue-600 cursor-pointer
+                            {% else %}
+                                border-slate-200 bg-slate-100 text-slate-400 cursor-not-allowed opacity-70
+                            {% endif %}
+                            ">
+                            <i
+                                class="fa-solid fa-lightbulb {% if submission %}text-amber-500{% else %}text-slate-400{% endif %}"></i>
+                            See Explanation
+                        </button>
+                    </div>
+
                     {% if submission %}
-                        {% if question.explanation or question.explanation_image or question.explanation_note or question.explanation_video_url %}
-                        <div class="mt-4">
-                            <button type="button" onclick="document.getElementById('expl_{{ question.id }}').classList.toggle('hidden')" class="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 hover:text-blue-600">
-                                <i class="fa-solid fa-lightbulb text-amber-500"></i> See Explanation
-                            </button>
-                        </div>
-                        <div id="expl_{{ question.id }}" class="hidden mt-4 p-5 rounded-xl bg-blue-50/50 border border-blue-100 transition-all">
-                            <h4 class="font-semibold text-blue-900 mb-3 flex items-center gap-2">
-                                Explanation
-                            </h4>
-                            {% if question.explanation %}
-                                <p class="text-sm text-slate-700 mb-4">{{ question.explanation|linebreaksbr }}</p>
+                    <div id="expl_{{ question.id }}"
+                        class="hidden mt-4 p-5 rounded-xl bg-blue-50/50 border border-blue-100 transition-all">
+                        <h4 class="font-semibold text-blue-900 mb-3 flex items-center gap-2">
+                            Explanation
+                        </h4>
+                        {% if question.explanation %}
+                        <p class="text-sm text-slate-700 mb-4">{{ question.explanation|linebreaksbr }}</p>
+                        {% endif %}
+                        {% if question.explanation_image %}
+                        <img src="{{ question.explanation_image.url }}" alt="Explanation Image"
+                            class="max-h-64 rounded-lg object-contain mb-4 border border-slate-200 shadow-sm bg-white p-1" />
+                        {% endif %}
+                        {% if question.explanation_note or question.explanation_video_url %}
+                        <div class="p-4 bg-white rounded-lg border border-blue-100 flex flex-col gap-3 shadow-sm">
+                            {% if question.explanation_note %}
+                            <p class="text-sm text-slate-700 italic">{{ question.explanation_note|linebreaksbr }}</p>
                             {% endif %}
-                            {% if question.explanation_image %}
-                                <img src="{{ question.explanation_image.url }}" alt="Explanation Image" class="max-h-64 rounded-lg object-contain mb-4 border border-slate-200 shadow-sm bg-white p-1" />
-                            {% endif %}
-                            {% if question.explanation_note or question.explanation_video_url %}
-                                <div class="p-4 bg-white rounded-lg border border-blue-100 flex flex-col gap-3 shadow-sm">
-                                    {% if question.explanation_note %}
-                                        <p class="text-sm text-slate-700 italic">{{ question.explanation_note|linebreaksbr }}</p>
-                                    {% endif %}
-                                    {% if question.explanation_video_url %}
-                                        <a href="javascript:void(0)" onclick="openYouTubeModal('{{ question.explanation_video_url }}')" class="inline-flex w-fit items-center gap-2 rounded-lg bg-rose-50 px-4 py-2 text-sm font-medium text-rose-600 transition hover:bg-rose-100 hover:text-rose-700">
-                                            <i class="fa-brands fa-youtube text-lg"></i>
-                                            Watch Video Explanation
-                                        </a>
-                                    {% endif %}
-                                </div>
+                            {% if question.explanation_video_url %}
+                            <a href="javascript:void(0)"
+                                onclick="openYouTubeModal('{{ question.explanation_video_url }}')"
+                                class="inline-flex w-fit items-center gap-2 rounded-lg bg-rose-50 px-4 py-2 text-sm font-medium text-rose-600 transition hover:bg-rose-100 hover:text-rose-700">
+                                <i class="fa-brands fa-youtube text-lg"></i>
+                                Watch Video Explanation
+                            </a>
                             {% endif %}
                         </div>
                         {% endif %}
+                    </div>
+                    {% endif %}
                     {% endif %}
                 </div>
                 {% empty %}
-                <div class="rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-6 text-center text-slate-600">
+                <div
+                    class="rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-6 text-center text-slate-600">
                     No questions added yet.
                 </div>
                 {% endfor %}
@@ -149,9 +178,11 @@
                     <button type="submit" class="btn btn-primary">Submit Answers</button>
                     {% endif %}
                     {% if lesson %}
-                    <a href="{% url 'content:quiz_detail' course.slug module.slug lesson.slug quiz.id %}" class="btn">{% if submission %}Try Again{% else %}Reset{% endif %}</a>
+                    <a href="{% url 'content:quiz_detail' course.slug module.slug lesson.slug quiz.id %}" class="btn">{%
+                        if submission %}Try Again{% else %}Reset{% endif %}</a>
                     {% else %}
-                    <a href="{% url 'content:module_quiz_detail' course.slug module.slug quiz.id %}" class="btn">{% if submission %}Try Again{% else %}Reset{% endif %}</a>
+                    <a href="{% url 'content:module_quiz_detail' course.slug module.slug quiz.id %}" class="btn">{% if
+                        submission %}Try Again{% else %}Reset{% endif %}</a>
                     {% endif %}
                 </div>
                 {% endif %}

@@ -15,12 +15,13 @@ def ensure_enrollment(user, course, granted_by=None):
     return enrollment
 
 
-def create_or_update_payment_submission(user, course, payment_method, transaction_id, note=""):
+def create_or_update_payment_submission(user, course, payment_method, transaction_id, bkash_phone_number="", note=""):
     submission = PaymentSubmission.objects.create(
         user=user,
         course=course,
         payment_method=payment_method or "other",
         transaction_id=transaction_id,
+        bkash_phone_number=bkash_phone_number or "",
         note=note or "",
         status=PaymentSubmissionStatus.PENDING,
     )

@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}Student Signup — Teaching Platform{% endblock %}
+{% block title %}Student Signup â€” Teaching Platform{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -58,26 +58,22 @@
                 </div>
 
                 <div>
-                    <label for="id_email" class="mb-1.5 block text-sm font-semibold text-slate-700">Email</label>
-                    <input id="id_email" type="email" name="email" value="{{ form.email.value|default:'' }}" required class="field-input w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-slate-900">
+                    <label for="id_email_or_phone" class="mb-1.5 block text-sm font-semibold text-slate-700">Email or Phone</label>
+                    <input id="id_email_or_phone" type="text" name="email_or_phone" value="{{ form.email_or_phone.value|default:'' }}" required class="field-input w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-slate-900" placeholder="email@example.com or +8801XXXXXXXXX">
+                    {% if form.email_or_phone.errors %}<p class="mt-1 text-sm text-rose-600">{{ form.email_or_phone.errors|striptags }}</p>{% endif %}
                     {% if form.email.errors %}<p class="mt-1 text-sm text-rose-600">{{ form.email.errors|striptags }}</p>{% endif %}
-                </div>
-
-                <div>
-                    <label for="id_phone_number" class="mb-1.5 block text-sm font-semibold text-slate-700">Phone Number</label>
-                    <input id="id_phone_number" type="tel" name="phone_number" value="{{ form.phone_number.value|default:'' }}" required class="field-input w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-slate-900" placeholder="+8801XXXXXXXXX">
                     {% if form.phone_number.errors %}<p class="mt-1 text-sm text-rose-600">{{ form.phone_number.errors|striptags }}</p>{% endif %}
                 </div>
 
                 <div>
-                    <label for="id_student_institution" class="mb-1.5 block text-sm font-semibold text-slate-700">School / College</label>
-                    <input id="id_student_institution" type="text" name="student_institution" value="{{ form.student_institution.value|default:'' }}" required class="field-input w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-slate-900">
+                    <label for="id_student_institution" class="mb-1.5 block text-sm font-semibold text-slate-700">School / College <span class="font-normal text-slate-400">(Optional)</span></label>
+                    <input id="id_student_institution" type="text" name="student_institution" value="{{ form.student_institution.value|default:'' }}" class="field-input w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-slate-900">
                     {% if form.student_institution.errors %}<p class="mt-1 text-sm text-rose-600">{{ form.student_institution.errors|striptags }}</p>{% endif %}
                 </div>
 
                 <div>
-                    <label for="id_student_level" class="mb-1.5 block text-sm font-semibold text-slate-700">Class / Level</label>
-                    <input id="id_student_level" type="text" name="student_level" value="{{ form.student_level.value|default:'' }}" required class="field-input w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-slate-900" placeholder="e.g. HSC 1st Year">
+                    <label for="id_student_level" class="mb-1.5 block text-sm font-semibold text-slate-700">Class / Level <span class="font-normal text-slate-400">(Optional)</span></label>
+                    <input id="id_student_level" type="text" name="student_level" value="{{ form.student_level.value|default:'' }}" class="field-input w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-slate-900" placeholder="e.g. HSC 1st Year">
                     {% if form.student_level.errors %}<p class="mt-1 text-sm text-rose-600">{{ form.student_level.errors|striptags }}</p>{% endif %}
                 </div>
 
@@ -103,8 +99,8 @@
                     {% if form.password2.errors %}<p class="mt-1 text-sm text-rose-600">{{ form.password2.errors|striptags }}</p>{% endif %}
                 </div>
 
-                <button type="submit" class="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-600 px-5 py-3 font-semibold text-white shadow-lg shadow-blue-500/25 transition hover:from-blue-700 hover:to-cyan-700">
-                    <i class="fa-solid fa-user-plus"></i> Create Student Account
+                <button type="submit" id="signup-submit-btn" class="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-600 px-5 py-3 font-semibold text-white shadow-lg shadow-blue-500/25 transition hover:from-blue-700 hover:to-cyan-700 disabled:cursor-not-allowed disabled:opacity-70">
+                    <i class="fa-solid fa-user-plus"></i> <span id="signup-btn-text">Create Student Account</span>
                 </button>
             </form>
 
@@ -127,5 +123,18 @@
             icon.className = isPassword ? 'fa-regular fa-eye-slash' : 'fa-regular fa-eye';
         });
     });
+
+    const signupForm = document.querySelector('form[method="post"]');
+    const signupBtn = document.getElementById('signup-submit-btn');
+    const signupBtnText = document.getElementById('signup-btn-text');
+    if (signupForm && signupBtn) {
+        signupForm.addEventListener('submit', function () {
+            if (signupForm.checkValidity()) {
+                signupBtn.disabled = true;
+                signupBtn.querySelector('i').className = 'fa-solid fa-spinner fa-spin';
+                signupBtnText.textContent = 'Creating Account...';
+            }
+        });
+    }
 </script>
 {% endblock %}

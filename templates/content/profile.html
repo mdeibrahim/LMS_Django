@@ -75,12 +75,12 @@
                         </div>
                         <div>
                             <label for="id_email" class="mb-1.5 block text-sm font-semibold text-slate-700">Email</label>
-                            <input id="id_email" type="email" name="email" value="{{ form.email.value|default:'' }}" required class="field-input w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-slate-900">
+                            <input id="id_email" type="email" name="email" value="{{ form.email.value|default:'' }}" class="field-input w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-slate-900">
                             {% if form.email.errors %}<p class="mt-1 text-sm text-rose-600">{{ form.email.errors|striptags }}</p>{% endif %}
                         </div>
                         <div>
                             <label for="id_phone_number" class="mb-1.5 block text-sm font-semibold text-slate-700">Phone Number</label>
-                            <input id="id_phone_number" type="tel" name="phone_number" value="{{ form.phone_number.value|default:'' }}" required class="field-input w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-slate-900">
+                            <input id="id_phone_number" type="tel" name="phone_number" value="{{ form.phone_number.value|default:'' }}" class="field-input w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-slate-900">
                             {% if form.phone_number.errors %}<p class="mt-1 text-sm text-rose-600">{{ form.phone_number.errors|striptags }}</p>{% endif %}
                         </div>
                         <div>

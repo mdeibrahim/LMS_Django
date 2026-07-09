@@ -15,6 +15,9 @@ def ensure_profile(user, default_role=UserRole.STUDENT):
             profile.teacher_subject = legacy.teacher_subject
             profile.teacher_experience_years = legacy.teacher_experience_years
             profile.save()
+            if legacy.phone_number and not user.phone_number:
+                user.phone_number = legacy.phone_number
+                user.save(update_fields=["phone_number"])
             try:
                 profile.assigned_categories.set(legacy.assigned_categories.all())
             except Exception:
@@ -35,6 +38,9 @@ def ensure_profile(user, default_role=UserRole.STUDENT):
         profile.student_institution = legacy.student_institution
         profile.student_level = legacy.student_level
         profile.save()
+        if legacy.phone_number and not user.phone_number:
+            user.phone_number = legacy.phone_number
+            user.save(update_fields=["phone_number"])
     if user.role != UserRole.STUDENT:
         user.role = UserRole.STUDENT
         user.save(update_fields=["role"])

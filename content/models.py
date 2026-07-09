@@ -481,35 +481,6 @@ class CourseEnrollment(models.Model):
         return f"{self.user} enrolled in {self.course.name}"
 
 
-class PaymentSubmission(models.Model):
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="payment_submissions")
-    course = models.ForeignKey("Course", on_delete=models.CASCADE, related_name="payment_submissions")
-    payment_method = models.CharField(max_length=20, choices=PAYMENT_METHOD_CHOICES, default="other")
-    transaction_id = models.CharField(max_length=255)
-    note = models.TextField(blank=True, default="")
-    status = models.CharField(max_length=20, choices=PaymentSubmissionStatus.choices, default=PaymentSubmissionStatus.PENDING)
-    reviewed_by = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.SET_NULL,
-        blank=True,
-        null=True,
-        related_name="reviewed_payment_submissions",
-    )
-    reviewed_at = models.DateTimeField(blank=True, null=True)
-    rejection_reason = models.TextField(blank=True, default="")
-    submitted_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        ordering = ["-submitted_at"]
-        indexes = [
-            models.Index(fields=["course", "status", "submitted_at"]),
-            models.Index(fields=["user", "status", "submitted_at"]),
-            models.Index(fields=["transaction_id"]),
-        ]
-
-    def __str__(self):
-        return f"{self.user} payment for {self.course.name} ({self.status})"
 
 
 # ------------------------------- Quiz Model -------------------------------
@@ -617,3 +588,35 @@ class PaymentInstruction(models.Model):
 
     def __str__(self):
         return self.get_payment_method_name_display() if self.payment_method_name else "Payment instruction"
+
+
+class PaymentSubmission(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="payment_submissions")
+    course = models.ForeignKey("Course", on_delete=models.CASCADE, related_name="payment_submissions")
+    payment_method = models.CharField(max_length=20, choices=PAYMENT_METHOD_CHOICES, default="other")
+    transaction_id = models.CharField(max_length=255)
+    bkash_phone_number = models.CharField(max_length=20, blank=True, default="")
+    note = models.TextField(blank=True, default="")
+    status = models.CharField(max_length=20, choices=PaymentSubmissionStatus.choices, default=PaymentSubmissionStatus.PENDING)
+    reviewed_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
+        related_name="reviewed_payment_submissions",
+    )
+    reviewed_at = models.DateTimeField(blank=True, null=True)
+    rejection_reason = models.TextField(blank=True, default="")
+    submitted_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-submitted_at"]
+        indexes = [
+            models.Index(fields=["course", "status", "submitted_at"]),
+            models.Index(fields=["user", "status", "submitted_at"]),
+            models.Index(fields=["transaction_id"]),
+        ]
+
+    def __str__(self):
+        return f"{self.user} payment for {self.course.name} ({self.status})"

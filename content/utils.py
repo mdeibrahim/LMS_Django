@@ -100,7 +100,15 @@ def send_password_reset_email(user, token: str) -> bool:
     return send_email(subject, text_body, html_body, to_email=user.email)
 
 
-def render_payment_submission_email(user, course, amount, payment_method: str, transaction_id: str, note: str):
+def render_payment_submission_email(
+        user,
+        course,
+        amount,
+        payment_method: str,
+        transaction_id: str,
+        bkash_phone_number: str,
+        note: str,
+):
         """Return (subject, text_body, html_body) for admin notification when a student submits payment details."""
         site = getattr(settings, 'SITE_URL', 'http://localhost:8000')
         student_name = user.get_full_name() or user.email
@@ -115,6 +123,7 @@ def render_payment_submission_email(user, course, amount, payment_method: str, t
                 <li><strong>Amount:</strong> ৳{amount}</li>
                 <li><strong>Payment method:</strong> {payment_method or 'N/A'}</li>
                 <li><strong>Transaction ID:</strong> {transaction_id}</li>
+                <li><strong>bKash phone number:</strong> {bkash_phone_number or 'N/A'}</li>
                 <li><strong>Student name:</strong> {student_name}</li>
                 <li><strong>Student email:</strong> {getattr(user, 'email', '')}</li>
             </ul>
@@ -129,8 +138,24 @@ def render_payment_submission_email(user, course, amount, payment_method: str, t
         return subject, text_body, html_body
 
 
-def send_payment_submission_email(user, course, amount, payment_method: str, transaction_id: str, note: str) -> bool:
-        subject, text_body, html_body = render_payment_submission_email(user, course, amount, payment_method, transaction_id, note)
+def send_payment_submission_email(
+        user,
+        course,
+        amount,
+        payment_method: str,
+        transaction_id: str,
+        bkash_phone_number: str = "",
+        note: str = "",
+) -> bool:
+        subject, text_body, html_body = render_payment_submission_email(
+                user,
+                course,
+                amount,
+                payment_method,
+                transaction_id,
+                bkash_phone_number,
+                note,
+        )
         to_email = getattr(settings, 'SERVER_EMAIL', None) or getattr(settings, 'DEFAULT_FROM_EMAIL', None) or getattr(settings, 'EMAIL_HOST_USER', None)
         if not to_email:
                 logger.error("Cannot send payment notification email: SERVER_EMAIL, DEFAULT_FROM_EMAIL, and EMAIL_HOST_USER are all not configured")

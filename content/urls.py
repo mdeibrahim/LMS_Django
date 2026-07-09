@@ -12,6 +12,8 @@ urlpatterns = [
     path('accounts/login/student/', views.student_login, name='student_login'),
     path('accounts/otp-verify/', views.otp_verify, name='otp_verify'),
     path('accounts/otp-resend/', views.otp_resend, name='otp_resend'),
+    path('accounts/firebase-phone-auth/', views.firebase_phone_auth, name='firebase_phone_auth'),
+    path('accounts/firebase-link-phone/', views.firebase_link_phone, name='firebase_link_phone'),
 
 
     # Password reset (using Django auth views)
