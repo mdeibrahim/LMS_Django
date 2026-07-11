@@ -53,8 +53,8 @@
                 {% endif %}
 
                 <div>
-                    <label for="id_email" class="mb-1.5 block text-sm font-semibold text-slate-700">Email</label>
-                    <input id="id_email" type="email" name="email" value="{{ form.email.value|default:'' }}" required class="field-input w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-slate-900">
+                    <label for="id_email" class="mb-1.5 block text-sm font-semibold text-slate-700">Email or Phone</label>
+                    <input id="id_email" type="text" name="email" value="{{ form.email.value|default:'' }}" required class="field-input w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-slate-900" placeholder="Email or phone">
                     {% if form.email.errors %}<p class="mt-1 text-sm text-rose-600">{{ form.email.errors|striptags }}</p>{% endif %}
                 </div>
 
@@ -70,47 +70,21 @@
                 </div>
 
                 <button type="submit" id="login-submit-btn" class="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-600 px-5 py-3 font-semibold text-white shadow-lg shadow-blue-500/25 transition hover:from-blue-700 hover:to-cyan-700 disabled:cursor-not-allowed disabled:opacity-70">
-                    <i class="fa-solid fa-right-to-bracket"></i> <span id="login-btn-text">Login as Student</span>
+                    <i class="fa-solid fa-right-to-bracket"></i> <span id="login-btn-text">Sign In</span>
                 </button>
             </form>
 
-            {% if firebase_config.apiKey and firebase_config.projectId and firebase_config.appId %}
-            <div class="mt-6 rounded-2xl border border-cyan-100 bg-cyan-50/70 p-5">
-                <div class="flex items-center justify-between gap-3">
-                    <div>
-                        <h3 class="text-base font-semibold text-slate-900">Use phone OTP</h3>
-                        <p class="mt-1 text-sm text-slate-600">Firebase OTP দিয়ে phone login করুন।</p>
-                    </div>
-                    <span class="rounded-full bg-white px-3 py-1 text-xs font-semibold text-cyan-700 ring-1 ring-cyan-200">Firebase</span>
-                </div>
-                <div class="mt-4 space-y-3">
-                    <div>
-                        <label for="phone_login_phone" class="mb-1 block text-sm font-semibold text-slate-700">Phone Number</label>
-                        <input id="phone_login_phone" type="tel" class="field-input w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-slate-900" placeholder="+8801XXXXXXXXX">
-                    </div>
-                    <div>
-                        <label for="phone_login_password" class="mb-1 block text-sm font-semibold text-slate-700">Password</label>
-                        <input id="phone_login_password" type="password" class="field-input w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-slate-900" placeholder="Your password">
-                    </div>
-                    <div class="hidden">
-                        <div id="login-recaptcha"></div>
-                    </div>
-                    <div class="hidden" id="login-otp-wrap">
-                        <label for="phone_login_otp" class="mb-1 block text-sm font-semibold text-slate-700">OTP Code</label>
-                        <input id="phone_login_otp" type="text" inputmode="numeric" maxlength="6" class="field-input w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-slate-900" placeholder="Enter the code">
-                    </div>
-                    <div class="flex flex-wrap gap-3 pt-1">
-                        <button type="button" id="phone-login-send" class="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white hover:bg-slate-800">
-                            <i class="fa-solid fa-paper-plane"></i> Send OTP
-                        </button>
-                        <button type="button" id="phone-login-verify" class="hidden inline-flex items-center gap-2 rounded-xl bg-cyan-600 px-4 py-3 text-sm font-semibold text-white hover:bg-cyan-700">
-                            <i class="fa-solid fa-circle-check"></i> Verify & Login
-                        </button>
-                    </div>
-                    <p id="login-phone-message" class="text-sm text-slate-600"></p>
-                </div>
+            <div class="mt-4 pt-4 border-t border-cyan-100 flex justify-center">
+                <button type="button" id="google-login-btn" class="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-5 py-3 font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50 hover:border-slate-300 disabled:opacity-70 disabled:cursor-not-allowed">
+                    <svg class="h-5 w-5" viewBox="0 0 24 24">
+                        <path fill="#EA4335" d="M5.266 9.765A7.077 7.077 0 0 1 12 4.909c1.69 0 3.218.6 4.418 1.582l3.51-3.51C17.642 1.091 14.974 0 12 0 7.354 0 3.307 2.651 1.258 6.526l4.008 3.239z"/>
+                        <path fill="#4285F4" d="M23.49 12.275c0-.818-.073-1.604-.21-2.364H12v4.51h6.47c-.29 1.48-1.14 2.73-2.4 3.58l3.77 2.92c2.2-2.03 3.65-5.02 3.65-8.646z"/>
+                        <path fill="#FBBC05" d="M5.266 14.235A7.098 7.098 0 0 1 4.909 12c0-.79.13-1.55.357-2.265L1.258 6.5c-.81 1.63-1.258 3.47-1.258 5.5s.448 3.87 1.258 5.5l4.008-3.265z"/>
+                        <path fill="#34A853" d="M12 24c3.24 0 5.97-1.07 7.96-2.91l-3.77-2.92c-1.08.73-2.47 1.17-4.19 1.17-3.23 0-5.97-2.18-6.95-5.11l-4.04 3.14C3.21 21.32 7.27 24 12 24z"/>
+                    </svg>
+                    Continue with Google
+                </button>
             </div>
-            {% endif %}
 
             <p class="mt-5 text-sm text-slate-600">Need a student account? <a href="{% url 'content:student_signup' %}" class="font-semibold text-blue-700 hover:text-blue-900">Signup here</a></p>
             <p class="mt-2 text-sm text-slate-600"><a href="{% url 'content:password_reset' %}" class="font-semibold text-rose-700 hover:text-rose-900">Forgot password?</a></p>
@@ -172,75 +146,6 @@
         });
     }
 
-    if (window.firebase && firebaseConfig.apiKey && firebaseConfig.projectId && firebaseConfig.appId) {
-        if (!firebase.apps.length) {
-            firebase.initializeApp(firebaseConfig);
-        }
-        const auth = firebase.auth();
-        const sendBtn = document.getElementById('phone-login-send');
-        const verifyBtn = document.getElementById('phone-login-verify');
-        const otpWrap = document.getElementById('login-otp-wrap');
-        const messageEl = document.getElementById('login-phone-message');
-        const recaptcha = new firebase.auth.RecaptchaVerifier('login-recaptcha', { size: 'invisible' }, auth);
-        let confirmation = null;
 
-        sendBtn?.addEventListener('click', async function () {
-            const phoneNumber = document.getElementById('phone_login_phone')?.value.trim();
-            const password = document.getElementById('phone_login_password')?.value;
-
-            if (!phoneNumber || !password) {
-                setMessage(messageEl, 'Phone number and password are required.', 'danger');
-                return;
-            }
-
-            try {
-                sendBtn.disabled = true;
-                setMessage(messageEl, 'Sending OTP...');
-                confirmation = await auth.signInWithPhoneNumber(phoneNumber, recaptcha);
-                otpWrap?.classList.remove('hidden');
-                verifyBtn?.classList.remove('hidden');
-                setMessage(messageEl, 'OTP sent. Check your phone.', 'success');
-            } catch (error) {
-                setMessage(messageEl, error?.message || 'Failed to send OTP.', 'danger');
-            } finally {
-                sendBtn.disabled = false;
-            }
-        });
-
-        verifyBtn?.addEventListener('click', async function () {
-            const code = document.getElementById('phone_login_otp')?.value.trim();
-            const password = document.getElementById('phone_login_password')?.value;
-
-            if (!confirmation || !code) {
-                setMessage(messageEl, 'Please send OTP and enter the code first.', 'danger');
-                return;
-            }
-
-            try {
-                setMessage(messageEl, 'Verifying OTP...');
-                const result = await confirmation.confirm(code);
-                const idToken = await result.user.getIdToken();
-                const response = await fetch("{% url 'content:firebase_phone_auth' %}", {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRFToken': getCookie('csrftoken'),
-                    },
-                    body: JSON.stringify({
-                        id_token: idToken,
-                        password: password,
-                    }),
-                });
-                const data = await response.json();
-                if (!response.ok || !data.ok) {
-                    throw new Error(data.error || 'Phone login failed.');
-                }
-                setMessage(messageEl, 'Login successful. Redirecting...', 'success');
-                window.location.href = "{% url 'content:student_dashboard' %}";
-            } catch (error) {
-                setMessage(messageEl, error?.message || 'OTP verification failed.', 'danger');
-            }
-        });
-    }
 </script>
 {% endblock %}

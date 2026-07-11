@@ -104,6 +104,19 @@
                 </button>
             </form>
 
+            <div class="mt-4 pt-4 border-t border-cyan-100 flex flex-col gap-3">
+                <button type="button" id="google-login-btn" class="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-5 py-3 font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50 hover:border-slate-300 disabled:opacity-70 disabled:cursor-not-allowed">
+                    <svg class="h-5 w-5" viewBox="0 0 24 24">
+                      <path fill="#EA4335" d="M5.266 9.765A7.077 7.077 0 0 1 12 4.909c1.69 0 3.218.6 4.418 1.582l3.51-3.51C17.642 1.091 14.974 0 12 0 7.354 0 3.307 2.651 1.258 6.526l4.008 3.239z"/>
+                      <path fill="#4285F4" d="M23.49 12.275c0-.818-.073-1.604-.21-2.364H12v4.51h6.47c-.29 1.48-1.14 2.73-2.4 3.58l3.77 2.92c2.2-2.03 3.65-5.02 3.65-8.646z"/>
+                      <path fill="#FBBC05" d="M5.266 14.235A7.098 7.098 0 0 1 4.909 12c0-.79.13-1.55.357-2.265L1.258 6.5c-.81 1.63-1.258 3.47-1.258 5.5s.448 3.87 1.258 5.5l4.008-3.265z"/>
+                      <path fill="#34A853" d="M12 24c3.24 0 5.97-1.07 7.96-2.91l-3.77-2.92c-1.08.73-2.47 1.17-4.19 1.17-3.23 0-5.97-2.18-6.95-5.11l-4.04 3.14C3.21 21.32 7.27 24 12 24z"/>
+                    </svg>
+                    Sign up with Google
+                </button>
+                <p id="login-phone-message" class="text-sm text-center text-slate-600"></p>
+            </div>
+            
             <p class="mt-5 text-sm text-slate-600">Already have student account? <a href="{% url 'content:student_login' %}" class="font-semibold text-blue-700 hover:text-blue-900">Login</a></p>
         </div>
     </div>
@@ -111,7 +124,29 @@
 {% endblock %}
 
 {% block extra_js %}
+{{ firebase_config|json_script:"firebase-config" }}
+{% if firebase_config.apiKey and firebase_config.projectId and firebase_config.appId %}
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-auth-compat.js"></script>
+{% endif %}
 <script>
+    function getCookie(name) {
+        const value = `; ${document.cookie}`;
+        const parts = value.split(`; ${name}=`);
+        if (parts.length === 2) return parts.pop().split(';').shift();
+        return '';
+    }
+
+    function setMessage(el, message, tone = 'slate') {
+        if (!el) return;
+        el.textContent = message || '';
+        el.className = tone === 'danger'
+            ? 'text-sm text-rose-600'
+            : tone === 'success'
+                ? 'text-sm text-emerald-600'
+                : 'text-sm text-slate-600';
+    }
+
     document.querySelectorAll('[data-toggle-password]').forEach(function (btn) {
         btn.addEventListener('click', function () {
             const inputId = btn.getAttribute('data-toggle-password');
@@ -133,6 +168,50 @@
                 signupBtn.disabled = true;
                 signupBtn.querySelector('i').className = 'fa-solid fa-spinner fa-spin';
                 signupBtnText.textContent = 'Creating Account...';
+            }
+        });
+    }
+
+    const firebaseConfig = JSON.parse(document.getElementById('firebase-config')?.textContent || '{}');
+    if (window.firebase && firebaseConfig.apiKey && firebaseConfig.projectId && firebaseConfig.appId) {
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+        const auth = firebase.auth();
+        const googleBtn = document.getElementById('google-login-btn');
+        const messageEl = document.getElementById('login-phone-message');
+        
+        googleBtn?.addEventListener('click', async function () {
+            try {
+                googleBtn.disabled = true;
+                setMessage(messageEl, 'Opening Google Login...');
+                
+                const provider = new firebase.auth.GoogleAuthProvider();
+                const result = await auth.signInWithPopup(provider);
+                const idToken = await result.user.getIdToken();
+                
+                const response = await fetch("{% url 'content:firebase_google_auth' %}", {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken'),
+                    },
+                    body: JSON.stringify({
+                        id_token: idToken,
+                    }),
+                });
+                
+                const data = await response.json();
+                if (!response.ok || !data.ok) {
+                    throw new Error(data.error || 'Google signup failed.');
+                }
+                
+                setMessage(messageEl, 'Signup successful. Redirecting...', 'success');
+                window.location.href = "{% url 'content:student_dashboard' %}";
+            } catch (error) {
+                setMessage(messageEl, error?.message || 'Google signup failed.', 'danger');
+            } finally {
+                googleBtn.disabled = false;
             }
         });
     }

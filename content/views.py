@@ -559,22 +559,29 @@ def _role_login(request, template_name):
 
     form = EmailLoginForm(request.POST or None)
     if request.method == "POST" and form.is_valid():
-        email = form.cleaned_data["email"].strip().lower()
+        email_or_phone = form.cleaned_data["email"].strip()
         password = form.cleaned_data["password"]
+        
+        # Check if it looks like a phone number (digits and optional '+' prefix)
+        looks_like_phone = email_or_phone.replace('+', '').isdigit()
 
-        matched_users = User.objects.filter(email__iexact=email)
+        if looks_like_phone:
+            matched_users = User.objects.filter(phone_number=email_or_phone)
+        else:
+            matched_users = User.objects.filter(email__iexact=email_or_phone)
+            
         if matched_users.count() > 1:
-            form.add_error("email", "Multiple accounts found with this email. Please contact support.")
+            form.add_error("email", "Multiple accounts found with this credential. Please contact support.")
             return render(request, template_name, {"form": form})
 
         user_obj = matched_users.first()
         if not user_obj:
-            form.add_error("email", "No account found with this email.")
+            form.add_error("email", "No account found with this credential.")
             return render(request, template_name, {"form": form})
 
         user = authenticate(request=request, email=user_obj.email, password=password)
         if not user:
-            form.add_error("password", "Invalid email or password.")
+            form.add_error("password", "Invalid credentials.")
             return render(request, template_name, {"form": form})
 
         profile = ensure_profile(user)
@@ -1076,3 +1083,54 @@ def _build_resource_slug(title, lesson):
         slug = f"{base}-{counter}"
         counter += 1
     return slug
+
+
+@require_POST
+def firebase_google_auth(request):
+    try:
+        payload = json.loads(request.body or "{}")
+    except Exception:
+        return JsonResponse({"ok": False, "error": "Invalid JSON payload."}, status=400)
+
+    id_token = (payload.get("id_token") or "").strip()
+    if not id_token:
+        return JsonResponse({"ok": False, "error": "id_token is required."}, status=400)
+
+    try:
+        decoded_token = verify_id_token(id_token)
+    except Exception as exc:
+        return JsonResponse({"ok": False, "error": "Invalid Firebase token.", "detail": str(exc)}, status=400)
+
+    email = (decoded_token.get("email") or "").strip()
+    if not email:
+        return JsonResponse({"ok": False, "error": "Email not found in Firebase token."}, status=400)
+
+    full_name = (payload.get("full_name") or decoded_token.get("name") or "").strip()
+
+    user = User.objects.filter(email=email).first()
+    created = False
+
+    if user is None:
+        user = User.objects.create_user(
+            email=email,
+            phone_number="",
+            full_name=full_name,
+            role=UserRole.STUDENT,
+            is_active=True,
+            is_verified=True,
+        )
+        user.set_unusable_password()
+        user.save()
+        created = True
+    else:
+        if not user.is_active:
+            user.is_active = True
+        if not user.is_verified:
+            user.is_verified = True
+        user.save()
+
+    StudentProfile.objects.get_or_create(user=user)
+
+    login(request, user)
+    return JsonResponse({"ok": True, "created": created, "message": "Successfully logged in via Google."})
+
