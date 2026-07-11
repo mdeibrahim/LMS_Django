@@ -67,6 +67,7 @@ INSTALLED_APPS = [
     'content',
     'apps.teacher_dashboard',
     'apps.student_dashboard',
+    'apps.authentication',
 ]
 
 
@@ -145,16 +146,16 @@ MEDIA_ROOT = BASE_DIR / 'media'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-AUTH_USER_MODEL = 'content.User'
+AUTH_USER_MODEL = 'authentication.User'
 AUTHENTICATION_BACKENDS = [
-    'content.auth_backends.EmailOrPhoneBackend',
+    'apps.authentication.backends.EmailOrPhoneBackend',
     'django.contrib.auth.backends.ModelBackend',
 ]
 
 
-LOGIN_URL = 'content:login'
+LOGIN_URL = 'apps.authentication:login'
 LOGIN_REDIRECT_URL = 'content:home'
-LOGOUT_REDIRECT_URL = 'content:home'
+LOGOUT_REDIRECT_URL = 'authentication:home'
 
 
 EMAIL_BACKEND = config('EMAIL_BACKEND', default='django.core.mail.backends.console.EmailBackend')

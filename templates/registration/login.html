@@ -53,7 +53,7 @@
         </div>
 
         <div class="mx-auto mt-10 max-w-3xl">
-            <a href="{% url 'content:student_login' %}{% if request.GET.next %}?next={{ request.GET.next|urlencode }}{% endif %}" class="choice-card group auth-panel block p-6 sm:p-8">
+            <a href="{% url 'authentication:student_login' %}{% if request.GET.next %}?next={{ request.GET.next|urlencode }}{% endif %}" class="choice-card group auth-panel block p-6 sm:p-8">
                 <div class="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
                     <div class="max-w-xl">
                         <div class="inline-flex h-14 w-14 items-center justify-center rounded-3xl bg-gradient-to-br from-blue-500/15 to-cyan-500/20 text-2xl text-blue-700 ring-1 ring-blue-200">
@@ -72,7 +72,7 @@
             </a>
         </div>
 
-        <p class="mt-7 text-center text-sm text-slate-600">No account yet? <a href="{% url 'content:signup' %}" class="font-semibold text-rose-700 transition hover:text-rose-900">Create one now</a></p>
+        <p class="mt-7 text-center text-sm text-slate-600">No account yet? <a href="{% url 'authentication:signup' %}" class="font-semibold text-rose-700 transition hover:text-rose-900">Create one now</a></p>
     </div>
 </section>
 {% endblock %}

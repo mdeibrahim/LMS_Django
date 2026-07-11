@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}Student Signup â€” Teaching Platform{% endblock %}
+{% block title %}Student Signup Teaching Platform{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -117,7 +117,7 @@
                 <p id="login-phone-message" class="text-sm text-center text-slate-600"></p>
             </div>
             
-            <p class="mt-5 text-sm text-slate-600">Already have student account? <a href="{% url 'content:student_login' %}" class="font-semibold text-blue-700 hover:text-blue-900">Login</a></p>
+            <p class="mt-5 text-sm text-slate-600">Already have student account? <a href="{% url 'authentication:student_login' %}" class="font-semibold text-blue-700 hover:text-blue-900">Login</a></p>
         </div>
     </div>
 </section>
@@ -190,7 +190,7 @@
                 const result = await auth.signInWithPopup(provider);
                 const idToken = await result.user.getIdToken();
                 
-                const response = await fetch("{% url 'content:firebase_google_auth' %}", {
+                const response = await fetch("{% url 'authentication:firebase_google_auth' %}", {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',

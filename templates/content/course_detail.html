@@ -222,7 +222,7 @@
                                 {% if course.is_free %}Unlock Free Course{% else %}Buy This Course{% endif %}
                             </a>
                             {% else %}
-                            <a href="{% url 'content:login' %}?next={{ request.path }}" class="inline-flex w-full items-center justify-center rounded-xl bg-yellow-400 px-4 py-3 font-bold text-slate-900 transition hover:bg-yellow-300">Log in to continue</a>
+                            <a href="{% url 'authentication:login' %}?next={{ request.path }}" class="inline-flex w-full items-center justify-center rounded-xl bg-yellow-400 px-4 py-3 font-bold text-slate-900 transition hover:bg-yellow-300">Log in to continue</a>
                             {% endif %}
                         </div>
                     </div>

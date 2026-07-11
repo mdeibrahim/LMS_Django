@@ -2,7 +2,7 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 
 from .models import TeacherProfile
-from content.models import User, UserRole
+from apps.authentication.models import User, UserRole
 
 
 @receiver(post_save, sender=User)

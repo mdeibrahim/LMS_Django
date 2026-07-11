@@ -1,6 +1,8 @@
+from django.conf import settings
 from django.db import models
 
-from content.models import Category, Subcategory, UserRole
+from content.models import Category, Subcategory
+from apps.authentication.models import UserRole
 
 
 class TeacherProfileManager(models.Manager):
@@ -10,7 +12,7 @@ class TeacherProfileManager(models.Manager):
 
 class TeacherProfile(models.Model):
     user = models.OneToOneField(
-        "content.User",
+        settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
         related_name="teacher_profile",
     )

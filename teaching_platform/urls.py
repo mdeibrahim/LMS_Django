@@ -10,6 +10,7 @@ urlpatterns = [
     path('admin/dashboard/', admin.site.admin_view(admin_dashboard), name='admin_dashboard'),
     path('admin/', admin.site.urls),
     path('', include(('content.urls', 'content'), namespace='content')),
+    path('', include(('apps.authentication.urls', 'authentication'), namespace='authentication')),
 
     
     path('api/', include(('apps.teacher_dashboard.urls', 'apps.teacher_dashboard'), namespace='teacher_dashboard')),

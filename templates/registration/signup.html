@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+{% comment %} {% extends 'base.html' %}
 
 {% block title %}Student Signup — Teaching Platform{% endblock %}
 
@@ -53,7 +53,7 @@
         </div>
 
         <div class="mx-auto mt-10 max-w-3xl">
-            <a href="{% url 'content:student_signup' %}{% if request.GET.next %}?next={{ request.GET.next|urlencode }}{% endif %}" class="choice-card group auth-panel block p-6 sm:p-8">
+            <a href="{% url 'authentication:student_signup' %}{% if request.GET.next %}?next={{ request.GET.next|urlencode }}{% endif %}" class="choice-card group auth-panel block p-6 sm:p-8">
                 <div class="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
                     <div class="max-w-xl">
                         <div class="inline-flex h-14 w-14 items-center justify-center rounded-3xl bg-gradient-to-br from-blue-500/15 to-cyan-500/20 text-2xl text-blue-700 ring-1 ring-blue-200">
@@ -72,7 +72,7 @@
             </a>
         </div>
 
-        <p class="mt-7 text-center text-sm text-slate-600">Already have an account? <a href="{% url 'content:login' %}" class="font-semibold text-cyan-700 transition hover:text-cyan-900">Login instead</a></p>
+        <p class="mt-7 text-center text-sm text-slate-600">Already have an account? <a href="{% url 'authentication:login' %}" class="font-semibold text-cyan-700 transition hover:text-cyan-900">Login instead</a></p>
     </div>
 </section>
-{% endblock %}
+{% endblock %} {% endcomment %}

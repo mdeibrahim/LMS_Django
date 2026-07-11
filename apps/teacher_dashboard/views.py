@@ -10,7 +10,8 @@ from rest_framework.permissions import IsAuthenticated
 from django.utils import timezone
 from apps.teacher_dashboard.utils import send_verification_email, forgot_password_email
 from content import models
-from content.models import Course, Module, Lesson, LessonResource, EmailOTP, PasswordResetSession, CourseQuiz, CourseQuizQuestion
+from content.models import Course, Module, Lesson, LessonResource, CourseQuiz, CourseQuizQuestion
+from apps.authentication.models import EmailOTP, PasswordResetSession
 from .models import Category, Subcategory
 from django.db.models import Q, Prefetch
 from .serializers import (
@@ -1319,7 +1320,7 @@ class FirebaseGoogleLoginView(APIView):
 
         name = decoded_token.get("name", "")
         
-        from content.models import User, UserRole
+        from apps.authentication.models import User, UserRole
         from .models import TeacherProfile
         
         user = User.objects.filter(email=email).first()
