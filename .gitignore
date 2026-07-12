@@ -34,3 +34,6 @@ staticfiles/
 # AI
 .codex/
 .agent/
+
+firebase-service-account.json
+*.json
