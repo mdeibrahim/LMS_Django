@@ -1,5 +1,6 @@
 from django.urls import path
 from .views import (
+    FirebaseGoogleLoginView,
     LoginView, RegisterView, TeacherProfileView, CourseListView,
     SubcategoryCreateView, SubcategoryDetailUpdateDeleteView,
     CategorySubcategoryListView, ModuleListView, LessonListView,
@@ -16,6 +17,7 @@ urlpatterns = [
     path('auth/resend-otp/', ResendOTPView.as_view(), name='teacher_resend_otp'),
 
     path('auth/login/', LoginView.as_view(), name='teacher_login'),
+    path('auth/firebase-google-auth/', FirebaseGoogleLoginView.as_view(), name='teacher_firebase_google_auth'),
     path('profile/', TeacherProfileView.as_view(), name='teacher_profile'),
     path('change-password/', ChangePasswordView.as_view(), name='teacher_password_change'),
     path('update-profile/', TeacherProfileView.as_view(), name='teacher_update_profile'),

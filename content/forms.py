@@ -151,28 +151,28 @@ class StudentSignupForm(BaseRoleSignupForm):
         )
 
 
-class NewCourseAddRequestForm(forms.Form):
-    requested_category = forms.CharField(
-        max_length=255,
-        required=True,
-        widget=forms.TextInput(attrs={'class': 'w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5', 'placeholder': 'Category name'}),
-    )
-    requested_course_name = forms.CharField(
-        max_length=255,
-        required=True,
-        widget=forms.TextInput(attrs={'class': 'w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5'}),
-    )
-    requested_price = forms.DecimalField(
-        required=True,
-        min_value=0,
-        decimal_places=2,
-        max_digits=10,
-        widget=forms.NumberInput(attrs={'step': '0.01', 'class': 'w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5'}),
-    )
-    details = forms.CharField(
-        required=False,
-        widget=forms.Textarea(attrs={'rows': 4, 'class': 'w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5'}),
-    )
+# class NewCourseAddRequestForm(forms.Form):
+#     requested_category = forms.CharField(
+#         max_length=255,
+#         required=True,
+#         widget=forms.TextInput(attrs={'class': 'w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5', 'placeholder': 'Category name'}),
+#     )
+#     requested_course_name = forms.CharField(
+#         max_length=255,
+#         required=True,
+#         widget=forms.TextInput(attrs={'class': 'w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5'}),
+#     )
+#     requested_price = forms.DecimalField(
+#         required=True,
+#         min_value=0,
+#         decimal_places=2,
+#         max_digits=10,
+#         widget=forms.NumberInput(attrs={'step': '0.01', 'class': 'w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5'}),
+#     )
+#     details = forms.CharField(
+#         required=False,
+#         widget=forms.Textarea(attrs={'rows': 4, 'class': 'w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5'}),
+#     )
 
 
 class ProfileUpdateForm(forms.Form):

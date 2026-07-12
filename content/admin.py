@@ -7,6 +7,7 @@ from django.urls import reverse
 from django.utils import timezone
 from django.utils.html import format_html
 from unfold.admin import ModelAdmin, TabularInline
+from apps.authentication.models import EmailOTP
 
 from apps.student_dashboard.models import StudentDeviceSession
 from .models import (
@@ -16,13 +17,11 @@ from .models import (
     CourseEnrollment,
     CourseQuiz,
     CourseQuizQuestion,
-    EmailOTP,
     EnrollmentStatus,
     Lesson,
     LessonResource,
     LessonResourceType,
     Module,
-    # ModuleAccordionSection,
     PaymentInstruction,
     PaymentSubmission,
     PaymentSubmissionStatus,
@@ -353,12 +352,6 @@ class LessonInline(TabularInline):
     fields = ("title", "slug", "order", "is_preview", "is_published")
     readonly_fields = ("slug",)
 
-
-# class ModuleAccordionSectionInline(TabularInline):
-#     model = ModuleAccordionSection
-#     extra = 0
-#     show_change_link = True
-#     fields = ("title", "order", "is_open_by_default")
 
 
 @admin.register(Module)

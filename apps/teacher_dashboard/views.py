@@ -10,7 +10,8 @@ from rest_framework.permissions import IsAuthenticated
 from django.utils import timezone
 from apps.teacher_dashboard.utils import send_verification_email, forgot_password_email
 from content import models
-from content.models import Course, Module, Lesson, LessonResource, EmailOTP, PasswordResetSession, CourseQuiz, CourseQuizQuestion
+from content.models import Course, Module, Lesson, LessonResource, CourseQuiz, CourseQuizQuestion
+from apps.authentication.models import EmailOTP, PasswordResetSession
 from .models import Category, Subcategory
 from django.db.models import Q, Prefetch
 from .serializers import (
@@ -1297,3 +1298,68 @@ class QuizListView(APIView):
             {"message": f'"{title}" deleted successfully'},
             status=status.HTTP_200_OK,
         )
+
+
+from content.firebase import verify_id_token
+from rest_framework_simplejwt.tokens import RefreshToken
+
+class FirebaseGoogleLoginView(APIView):
+    def post(self, request):
+        id_token = request.data.get("id_token")
+        if not id_token:
+            return Response({"message": "ID token is required"}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            decoded_token = verify_id_token(id_token)
+        except Exception as exc:
+            return Response({"message": "Invalid Firebase token", "detail": str(exc)}, status=status.HTTP_400_BAD_REQUEST)
+
+        email = decoded_token.get("email")
+        if not email:
+            return Response({"message": "Email not found in Firebase token"}, status=status.HTTP_400_BAD_REQUEST)
+
+        name = decoded_token.get("name", "")
+        
+        from apps.authentication.models import User, UserRole
+        from .models import TeacherProfile
+        
+        user = User.objects.filter(email=email).first()
+        created = False
+        if user is None:
+            user = User.objects.create_user(
+                email=email,
+                full_name=name,
+                role=UserRole.TEACHER,
+                is_active=True,
+                is_verified=True,
+                phone_number="",
+            )
+            user.set_unusable_password()
+            user.save()
+            created = True
+        else:
+            if not user.is_active:
+                user.is_active = True
+            if not user.is_verified:
+                user.is_verified = True
+            user.save()
+
+        TeacherProfile.objects.get_or_create(user=user)
+
+        refresh = RefreshToken.for_user(user)
+
+        return Response(
+            {
+                "message": "Teacher login successful",
+                "refresh_token": str(refresh),
+                "access_token": str(refresh.access_token),
+                "user": {
+                    "id": user.id,
+                    "email": user.email,
+                    "name": user.get_full_name(),
+                    "profile_picture": user.profile.profile_picture.url if hasattr(user, 'profile') and hasattr(user.profile, 'profile_picture') and user.profile.profile_picture else None,
+                }
+            },
+            status=status.HTTP_200_OK,
+        )
+
