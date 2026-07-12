@@ -180,38 +180,53 @@
         const auth = firebase.auth();
         const googleBtn = document.getElementById('google-login-btn');
         const messageEl = document.getElementById('login-phone-message');
-        
+
+        const googleProvider = new firebase.auth.GoogleAuthProvider();
+        googleProvider.setCustomParameters({ prompt: 'select_account' });
+
+        async function finishGoogleSignIn(idToken) {
+            const response = await fetch("{% url 'authentication:firebase_google_auth' %}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken'),
+                },
+                body: JSON.stringify({ id_token: idToken }),
+            });
+
+            const data = await response.json();
+            if (!response.ok || !data.ok) {
+                throw new Error(data.error || 'Google signup failed.');
+            }
+
+            setMessage(messageEl, 'Signup successful. Redirecting...', 'success');
+            window.location.href = "{% url 'content:student_dashboard' %}";
+        }
+
+        // On page load, silently check if we're returning from a Google redirect.
+        auth.getRedirectResult().then(async function (result) {
+            if (result && result.user) {
+                googleBtn.disabled = true;
+                setMessage(messageEl, 'Completing Google signup...');
+                const idToken = await result.user.getIdToken();
+                await finishGoogleSignIn(idToken);
+            }
+            // result.user is null = normal page load (no redirect happened), do nothing.
+        }).catch(function (error) {
+            console.error('[Google] getRedirectResult error:', error);
+            if (error && error.code !== 'auth/null-user') {
+                setMessage(messageEl, (error && error.message ? error.message : 'Google signup failed.') + (error && error.code ? ' (' + error.code + ')' : ''), 'danger');
+            }
+        });
+
         googleBtn?.addEventListener('click', async function () {
             try {
                 googleBtn.disabled = true;
-                setMessage(messageEl, 'Opening Google Login...');
-                
-                const provider = new firebase.auth.GoogleAuthProvider();
-                const result = await auth.signInWithPopup(provider);
-                const idToken = await result.user.getIdToken();
-                
-                const response = await fetch("{% url 'authentication:firebase_google_auth' %}", {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRFToken': getCookie('csrftoken'),
-                    },
-                    body: JSON.stringify({
-                        id_token: idToken,
-                    }),
-                });
-                
-                const data = await response.json();
-                if (!response.ok || !data.ok) {
-                    throw new Error(data.error || 'Google signup failed.');
-                }
-                
-                setMessage(messageEl, 'Signup successful. Redirecting...', 'success');
-                window.location.href = "{% url 'content:student_dashboard' %}";
+                setMessage(messageEl, 'Redirecting to Google...');
+                await auth.signInWithRedirect(googleProvider);
             } catch (error) {
-                setMessage(messageEl, error?.message || 'Google signup failed.', 'danger');
-            } finally {
                 googleBtn.disabled = false;
+                setMessage(messageEl, (error && error.message ? error.message : 'Google signup failed.') + (error && error.code ? ' (' + error.code + ')' : ''), 'danger');
             }
         });
     }
