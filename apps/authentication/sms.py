@@ -32,7 +32,7 @@ def send_sms_bulksmsbd(message, phone_number):
         "senderid": sender_id,
         "message": message,
     }
-
+    print("ok----------------")
     try:
         data = urllib_parse.urlencode(payload).encode()
         req = urllib_request.Request(url, data=data, method="POST")
