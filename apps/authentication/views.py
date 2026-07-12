@@ -18,7 +18,8 @@ from content.services.profiles import ensure_profile
 from content.firebase import verify_id_token
 from content.utils import send_verification_email
 
-from apps.authentication.models import EmailOTP, User
+from apps.authentication.models import OTP, User
+from apps.authentication.sms import send_otp_sms
 from apps.student_dashboard.models import StudentProfile
 
 
@@ -30,14 +31,14 @@ def _role_login(request, template_name):
     if request.method == "POST" and form.is_valid():
         email_or_phone = form.cleaned_data["email"].strip()
         password = form.cleaned_data["password"]
-        
+
         looks_like_phone = email_or_phone.replace('+', '').isdigit()
 
         if looks_like_phone:
             matched_users = User.objects.filter(phone_number=email_or_phone)
         else:
             matched_users = User.objects.filter(email__iexact=email_or_phone)
-            
+
         if matched_users.count() > 1:
             form.add_error("email", "Multiple accounts found with this credential. Please contact support.")
             return render(request, template_name, {"form": form})
@@ -47,7 +48,7 @@ def _role_login(request, template_name):
             form.add_error("email", "No account found with this credential.")
             return render(request, template_name, {"form": form})
 
-        user = authenticate(request=request, email=user_obj.email, password=password)
+        user = authenticate(request=request, username=user_obj.email or user_obj.phone_number, password=password)
         if not user:
             form.add_error("password", "Invalid credentials.")
             return render(request, template_name, {"form": form})
@@ -58,7 +59,7 @@ def _role_login(request, template_name):
             return render(request, template_name, {"form": form})
 
         login(request, user)
-        messages.success(request, f"Welcome back, {user.get_full_name() or user.email}!")
+        messages.success(request, f"Welcome back, {user.get_full_name()}!")
         next_url = request.POST.get("next") or request.GET.get("next")
         if next_url:
             return redirect(next_url)
@@ -78,13 +79,38 @@ def student_login(request):
     return _role_login(request, template_name="registration/student_login.html")
 
 
-def generate_otp(user):
-    EmailOTP.objects.filter(user=user).delete()
+def _get_display_contact(user):
+    if user.email:
+        return user.email
+    return user.phone_number
+
+
+def _user_channel(user):
+    return OTP.CHANNEL_SMS if user.phone_number and not user.email else OTP.CHANNEL_EMAIL
+
+
+def generate_otp(user, channel=None):
+    if channel is None:
+        channel = _user_channel(user)
+    OTP.objects.filter(user=user, is_used=False).delete()
 
     code = f"{random.randint(100000, 999999)}"
     expires = timezone.now() + timedelta(minutes=15)
-    EmailOTP.objects.create(user=user, code=code, expires_at=expires)
+    OTP.objects.create(user=user, code=code, expires_at=expires, channel=channel)
     return code
+
+
+def _send_otp(user, code):
+    channel = _user_channel(user)
+    if channel == OTP.CHANNEL_EMAIL:
+        sent = send_verification_email(user, code)
+        if not sent:
+            messages.info(request, f"OTP for verification: {code}")
+        return sent
+    sent = send_otp_sms(code, user.phone_number)
+    if not sent:
+        messages.info(request, f"SMS delivery failed. OTP for verification: {code}")
+    return sent
 
 
 def _role_signup(request, template_name):
@@ -96,13 +122,21 @@ def _role_signup(request, template_name):
         user = form.save()
         form.save_profile(user=user, role=UserRole.STUDENT)
 
-        code = generate_otp(user)
+        channel = _user_channel(user)
+        code = generate_otp(user, channel=channel)
 
-        sent = send_verification_email(user, code)
-        if not sent:
-            messages.info(request, f"OTP for verification: {code}")
+
+        if channel == OTP.CHANNEL_EMAIL:
+            sent = send_verification_email(user, code)
+            if not sent:
+                messages.info(request, f"OTP for verification: {code}")
+        else:
+            sent = send_otp_sms(code, user.phone_number)
+            if not sent:
+                messages.info(request, f"OTP for verification: {code}")
 
         request.session["pending_otp_user"] = user.id
+        request.session["pending_otp_channel"] = channel
         return redirect("authentication:otp_verify")
 
     return render(
@@ -128,6 +162,9 @@ def otp_verify(request):
 
     user = get_object_or_404(User, id=user_id)
     profile = ensure_profile(user)
+    channel = request.session.get("pending_otp_channel") or _user_channel(user)
+    display_contact = _get_display_contact(user)
+
     lock_key = f"otp:lockout:{user.id}"
     if cache.get(lock_key):
         messages.error(request, "Too many failed attempts. Please try again later.")
@@ -135,14 +172,15 @@ def otp_verify(request):
 
     if request.method == "POST" and form.is_valid():
         code = form.cleaned_data["code"].strip()
-        otp_qs = EmailOTP.objects.filter(user=user, code=code, is_used=False, expires_at__gte=timezone.now())
+        otp_qs = OTP.objects.filter(user=user, code=code, is_used=False, expires_at__gte=timezone.now())
         if otp_qs.exists():
             otp = otp_qs.first()
             otp.is_used = True
             otp.save(update_fields=["is_used"])
             cache.delete(f"otp:attempt:{user.id}")
-            login(request, user)
+            login(request, user, backend='apps.authentication.backends.EmailOrPhoneBackend')
             request.session.pop("pending_otp_user", None)
+            request.session.pop("pending_otp_channel", None)
             user.is_verified = True
             user.is_active = True
             user.save(update_fields=["is_verified", "is_active"])
@@ -169,7 +207,15 @@ def otp_verify(request):
 
         form.add_error("code", "Invalid or expired code.")
 
-    return render(request, "registration/otp_verify.html", {"form": form, "email": user.email})
+    return render(
+        request,
+        "registration/otp_verify.html",
+        {
+            "form": form,
+            "display_contact": display_contact,
+            "channel": channel,
+        },
+    )
 
 
 def otp_resend(request):
@@ -177,7 +223,7 @@ def otp_resend(request):
     if not user_id:
         messages.error(request, "No pending verification found. Please sign up first.")
         return redirect("authentication:signup")
-        
+
     user = get_object_or_404(User, id=user_id)
 
     resend_key = f"otp:resend:{user.id}"
@@ -194,12 +240,22 @@ def otp_resend(request):
     except Exception:
         pass
 
-    code = generate_otp(user)
-    sent = send_verification_email(user, code)
-    if sent:
-        messages.success(request, "A verification code has been sent to your email.")
+    channel = request.session.get("pending_otp_channel") or _user_channel(user)
+    code = generate_otp(user, channel=channel)
+
+    if channel == OTP.CHANNEL_EMAIL:
+        sent = send_verification_email(user, code)
+        if sent:
+            messages.success(request, "A verification code has been sent to your email.")
+        else:
+            messages.info(request, f"OTP for verification: {code}")
     else:
-        messages.info(request, f"OTP for verification: {code}")
+        sent = send_otp_sms(code, user.phone_number)
+        if sent:
+            messages.success(request, "A verification code has been sent to your phone.")
+        else:
+            messages.info(request, f"OTP for verification: {code}")
+
     return redirect("authentication:otp_verify")
 
 
@@ -212,109 +268,109 @@ def _firebase_web_config():
     }
 
 
-@require_POST
-def firebase_phone_auth(request):
-    try:
-        payload = json.loads(request.body or "{}")
-    except Exception:
-        return JsonResponse({"ok": False, "error": "Invalid JSON payload."}, status=400)
+# @require_POST
+# def firebase_phone_auth(request):
+#     try:
+#         payload = json.loads(request.body or "{}")
+#     except Exception:
+#         return JsonResponse({"ok": False, "error": "Invalid JSON payload."}, status=400)
 
-    id_token = (payload.get("id_token") or "").strip()
-    if not id_token:
-        return JsonResponse({"ok": False, "error": "id_token is required."}, status=400)
+#     id_token = (payload.get("id_token") or "").strip()
+#     if not id_token:
+#         return JsonResponse({"ok": False, "error": "id_token is required."}, status=400)
 
-    try:
-        decoded_token = verify_id_token(id_token)
-    except Exception as exc:
-        return JsonResponse({"ok": False, "error": "Invalid Firebase token.", "detail": str(exc)}, status=400)
+#     try:
+#         decoded_token = verify_id_token(id_token)
+#     except Exception as exc:
+#         return JsonResponse({"ok": False, "error": "Invalid Firebase token.", "detail": str(exc)}, status=400)
 
-    phone_number = (decoded_token.get("phone_number") or "").strip()
-    if not phone_number:
-        return JsonResponse({"ok": False, "error": "Phone number not found in Firebase token."}, status=400)
+#     phone_number = (decoded_token.get("phone_number") or "").strip()
+#     if not phone_number:
+#         return JsonResponse({"ok": False, "error": "Phone number not found in Firebase token."}, status=400)
 
-    full_name = (payload.get("full_name") or decoded_token.get("name") or "").strip()
-    password = (payload.get("password") or "").strip()
+#     full_name = (payload.get("full_name") or decoded_token.get("name") or "").strip()
+#     password = (payload.get("password") or "").strip()
 
-    user = User.objects.filter(phone_number=phone_number).first()
-    created = False
+#     user = User.objects.filter(phone_number=phone_number).first()
+#     created = False
 
-    if user is None:
-        user = User.objects.create_user(
-            phone_number=phone_number,
-            password=password or None,
-            full_name=full_name,
-            role=UserRole.STUDENT,
-            is_active=True,
-            is_verified=True,
-        )
-        if not password:
-            user.set_unusable_password()
-            user.save(update_fields=["password"])
-        created = True
-    else:
-        if password and user.has_usable_password() and not user.check_password(password):
-            return JsonResponse({"ok": False, "error": "Invalid password for this phone number."}, status=400)
-        if password and not user.has_usable_password():
-            user.set_password(password)
-        if full_name and not user.full_name:
-            user.full_name = full_name
-        if not user.is_active:
-            user.is_active = True
-        if not user.is_verified:
-            user.is_verified = True
-        update_fields = ["full_name", "is_active", "is_verified"]
-        if password:
-            update_fields.append("password")
-        user.save(update_fields=update_fields)
+#     if user is None:
+#         user = User.objects.create_user(
+#             phone_number=phone_number,
+#             password=password or None,
+#             full_name=full_name,
+#             role=UserRole.STUDENT,
+#             is_active=True,
+#             is_verified=True,
+#         )
+#         if not password:
+#             user.set_unusable_password()
+#             user.save(update_fields=["password"])
+#         created = True
+#     else:
+#         if password and user.has_usable_password() and not user.check_password(password):
+#             return JsonResponse({"ok": False, "error": "Invalid password for this phone number."}, status=400)
+#         if password and not user.has_usable_password():
+#             user.set_password(password)
+#         if full_name and not user.full_name:
+#             user.full_name = full_name
+#         if not user.is_active:
+#             user.is_active = True
+#         if not user.is_verified:
+#             user.is_verified = True
+#         update_fields = ["full_name", "is_active", "is_verified"]
+#         if password:
+#             update_fields.append("password")
+#         user.save(update_fields=update_fields)
 
-    profile = ensure_profile(user)
-    login(request, user)
-    return JsonResponse(
-        {
-            "ok": True,
-            "is_new_user": created,
-            "user": {
-                "id": user.id,
-                "email": user.email,
-                "phone_number": user.phone_number,
-                "full_name": user.full_name,
-                "role": user.role,
-            },
-            "profile_role": profile.role,
-        }
-    )
+#     profile = ensure_profile(user)
+#     login(request, user)
+#     return JsonResponse(
+#         {
+#             "ok": True,
+#             "is_new_user": created,
+#             "user": {
+#                 "id": user.id,
+#                 "email": user.email,
+#                 "phone_number": user.phone_number,
+#                 "full_name": user.full_name,
+#                 "role": user.role,
+#             },
+#             "profile_role": profile.role,
+#         }
+#     )
 
 
-@login_required
-@require_POST
-def firebase_link_phone(request):
-    try:
-        payload = json.loads(request.body or "{}")
-    except Exception:
-        return JsonResponse({"ok": False, "error": "Invalid JSON payload."}, status=400)
+# @login_required
+# @require_POST
+# def firebase_link_phone(request):
+#     try:
+#         payload = json.loads(request.body or "{}")
+#     except Exception:
+#         return JsonResponse({"ok": False, "error": "Invalid JSON payload."}, status=400)
 
-    id_token = (payload.get("id_token") or "").strip()
-    if not id_token:
-        return JsonResponse({"ok": False, "error": "id_token is required."}, status=400)
+#     id_token = (payload.get("id_token") or "").strip()
+#     if not id_token:
+#         return JsonResponse({"ok": False, "error": "id_token is required."}, status=400)
 
-    try:
-        decoded_token = verify_id_token(id_token)
-    except Exception as exc:
-        return JsonResponse({"ok": False, "error": "Invalid Firebase token.", "detail": str(exc)}, status=400)
+#     try:
+#         decoded_token = verify_id_token(id_token)
+#     except Exception as exc:
+#         return JsonResponse({"ok": False, "error": "Invalid Firebase token.", "detail": str(exc)}, status=400)
 
-    phone_number = (decoded_token.get("phone_number") or "").strip()
-    if not phone_number:
-        return JsonResponse({"ok": False, "error": "Phone number not found in Firebase token."}, status=400)
+#     phone_number = (decoded_token.get("phone_number") or "").strip()
+#     if not phone_number:
+#         return JsonResponse({"ok": False, "error": "Phone number not found in Firebase token."}, status=400)
 
-    if User.objects.filter(phone_number=phone_number).exclude(pk=request.user.pk).exists():
-        return JsonResponse({"ok": False, "error": "This phone number is already linked to another account."}, status=400)
+#     if User.objects.filter(phone_number=phone_number).exclude(pk=request.user.pk).exists():
+#         return JsonResponse({"ok": False, "error": "This phone number is already linked to another account."}, status=400)
 
-    request.user.phone_number = phone_number
-    request.user.is_active = True
-    request.user.is_verified = True
-    request.user.save(update_fields=["phone_number", "is_active", "is_verified"])
+#     request.user.phone_number = phone_number
+#     request.user.is_active = True
+#     request.user.is_verified = True
+#     request.user.save(update_fields=["phone_number", "is_active", "is_verified"])
 
-    return JsonResponse({"ok": True, "phone_number": phone_number})
+#     return JsonResponse({"ok": True, "phone_number": phone_number})
 
 
 @require_POST
@@ -363,5 +419,7 @@ def firebase_google_auth(request):
 
     StudentProfile.objects.get_or_create(user=user)
 
-    login(request, user)
+    login(request, user, backend='apps.authentication.backends.EmailOrPhoneBackend')
     return JsonResponse({"ok": True, "created": created, "message": "Successfully logged in via Google."})
+
+

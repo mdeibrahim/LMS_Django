@@ -155,7 +155,7 @@ AUTHENTICATION_BACKENDS = [
 
 LOGIN_URL = 'apps.authentication:login'
 LOGIN_REDIRECT_URL = 'content:home'
-LOGOUT_REDIRECT_URL = 'authentication:home'
+LOGOUT_REDIRECT_URL = 'content:home'
 
 
 EMAIL_BACKEND = config('EMAIL_BACKEND', default='django.core.mail.backends.console.EmailBackend')
@@ -188,6 +188,9 @@ OTP_ATTEMPT_LIMIT = config('OTP_ATTEMPT_LIMIT', default=5, cast=int)
 OTP_LOCKOUT_SECONDS = config('OTP_LOCKOUT_SECONDS', default=600, cast=int)
 OTP_RESEND_WINDOW = config('OTP_RESEND_WINDOW', default=900, cast=int)
 OTP_RESEND_LIMIT = config('OTP_RESEND_LIMIT', default=3, cast=int)
+
+BULKSMSBD_API_KEY = config('BULKSMSBD_API_KEY', default='')
+BULKSMSBD_SENDER_ID = config('BULKSMSBD_SENDER_ID', default='8809617611470')
 
 
 REST_FRAMEWORK = {

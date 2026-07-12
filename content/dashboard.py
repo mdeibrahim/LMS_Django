@@ -87,7 +87,7 @@ def admin_dashboard(request):
     quick_actions = [
         {"label": "Create Course", "url": reverse("admin:content_course_add"), "tone": "primary"},
         {"label": "Review Payments", "url": reverse("admin:content_paymentsubmission_changelist"), "tone": "secondary"},
-        {"label": "Manage Users", "url": reverse("admin:content_user_changelist"), "tone": "secondary"},
+        {"label": "Manage Users", "url": reverse("admin:authentication_user_changelist"), "tone": "secondary"},
     ]
 
     context = {

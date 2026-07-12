@@ -9,7 +9,7 @@
         <div class="auth-panel p-6 sm:p-8">
             <span class="eyebrow"><i class="fa-solid fa-shield-check"></i> OTP VERIFICATION</span>
             <h2 class="mt-5 text-3xl font-bold text-slate-900">Verify your account</h2>
-            <p class="mt-2 text-sm leading-7 text-slate-600">We sent a 6-digit verification code to <strong>{{ email }}</strong>. Enter it below to finish signup.</p>
+            <p class="mt-2 text-sm leading-7 text-slate-600">We sent a 6-digit verification code to your <strong>{% if channel == 'sms' %}phone number{% else %}email{% endif %}</strong> <strong>{{ display_contact }}</strong>. Enter it below to finish signup.</p>
 
             {% if messages %}
             <div class="mt-4 space-y-2">

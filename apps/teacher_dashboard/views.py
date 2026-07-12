@@ -11,7 +11,7 @@ from django.utils import timezone
 from apps.teacher_dashboard.utils import send_verification_email, forgot_password_email
 from content import models
 from content.models import Course, Module, Lesson, LessonResource, CourseQuiz, CourseQuizQuestion
-from apps.authentication.models import EmailOTP, PasswordResetSession
+from apps.authentication.models import OTP, PasswordResetSession
 from .models import Category, Subcategory
 from django.db.models import Q, Prefetch
 from .serializers import (
@@ -32,11 +32,10 @@ from django.shortcuts import get_object_or_404
 from django.db.models import Max
 
 def generate_otp(user):
-    EmailOTP.objects.filter(user=user).delete()
+    OTP.objects.filter(user=user, is_used=False).delete()
     code = f"{random.randint(100000, 999999)}"
     expires = timezone.now() + timedelta(minutes=15)
-    is_used = False
-    EmailOTP.objects.create(user=user, code=code, expires_at=expires, is_used=is_used)
+    OTP.objects.create(user=user, code=code, expires_at=expires, channel=OTP.CHANNEL_EMAIL)
     return code
 
 class RegisterView(APIView):
@@ -84,8 +83,8 @@ class VerifyOTPView(APIView):
             )
 
         try:
-            otp_record = EmailOTP.objects.get(user=user, code=otp, is_used=False, expires_at__gt=timezone.now())
-        except EmailOTP.DoesNotExist:
+            otp_record = OTP.objects.get(user=user, code=otp, is_used=False, expires_at__gt=timezone.now())
+        except OTP.DoesNotExist:
             print(f"otp_record: {otp_record}")
             return Response(
                 {"message": "Invalid OTP."},

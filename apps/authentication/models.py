@@ -5,14 +5,14 @@ from django.conf import settings
 
 
 class UserManager(BaseUserManager):
-    def create_user(self, email, password=None, **extra_fields):
-        if not email:
-            raise ValueError("Email is required")
-        email = self.normalize_email(email)
-        user = self.model(email=email, **extra_fields)
+    def create_user(self, email=None, password=None, **extra_fields):
+        if not email and not extra_fields.get("phone_number"):
+            raise ValueError("Either email or phone_number is required")
+        if email:
+            email = self.normalize_email(email)
+        user = self.model(email=email or None, **extra_fields)
         user.set_password(password)
         user.is_active = False
-
         user.save(using=self._db)
         return user
 
@@ -36,7 +36,7 @@ class UserRole(models.TextChoices):
     
 
 class User(AbstractBaseUser, PermissionsMixin):
-    email = models.EmailField(unique=True)
+    email = models.EmailField(unique=True, blank=True, null=True)
     full_name = models.CharField(max_length=160, blank=True, default="")
     role = models.CharField(max_length=20, choices=UserRole.choices, default=UserRole.STUDENT)
     phone_number = models.CharField(max_length=20, blank=True, default="")
@@ -52,16 +52,21 @@ class User(AbstractBaseUser, PermissionsMixin):
     EMAIL_FIELD = "email"
 
     class Meta:
-        ordering = ["email"]
+        ordering = ["-date_joined"]
 
     def __str__(self):
-        return self.email
+        return self.email or self.phone_number or f"User {self.pk}"
 
     def get_full_name(self):
-        return (self.full_name or "").strip() or self.email
+        return (self.full_name or "").strip() or self.email or self.phone_number or "User"
 
     def get_short_name(self):
-        return (self.full_name or "").strip() or self.email
+        return (self.full_name or "").strip() or self.email or self.phone_number or "User"
+
+    def clean(self):
+        if not self.email and not self.phone_number:
+            from django.core.exceptions import ValidationError
+            raise ValidationError("Provide at least an email address or a phone number.")
 
     @property
     def profile(self):
@@ -76,9 +81,17 @@ class User(AbstractBaseUser, PermissionsMixin):
         return profile
 
 
-class EmailOTP(models.Model):
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="email_otps")
+class OTP(models.Model):
+    CHANNEL_EMAIL = "email"
+    CHANNEL_SMS = "sms"
+    CHANNEL_CHOICES = [
+        (CHANNEL_EMAIL, "Email"),
+        (CHANNEL_SMS, "SMS"),
+    ]
+
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="otps")
     code = models.CharField(max_length=6)
+    channel = models.CharField(max_length=10, choices=CHANNEL_CHOICES, default=CHANNEL_EMAIL)
     is_used = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     expires_at = models.DateTimeField()
@@ -90,8 +103,7 @@ class EmailOTP(models.Model):
         ]
 
     def __str__(self):
-        return f"OTP for {self.user.email} - {self.code}"
-    
+        return f"OTP for {self.user.get_full_name()} via {self.channel} - {self.code}"
 
 
 class PasswordResetSession(models.Model):

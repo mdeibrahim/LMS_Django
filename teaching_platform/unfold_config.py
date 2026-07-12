@@ -30,7 +30,7 @@ UNFOLD = {
                     {
                         "title": "Users",
                         "icon": "person",
-                        "link": reverse_lazy("admin:content_user_changelist"),
+                        "link": reverse_lazy("admin:authentication_user_changelist"),
                     },
                     {
                         "title": "Teachers",
@@ -50,7 +50,7 @@ UNFOLD = {
                     {
                         "title": "Email OTPs",
                         "icon": "mark_email_read",
-                        "link": reverse_lazy("admin:content_emailotp_changelist"),
+                        "link": reverse_lazy("admin:authentication_otp_changelist"),
                     },
                 ],
             },

@@ -116,7 +116,7 @@ class BaseRoleSignupForm(UserCreationForm):
     def save(self, commit=True):
         user = super().save(commit=False)
         user.email = self.cleaned_data.get('email') or None
-        user.phone_number = self.cleaned_data.get('phone_number') or None
+        user.phone_number = self.cleaned_data.get('phone_number') or ""
         if commit:
             user.save()
         return user
@@ -137,7 +137,7 @@ class StudentSignupForm(BaseRoleSignupForm):
 
         user.role = UserRole.STUDENT
         user.full_name = self.cleaned_data['full_name'].strip()
-        user.phone_number = self.cleaned_data.get('phone_number') or None
+        user.phone_number = self.cleaned_data.get('phone_number') or ""
         user.save(update_fields=['role', 'full_name', 'phone_number'])
 
         StudentProfile.objects.update_or_create(
@@ -256,7 +256,7 @@ class ProfileUpdateForm(forms.Form):
         profile = self.profile
 
         user.email = self.cleaned_data.get('email') or None
-        user.phone_number = self.cleaned_data.get('phone_number') or None
+        user.phone_number = self.cleaned_data.get('phone_number') or ""
         user.full_name = self.cleaned_data['full_name'].strip()
         user.save(update_fields=['email', 'phone_number', 'full_name'])
 
