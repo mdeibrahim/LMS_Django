@@ -13,51 +13,92 @@ from content.models import Category, Course, Lesson, LessonResource, LessonResou
 User = get_user_model()
 
 class TeacherRegisterSerializer(serializers.Serializer):
-    email = serializers.EmailField()
+    email_or_phone = serializers.CharField()
     password = serializers.CharField(write_only=True)
     confirm_password = serializers.CharField(write_only=True)
     full_name = serializers.CharField()
-    phone_number = serializers.CharField(required=True)
 
-    def validate_email(self, value):
-        if User.objects.filter(email=value).exists():
+    @staticmethod
+    def _is_phone(value: str) -> bool:
+        normalized = value.replace(" ", "").replace("-", "")
+        if normalized.startswith("+"):
+            normalized = normalized[1:]
+        return normalized.isdigit() and 10 <= len(normalized) <= 15
+
+    def validate_email_or_phone(self, value):
+        if self._is_phone(value):
+            normalized = value.replace(" ", "").replace("-", "")
+            if User.objects.filter(phone_number=normalized).exists():
+                raise serializers.ValidationError("Phone number is already in use")
+            return value
+        if User.objects.filter(email=value.lower()).exists():
             raise serializers.ValidationError("Email is already in use")
-        return value
+        return value.lower()
 
     def validate(self, attrs):
         if attrs["password"] != attrs["confirm_password"]:
             raise serializers.ValidationError(
                 {"confirm_password": "Passwords do not match"}
             )
+
+        contact = attrs["email_or_phone"]
+        if self._is_phone(contact):
+            normalized = contact.replace(" ", "").replace("-", "")
+            if not (10 <= len(normalized) <= 15):
+                raise serializers.ValidationError(
+                    {"email_or_phone": "Phone number must be 10 to 15 digits."}
+                )
+
         return attrs
 
     def create(self, validated_data):
         validated_data.pop("confirm_password")
+        contact = validated_data.pop("email_or_phone")
 
-        user = User.objects.create_user(
-            email=validated_data["email"],
-            password=validated_data["password"],
-            full_name=validated_data["full_name"],
-            phone_number=validated_data["phone_number"],
-            role=UserRole.TEACHER,
-        )
+        if self._is_phone(contact):
+            normalized = contact.replace(" ", "").replace("-", "")
+            user = User.objects.create_user(
+                phone_number=normalized,
+                password=validated_data["password"],
+                full_name=validated_data["full_name"],
+                role=UserRole.TEACHER,
+            )
+        else:
+            user = User.objects.create_user(
+                email=contact.lower(),
+                password=validated_data["password"],
+                full_name=validated_data["full_name"],
+                role=UserRole.TEACHER,
+            )
 
+        TeacherProfile.objects.get_or_create(user=user)
         return user
     
 
 class TeacherLoginSerializer(serializers.Serializer):
-    email = serializers.EmailField()
+    email_or_phone = serializers.CharField()
     password = serializers.CharField(write_only=True)
 
+    @staticmethod
+    def _is_phone(value: str) -> bool:
+        normalized = value.replace(" ", "").replace("-", "")
+        if normalized.startswith("+"):
+            normalized = normalized[1:]
+        return normalized.isdigit() and 10 <= len(normalized) <= 15
+
     def validate(self, data):
-        email = data.get("email")
+        contact = data.get("email_or_phone")
         password = data.get("password")
 
-        user = authenticate(email=email, password=password)
+        if self._is_phone(contact):
+            username = contact.replace(" ", "").replace("-", "")
+            user = authenticate(username=username, password=password)
+        else:
+            user = authenticate(username=contact.lower(), password=password)
 
         if not user:
             raise serializers.ValidationError(
-                {"detail": "Invalid email or password"}
+                {"detail": "Invalid credentials"}
             )
 
         try:

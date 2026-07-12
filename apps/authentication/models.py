@@ -10,9 +10,9 @@ class UserManager(BaseUserManager):
             raise ValueError("Either email or phone_number is required")
         if email:
             email = self.normalize_email(email)
+        extra_fields.setdefault("is_active", False)
         user = self.model(email=email or None, **extra_fields)
         user.set_password(password)
-        user.is_active = False
         user.save(using=self._db)
         return user
 

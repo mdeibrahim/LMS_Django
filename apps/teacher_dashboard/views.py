@@ -11,7 +11,7 @@ from django.utils import timezone
 from apps.teacher_dashboard.utils import send_verification_email, forgot_password_email
 from content import models
 from content.models import Course, Module, Lesson, LessonResource, CourseQuiz, CourseQuizQuestion
-from apps.authentication.models import OTP, PasswordResetSession
+from apps.authentication.models import OTP, PasswordResetSession, User
 from .models import Category, Subcategory
 from django.db.models import Q, Prefetch
 from .serializers import (
@@ -31,11 +31,11 @@ from .serializers import (
 from django.shortcuts import get_object_or_404
 from django.db.models import Max
 
-def generate_otp(user):
+def generate_otp(user, channel=OTP.CHANNEL_EMAIL):
     OTP.objects.filter(user=user, is_used=False).delete()
     code = f"{random.randint(100000, 999999)}"
     expires = timezone.now() + timedelta(minutes=15)
-    OTP.objects.create(user=user, code=code, expires_at=expires, channel=OTP.CHANNEL_EMAIL)
+    OTP.objects.create(user=user, code=code, expires_at=expires, channel=channel)
     return code
 
 class RegisterView(APIView):
@@ -45,18 +45,27 @@ class RegisterView(APIView):
         if serializer.is_valid():
             user = serializer.save()
 
-            code = generate_otp(user)
+            contact = user.email or user.phone_number
+            if user.email:
+                channel = OTP.CHANNEL_EMAIL
+                code = generate_otp(user, channel=channel)
+                sent = send_verification_email(user, code)
+                channel_label = "email"
+            else:
+                channel = OTP.CHANNEL_SMS
+                code = generate_otp(user, channel=channel)
+                from apps.authentication.sms import send_otp_sms
+                sent = send_otp_sms(code, user.phone_number)
+                channel_label = "phone number"
 
-            sent = send_verification_email(user, code)
             if not sent:
                 return Response(
-                    {"message": "Failed to send verification email."},
+                    {"message": f"Failed to send OTP to your {channel_label}."},
                     status=status.HTTP_500_INTERNAL_SERVER_ERROR
                 )
-            
 
             return Response(
-                {"message": "OTP sent to your email. Please verify to complete registration."},
+                {"message": f"OTP sent to your {channel_label}. Please verify to complete registration."},
                 status=status.HTTP_201_CREATED
             )
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -64,39 +73,41 @@ class RegisterView(APIView):
 
 class VerifyOTPView(APIView):
     def post(self, request):
-        email = request.data.get("email")
+        contact = request.data.get("email_or_phone") or request.data.get("email")
         otp = request.data.get("otp")
         type = request.data.get("type", "register")
 
-        if not email or not otp:
+        if not contact or not otp:
             return Response(
-                {"message": "Email and OTP are required."},
+                {"message": "Email/phone and OTP are required."},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        try:
-            user = models.User.objects.get(email=email)
-        except models.User.DoesNotExist:
+        user = None
+        if TeacherRegisterSerializer._is_phone(contact):
+            normalized = contact.replace(" ", "").replace("-", "")
+            user = User.objects.filter(phone_number=normalized).first()
+
+        else:
+            user = User.objects.filter(email=contact.lower()).first()
+        if not user:
             return Response(
-                {"message": "User with this email does not exist."},
+                {"message": "User with this contact does not exist."},
                 status=status.HTTP_404_NOT_FOUND
             )
 
         try:
             otp_record = OTP.objects.get(user=user, code=otp, is_used=False, expires_at__gt=timezone.now())
         except OTP.DoesNotExist:
-            print(f"otp_record: {otp_record}")
             return Response(
                 {"message": "Invalid OTP."},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        # Mark the user as verified
         user.is_verified = True
         user.is_active = True  
         user.save(update_fields=["is_verified", "is_active"])
 
-        # Mark the OTP as used
         otp_record.is_used = True
         otp_record.save(update_fields=["is_used"])
 
@@ -122,24 +133,28 @@ class VerifyOTPView(APIView):
 
 class ResendOTPView(APIView):
     def post(self, request):
-        email = request.data.get("email")
-        type = request.data.get("type", "register") 
+        contact = request.data.get("email_or_phone") or request.data.get("email")
+        type = request.data.get("type", "register")
 
-        if not email:
+        if not contact:
             return Response(
-                {"message": "Email is required."},
+                {"message": "Email/phone is required."},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        try:
-            user = models.User.objects.get(email=email)
-        except models.User.DoesNotExist:
+        user = None
+        if TeacherRegisterSerializer._is_phone(contact):
+            normalized = contact.replace(" ", "").replace("-", "")
+            user = User.objects.filter(phone_number=normalized).first()
+
+        else:
+            user = User.objects.filter(email=contact.lower()).first()
+        if not user:
             return Response(
-                {"message": "User with this email does not exist."},
+                {"message": "User with this contact does not exist."},
                 status=status.HTTP_404_NOT_FOUND
             )
 
-        # Generate a new OTP
         code = generate_otp(user)
 
         if user.is_verified:
@@ -148,19 +163,20 @@ class ResendOTPView(APIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
         
-        if type == "register":
+        if user.email:
             sent = send_verification_email(user, code)
         else:
-            sent = forgot_password_email(user, code)
+            from apps.authentication.sms import send_otp_sms
+            sent = send_otp_sms(code, user.phone_number)
         
         if not sent:
             return Response(
-                {"message": "Failed to send verification email."},
+                {"message": "Failed to send verification."},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
         return Response(
-            {"message": "A new OTP has been sent to your email."},
+            {"message": "A new OTP has been sent to your contact."},
             status=status.HTTP_200_OK
         )
     
@@ -183,7 +199,7 @@ class LoginView(APIView):
                         "id": user.id,
                         "email": user.email,
                         "name": user.get_full_name(),
-                        "profile_picture": user.profile.profile_picture.url if user.profile.profile_picture else None,
+                        "profile_picture": user.profile.profile_picture.url if hasattr(user, 'profile') and hasattr(user.profile, 'profile_picture') and user.profile.profile_picture else None,
                     }
                 },
                 status=status.HTTP_200_OK,
@@ -281,81 +297,89 @@ class ChangePasswordView(APIView):
 
 class ForgotPasswordView(APIView):
     def post(self, request):
-        email = request.data.get("email")
+        contact = request.data.get("email_or_phone") or request.data.get("email")
 
-        if not email:
+        if not contact:
             return Response(
-                {"message": "Email is required."},
+                {"message": "Email or phone number is required."},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        try:
-            user = models.User.objects.get(email=email)
-        except models.User.DoesNotExist:
+        user = None
+        if TeacherRegisterSerializer._is_phone(contact):
+            normalized = contact.replace(" ", "").replace("-", "")
+            user = User.objects.filter(phone_number=normalized).first()
+
+        else:
+            user = User.objects.filter(email=contact.lower()).first()
+        if not user:
             return Response(
-                {"message": "User with this email does not exist."},
+                {"message": "User with this contact does not exist."},
                 status=status.HTTP_404_NOT_FOUND
             )
 
-        # Generate a new OTP for password reset
         code = generate_otp(user)
 
-        sent = forgot_password_email(user, code)
+        if user.email:
+            sent = forgot_password_email(user, code)
+        else:
+            from apps.authentication.sms import send_otp_sms
+            sent = send_otp_sms(code, user.phone_number)
+        
         if not sent:
             return Response(
-                {"message": "Failed to send password reset email."},
+                {"message": "Failed to send password reset OTP."},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
         return Response(
-            {"message": "A password reset OTP has been sent to your email."},
+            {"message": "A password reset OTP has been sent to your contact."},
             status=status.HTTP_200_OK
         )
     
 class ResetPasswordView(APIView):
     def post(self, request):
-        email = request.data.get("email")
+        contact = request.data.get("email_or_phone") or request.data.get("email")
         reset_token = request.data.get("reset_token")
         new_password = request.data.get("password")
         confirm_password = request.data.get("confirm_password")
 
-        if not email or not reset_token or not new_password or not confirm_password:
-            print ("All fields are required.")
+        if not contact or not reset_token or not new_password or not confirm_password:
             return Response(
                 {"message": "All fields are required."},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
         if new_password != confirm_password:
-            print ("New passwords do not match.")
             return Response(
                 {"message": "New passwords do not match."},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        try:
-            user = models.User.objects.get(email=email)
-        except models.User.DoesNotExist:
-            print ("User with this email does not exist.")
+        user = None
+        if TeacherRegisterSerializer._is_phone(contact):
+            normalized = contact.replace(" ", "").replace("-", "")
+            user = User.objects.filter(phone_number=normalized).first()
+
+        else:
+            user = User.objects.filter(email=contact.lower()).first()
+        if not user:
             return Response(
-                {"message": "User with this email does not exist."},
+                {"message": "User with this contact does not exist."},
                 status=status.HTTP_404_NOT_FOUND
             )
 
         try:
             session = PasswordResetSession.objects.get(user=user, token=reset_token, is_used=False, expires_at__gt=timezone.now())
         except PasswordResetSession.DoesNotExist:
-            print ("Invalid reset token.")
             return Response(
                 {"message": "Invalid reset token."},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        # Reset the user's password
         user.set_password(new_password)
         user.save()
 
-        # Mark the reset session as used
         session.is_used = True
         session.save(update_fields=["is_used"])
 
