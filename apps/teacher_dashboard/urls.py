@@ -8,6 +8,19 @@ from .views import (
     ResendOTPView, ForgotPasswordView, ResetPasswordView,
     QuizListView
 )
+from .admin_views import (
+    AdminCertificateListView,
+    AdminDeviceSessionListView,
+    AdminEnrollmentListView,
+    AdminOTPListView,
+    AdminPaymentInstructionDetailView,
+    AdminPaymentInstructionListCreateView,
+    AdminPaymentSubmissionListView,
+    AdminStudentListView,
+    AdminTeacherListView,
+    AdminUserDetailView,
+    AdminUserListView,
+)
 
 
 urlpatterns = [
@@ -64,4 +77,18 @@ urlpatterns = [
     path('create-quiz/', QuizListView.as_view(), name='teacher_create_quiz'),
     path('update-quiz/', QuizListView.as_view(), name='teacher_update_quiz'),
     path('delete-quiz/', QuizListView.as_view(), name='teacher_delete_quiz'),
+
+    # Admin URLs
+    path('admin/users/', AdminUserListView.as_view(), name='admin_user_list'),
+    path('admin/users/<int:pk>/', AdminUserDetailView.as_view(), name='admin_user_detail'),
+    path('admin/teachers/', AdminTeacherListView.as_view(), name='admin_teacher_list'),
+    path('admin/students/', AdminStudentListView.as_view(), name='admin_student_list'),
+    path('admin/device-sessions/', AdminDeviceSessionListView.as_view(), name='admin_device_session_list'),
+    path('admin/otps/', AdminOTPListView.as_view(), name='admin_otp_list'),
+    path('admin/payment-submissions/', AdminPaymentSubmissionListView.as_view(), name='admin_payment_submission_list'),
+    path('admin/payment-submissions/<int:pk>/', AdminPaymentSubmissionListView.as_view(), name='admin_payment_submission_detail'),
+    path('admin/enrollments/', AdminEnrollmentListView.as_view(), name='admin_enrollment_list'),
+    path('admin/certificates/', AdminCertificateListView.as_view(), name='admin_certificate_list'),
+    path('admin/payment-instructions/', AdminPaymentInstructionListCreateView.as_view(), name='admin_payment_instruction_list'),
+    path('admin/payment-instructions/<int:pk>/', AdminPaymentInstructionDetailView.as_view(), name='admin_payment_instruction_detail'),
 ]
