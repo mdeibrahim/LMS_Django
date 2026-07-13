@@ -121,6 +121,7 @@ class TeacherLoginSerializer(serializers.Serializer):
 
 class TeacherProfileSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(source="user.email", read_only=True)
+    is_admin = serializers.BooleanField(source="user.is_staff", read_only=True)
 
     class Meta:
         model = TeacherProfile
@@ -135,9 +136,10 @@ class TeacherProfileSerializer(serializers.ModelSerializer):
             "teacher_institution",
             "teacher_subject",
             "teacher_experience_years",
+            "is_admin",
             "created_at",
         )
-        read_only_fields = ("email",)
+        read_only_fields = ("email", "is_admin")
 
     def update(self, instance, validated_data):
         user_data = validated_data.pop("user", {})
