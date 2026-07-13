@@ -559,6 +559,24 @@ def _serialize_resource(resource):
     content_type = resource.content_type
     if content_type == LessonResourceType.VIDEO and youtube_embed_url:
         content_type = "youtube"
+
+    external_url = resource.external_url or ""
+
+    if resource.content_type == LessonResourceType.IMAGE:
+        image_url = file_url or external_url
+    else:
+        image_url = ""
+
+    if resource.content_type == LessonResourceType.AUDIO:
+        audio_url = file_url or external_url
+    else:
+        audio_url = ""
+
+    if resource.content_type == LessonResourceType.VIDEO:
+        video_url = file_url or external_url
+    else:
+        video_url = ""
+
     return {
         "ok": True,
         "id": resource.id,
@@ -568,12 +586,12 @@ def _serialize_resource(resource):
         "content_type": content_type,
         "text_content": resource.text_content or "",
         "file_url": file_url,
-        "image_url": file_url if resource.content_type == LessonResourceType.IMAGE else "",
-        "audio_url": file_url if resource.content_type == LessonResourceType.AUDIO else "",
-        "video_url": file_url if resource.content_type == LessonResourceType.VIDEO and not youtube_embed_url else "",
-        "youtube_url": resource.external_url if resource.get_youtube_embed_url() else "",
+        "image_url": image_url,
+        "audio_url": audio_url,
+        "video_url": video_url,
+        "youtube_url": external_url if resource.get_youtube_embed_url() else "",
         "youtube_embed_url": youtube_embed_url,
-        "external_url": resource.external_url or "",
+        "external_url": external_url,
         "embed_url": resource.embed_url or "",
         "duration_seconds": resource.duration_seconds,
         "created_at": resource.created_at.isoformat(),
